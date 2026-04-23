@@ -1,0 +1,162 @@
+# PROMPT_07 - Contracts And Templates
+
+You are implementing the first contract and template library for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 06 have been attempted.
+
+## Project Brief
+
+The repo should make orchestrated agent work concrete through task contracts,
+result contracts, review contracts, escalation contracts, promotion records,
+run manifests, readiness reports, completion audits, handoff records, and
+session closeout records. Templates should help human operators and fresh
+assistant sessions produce consistent artifacts without heavy automation.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read relevant docs from `docs/doctrine/`, `docs/roles/`, `docs/runtime/`,
+   and `docs/memory/`.
+4. Inspect existing `templates/` content if present and integrate rather than
+   replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a practical, compact template library and contract overview that future
+runbooks, scripts, and examples can use.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/contracts/README.md`
+- `docs/contracts/contract-types.md`
+- `docs/contracts/contract-composition.md`
+- `templates/contracts/task-contract.md`
+- `templates/contracts/result-contract.md`
+- `templates/contracts/review-contract.md`
+- `templates/contracts/escalation-contract.md`
+- `templates/memory/promotion-record.md`
+- `templates/runs/run-manifest.md`
+- `templates/reports/completion-audit.md`
+- `templates/reports/readiness-report.md`
+- `templates/handoffs/handoff.md`
+- `templates/handoffs/repair-checklist.md`
+- `templates/session-closeout.md`
+- `docs/README.md`
+
+If memory-specific templates already exist from Prompt 06, do not duplicate
+them blindly. Reuse `templates/memory/promotion-record.md` as the canonical
+promotion record template and link or adapt it where appropriate instead of
+creating a second promotion-record template under `templates/contracts/`.
+
+## Contract Type Requirements
+
+`docs/contracts/contract-types.md` must define:
+
+- task contract
+- result contract
+- review contract
+- escalation contract
+- promotion record
+- run manifest
+- completion audit report
+- readiness report
+- handoff record
+- session closeout record
+
+For each type, document:
+
+- purpose
+- when to use it
+- owner
+- required fields
+- optional fields
+- lifecycle
+- relationship to memory promotion
+
+## Contract Composition Requirements
+
+`docs/contracts/contract-composition.md` must explain how contracts fit into
+the hierarchy:
+
+- Orchestrator creates or approves lane-level task contracts.
+- Leads decompose lane contracts into Worker task contracts.
+- Workers produce result contracts.
+- Leads or Reviewers produce review contracts.
+- Completion Auditors produce completion audit reports.
+- Readiness Checkers produce next-prompt readiness reports.
+- Handoff Composers create handoff records only when justified.
+
+Keep it practical for manual use.
+
+## Template Requirements
+
+Each template should be concise but complete. Prefer headings and fields over
+long prose. Use markdown checkboxes where appropriate.
+
+Every template should include:
+
+- artifact id or title
+- date or run id where relevant
+- owner role
+- scope
+- inputs
+- outputs
+- validation or evidence fields where relevant
+- open issues or blockers
+- next step or closeout field
+
+`templates/runs/run-manifest.md` should include:
+
+- prompt id
+- run id
+- assistant/tool
+- permission posture
+- target scope
+- expected deliverables
+- validation plan
+- changed files
+- completion audit status
+- next-prompt readiness status
+- handoff created yes/no
+
+`templates/handoffs/handoff.md` must be suitable for `tmp/HANDOFF.md`.
+
+`templates/memory/promotion-record.md` remains the canonical promotion record
+template. The contracts docs may describe how it fits into the contract
+library, but this prompt must not create a duplicate promotion-record template
+at another path.
+
+## Constraints
+
+- Do not build scripts yet. Prompt 09 owns script support.
+- Do not create full runbooks yet. Prompt 08 owns runbooks.
+- Do not create example scenarios yet. Prompt 10 owns examples.
+- Do not create schemas yet unless they are tiny and obviously necessary;
+  Prompt 13 owns structured metadata.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required docs and template file exists.
+2. Confirm templates are compact and usable, not essay-like.
+3. Confirm handoff templates make handoffs optional and justified.
+4. Confirm `docs/README.md` links to contracts.
+5. Confirm no template requires unavailable automation.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit contract and template deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_08.txt` and state
+   whether the repo is ready for it.
+3. Perform cheap bridging fixes if runbook readiness is blocked by missing
+   template navigation or obvious template gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

@@ -1,0 +1,111 @@
+# PROMPT_29 - Assistant Usage Guides
+
+You are implementing assistant-specific usage guides for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompts 01 through 28 have
+been attempted.
+
+## Project Brief
+
+The repo is tool-agnostic but must be practical for real subscription-level
+assistants. Operators may run prompts in Codex, Claude Code, Gemini, Pi, or
+similar tools. The repo should document how to use its artifacts across these
+tools without making any one tool mandatory.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/operator-start.md`, `docs/project-skills.md`,
+   `docs/prompt-templates.md`, and `docs/operator-console.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create practical usage guides for running the repo with different coding
+assistant tools while preserving the same operating model.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/assistants/README.md`
+- `docs/assistants/codex.md`
+- `docs/assistants/claude-code.md`
+- `docs/assistants/gemini.md`
+- `docs/assistants/pi.md`
+- `docs/assistants/generic-chat.md`
+- `docs/assistants/subscription-workflow.md`
+- `docs/assistants/context-loading.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+
+## Guide Requirements
+
+Each assistant guide should include:
+
+- how to start a fresh session
+- what files to load first
+- how to run one prompt
+- how to use prompt templates or project skills if supported
+- how to handle validation and commands
+- how to close with Execute -> Audit -> Preflight -> Bridge -> Reset
+- known limitations or tool differences
+
+Keep guides factual and avoid making claims about current product features that
+you cannot verify from the repo. If uncertain, phrase guidance generically.
+
+## Subscription Workflow Requirements
+
+`docs/assistants/subscription-workflow.md` must explain:
+
+- why the repo is designed for subscription-level tools
+- how to copy prompt files manually when needed
+- how to keep sessions bounded
+- how to avoid wasting quota on broad context loads
+- how to recover from rate limits or context exhaustion
+
+## Context Loading Requirements
+
+`docs/assistants/context-loading.md` must provide a small context-loading
+matrix for:
+
+- prompt execution
+- completion audit
+- repair session
+- prompt authoring
+- role-lane simulation
+- memory promotion review
+
+## Constraints
+
+- Do not browse the web unless the operator explicitly asks for current product
+  documentation. Use repo-local, tool-agnostic guidance.
+- Do not add provider-specific config files.
+- Do not claim automatic skill discovery for all tools.
+- When updating shared hot-spot files such as `README.md`, `AGENT.md`, and
+  `docs/README.md`, integrate with existing accurate content rather than
+  rewriting those files wholesale.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run docs link checks if available.
+2. Run `python3 scripts/ahl.py doctor`.
+3. Confirm guides all preserve the same core operating model.
+4. Confirm any uncertain product behavior is not stated as fact.
+5. Confirm `README.md` links to assistant guides.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit assistant-guide deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_30.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if security/posture readiness is blocked by
+   guide navigation or misleading claims.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

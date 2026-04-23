@@ -1,0 +1,147 @@
+# PROMPT_10 - Example Scenarios And Walkthroughs
+
+You are implementing the example scenario layer for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompts 01 through 09 have been
+attempted.
+
+## Project Brief
+
+This repo should not remain abstract. It needs realistic, inspectable examples
+that show how a human-assisted harness run works: bounded task delegation,
+structured results, review, memory promotion, prompt readiness, optional
+handoff, and clean session reset.
+
+Examples should teach the operating model without pretending to be a production
+runtime.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/roles/org-model.md`, `docs/runtime/execute-audit-preflight-bridge-reset.md`,
+   `docs/contracts/README.md`, `runbooks/fresh-session-prompt-run.md`, and
+   `templates/runs/run-manifest.md`.
+4. Run `python3 scripts/ahl.py promptset` if the script exists.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create realistic example scenarios that demonstrate the repo's concepts using
+plain files and templates.
+
+## Required Deliverables
+
+Create or update:
+
+- `examples/README.md`
+- `examples/sequential-prompt-run/README.md`
+- `examples/sequential-prompt-run/artifacts/run-manifest.md`
+- `examples/sequential-prompt-run/artifacts/completion-audit.md`
+- `examples/sequential-prompt-run/artifacts/readiness-report.md`
+- `examples/sequential-prompt-run/artifacts/handoff-not-created.md`
+- `examples/org-lane-delegation/README.md`
+- `examples/org-lane-delegation/artifacts/orchestrator-brief.md`
+- `examples/org-lane-delegation/artifacts/lead-task-contract.md`
+- `examples/org-lane-delegation/artifacts/worker-task-contract.md`
+- `examples/org-lane-delegation/artifacts/worker-result-contract.md`
+- `examples/org-lane-delegation/artifacts/lead-review.md`
+- `examples/memory-promotion/README.md`
+- `examples/memory-promotion/artifacts/promotion-record.md`
+- `examples/repair-bridge/README.md`
+- `examples/repair-bridge/artifacts/tmp-HANDOFF.example.md`
+- `docs/README.md`
+
+You may add additional small artifacts if they materially improve the example,
+but keep the examples focused.
+
+## Scenario Requirements
+
+### Sequential Prompt Run
+
+Show a normal prompt execution where:
+
+- the prompt scope is bounded
+- the run manifest records the prompt id and permission posture
+- completion audit succeeds
+- next-prompt readiness is checked
+- no handoff is created because no meaningful blocker remains
+- reset is clean
+
+The `handoff-not-created.md` artifact should explicitly explain why no
+`tmp/HANDOFF.md` was created.
+
+### Org Lane Delegation
+
+Show a hierarchy where:
+
+- the Orchestrator defines a lane
+- a Lead receives a lane-level task
+- the Lead creates a Worker task contract
+- the Worker returns a structured result
+- the Lead reviews the result and summarizes upward
+
+Make the scenario concrete but small. It can use a fictional documentation or
+script improvement task rather than a real app build.
+
+### Memory Promotion
+
+Show how a temporary observation becomes promoted durable knowledge only after
+review. Include:
+
+- source observation
+- evidence
+- reviewer
+- accepted memory plane
+- rejection criteria that were considered
+
+### Repair Bridge
+
+Show when a handoff is justified:
+
+- a prompt was incomplete or blocked
+- the next session needs exact state
+- `tmp/HANDOFF.md` is created as a transient bridge
+- the repair session has a bounded start
+
+Use `tmp-HANDOFF.example.md` instead of creating real `tmp/HANDOFF.md` inside
+the example.
+
+## Quality Requirements
+
+Examples must:
+
+- use the terminology from existing docs
+- link to relevant templates and runbooks
+- avoid huge fictional transcripts
+- avoid pretending there was an actual model session if this is illustrative
+- be useful as reference material for future prompts and tests
+
+## Constraints
+
+- Do not build new scripts unless fixing a small issue in existing helper
+  scripts is necessary.
+- Do not create a real app scenario with lots of code.
+- Do not add raw transcript dumps.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm all required example files exist.
+2. Run `python3 scripts/ahl.py doctor` if the script exists.
+3. Run `python3 scripts/ahl.py promptset` if the script exists.
+4. Check that example links to docs/templates are plausible.
+5. Confirm examples do not contradict role, memory, or lifecycle docs.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit example deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_11.txt` and state
+   whether the repo is ready for it.
+3. Perform cheap bridging fixes if experiments/reporting readiness is blocked
+   by example navigation or artifact inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

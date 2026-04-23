@@ -1,0 +1,123 @@
+# PROMPT_16 - Prompt Template Library
+
+You are implementing a reusable prompt template library for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 15 have been attempted.
+
+## Project Brief
+
+The repo should convert recurring operator prompts into reusable, named
+templates. These templates should work as copyable markdown prompts and should
+also be compatible with tools that support project prompt templates. They must
+remain tool-agnostic and should not depend on hidden context.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/routines/micro-routine-library.md`, `runbooks/README.md`,
+   `docs/contracts/README.md`, and `registry/routines.json` if present.
+4. Run available checks from `scripts/ahl.py`.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a prompt template library for the major human-assisted harness routines.
+
+## Required Deliverables
+
+Create or update:
+
+- `prompt-templates/README.md`
+- `prompt-templates/prompt-run.md`
+- `prompt-templates/completion-audit.md`
+- `prompt-templates/next-prompt-preflight.md`
+- `prompt-templates/bridge-decision.md`
+- `prompt-templates/handoff-compose.md`
+- `prompt-templates/repair-session.md`
+- `prompt-templates/promotion-review.md`
+- `prompt-templates/prompt-authoring.md`
+- `prompt-templates/orchestrator-lane-plan.md`
+- `prompt-templates/lead-worker-task.md`
+- `prompt-templates/worker-result.md`
+- `prompt-templates/review-findings.md`
+- `prompt-templates/commit-package.md`
+- `docs/prompt-templates.md`
+- `registry/templates.json`
+- `docs/README.md`
+
+## Template Format Requirements
+
+Each template should:
+
+- begin with a short title
+- include a purpose line
+- include placeholders using simple uppercase names in angle brackets, such as
+  `<PROMPT_ID>` or `<TARGET_SCOPE>`
+- specify required context to load
+- specify expected output
+- include stop conditions
+- avoid assuming a specific assistant vendor
+- avoid hidden context from previous sessions
+
+If a target tool supports frontmatter, do not require it. Keep templates
+plain-markdown and copyable.
+
+## Template Coverage Requirements
+
+The library must include templates for:
+
+- running a prompt in a fresh session
+- auditing completion against a prompt
+- checking next-prompt readiness
+- deciding whether a bridge is justified
+- composing `tmp/HANDOFF.md`
+- starting a repair session
+- reviewing memory promotion
+- authoring new prompts in a dedicated session
+- planning an Orchestrator lane
+- assigning a Lead-to-Worker task
+- reporting Worker results
+- reviewing findings
+- packaging a commit when the operator asks
+
+## Docs Requirements
+
+`docs/prompt-templates.md` must explain:
+
+- how prompt templates differ from `.prompts/PROMPT_XX.txt`
+- how an operator should use them manually
+- how a tool such as Pi-style prompt templates could load them later
+- why templates should not become a second promptset
+- how to add a new template without duplicating a runbook
+
+Update `registry/templates.json` so templates are discoverable.
+
+## Constraints
+
+- Do not create tool-specific `.pi/` or `.claude/` config unless existing docs
+  already introduced that convention.
+- Do not build a template expander script unless it is a tiny helper naturally
+  added to existing `ahl.py`.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required template exists.
+2. Run `python3 scripts/ahl.py registry check` or the equivalent if available.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Confirm templates are copyable and do not rely on hidden state.
+5. Confirm docs distinguish prompt templates from implementation prompt files.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit prompt-template deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_17.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if project-skill readiness is blocked by
+   missing template navigation or registry data.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

@@ -1,0 +1,141 @@
+# PROMPT_12 - Quality, Validation, And Promptset Discipline
+
+You are implementing the quality and validation layer for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompts 01 through 11 have
+been attempted.
+
+## Project Brief
+
+The repo should support repeatable prompt-bounded work with explicit proof
+paths. "Looks plausible" is not enough. Assistants must compare work against
+prompt requirements, run available checks, report validation honestly, inspect
+next-prompt readiness, and preserve promptset quality over time.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `runbooks/completion-audit.md`, `runbooks/next-prompt-preflight.md`,
+   `docs/contracts/README.md`, `scripts/README.md`, and `docs/lab-method.md`
+   if they exist.
+4. Run `python3 scripts/ahl.py promptset` if the script exists.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create quality gates, validation doctrine, promptset discipline docs, and
+script checks that make completion claims more trustworthy.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/quality/README.md`
+- `docs/quality/validation-gates.md`
+- `docs/quality/promptset-quality.md`
+- `docs/quality/audit-protocol.md`
+- `docs/quality/review-severity.md`
+- `docs/quality/definition-of-done.md`
+- `docs/quality/failure-classification.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+
+## Quality Docs Requirements
+
+`docs/quality/validation-gates.md` must define validation gates for:
+
+- docs-only prompts
+- template prompts
+- script prompts
+- example prompts
+- metadata/schema prompts
+- capstone audit prompts
+
+Each gate should include expected checks and evidence.
+
+`docs/quality/promptset-quality.md` must define what makes a prompt file
+execution-ready:
+
+- clear scope
+- bounded deliverables
+- startup instructions
+- constraints
+- validation expectations
+- endcap instructions
+- next-prompt readiness check
+- no hidden dependency on prior conversation
+
+`docs/quality/audit-protocol.md` must specify how to audit current prompt
+implementation against prompt text.
+
+`docs/quality/review-severity.md` must define severity levels for findings.
+
+`docs/quality/definition-of-done.md` must define `done`, `incomplete`, and
+`blocked` in this repo's context.
+
+`docs/quality/failure-classification.md` must classify failures such as missing
+deliverables, stale docs, validation skipped, prompt ambiguity, scope creep,
+handoff misuse, and next-prompt readiness blockers.
+
+## Script Enhancement Requirements
+
+Enhance `scripts/ahl.py` without making it heavy.
+
+Add or improve checks so `doctor` or a new subcommand such as `validate` can
+report:
+
+- required top-level docs directories exist
+- prompt files are strictly numbered
+- `AGENT.md` and `README.md` exist
+- templates directory exists
+- runbooks directory exists
+- tests for helper scripts are present
+
+If you add a new subcommand, document it and test it.
+
+Keep JSON output stable and simple.
+
+## Test Requirements
+
+Update `tests/test_ahl.py` to cover any new CLI behavior. Tests must still use
+only standard library `unittest` and temporary directories/fixtures.
+
+## AGENT And README Updates
+
+Update `AGENT.md` and `README.md` to mention the quality/validation docs and
+the expected check commands. Do not overstate coverage. Preserve any existing
+`AGENT.md` guidance about treating shared hot-spot files as surgical
+integration targets rather than rewrite targets.
+
+## Constraints
+
+- Do not introduce external dependencies.
+- Do not add CI workflows.
+- Do not make validation depend on paid model calls.
+- Do not turn docs into a bureaucratic process manual.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py promptset`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run any new validation subcommand you add.
+5. Confirm docs match actual script behavior.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit quality deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_13.txt` and
+   state whether the repo is ready for it.
+3. Perform cheap bridging fixes if metadata/control-surface readiness is
+   blocked by quality doc or script issues.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

@@ -1,0 +1,105 @@
+# PROMPT_30 - Safety, Permissions, And Data Hygiene
+
+You are implementing safety, permission posture, and data hygiene hardening for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 29 have been attempted.
+
+## Project Brief
+
+The repo should help operators use powerful coding assistants safely. It should
+make permission posture explicit, discourage destructive operations, protect
+temporary artifacts from accidental promotion, and avoid storing sensitive raw
+conversation or system data.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/runtime/permission-posture.md`, `docs/memory/retention-and-pruning.md`,
+   `docs/assistants/subscription-workflow.md`, and `scripts/README.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a practical safety and hygiene layer for operator-run harness work.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/safety/README.md`
+- `docs/safety/permission-postures.md`
+- `docs/safety/destructive-actions.md`
+- `docs/safety/data-hygiene.md`
+- `docs/safety/secrets-and-transcripts.md`
+- `docs/safety/reference-repo-boundaries.md`
+- `docs/safety/operator-approval.md`
+- `.gitignore`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+
+## Safety Docs Requirements
+
+Document:
+
+- read-only inspection posture
+- workspace-write implementation posture
+- dangerous/manual operations posture
+- when human approval is required
+- why reference repos are not implementation targets
+- why raw transcripts and secrets should not be stored
+- how to treat `tmp/`, handoffs, memory candidates, and reports
+- what to do before running destructive commands
+
+## Script Requirements
+
+Enhance `doctor` or add a safety check that detects obvious issues:
+
+- `tmp/HANDOFF.md` present and possibly stale
+- reference repo directories not ignored
+- common transcript dump directories or files if present
+- `.env` or secret-looking files staged or unignored, using conservative checks
+- missing `.gitignore` entries for local/transient artifacts
+
+Do not scan file contents for secrets aggressively. Keep checks conservative and
+document limitations.
+
+## Test Requirements
+
+Add tests for safety checks using temporary fixtures.
+
+## Constraints
+
+- Do not delete files automatically.
+- Do not inspect private file contents beyond simple names/patterns.
+- Do not implement a security scanner.
+- When updating shared hot-spot files such as `README.md`, `AGENT.md`,
+  `docs/README.md`, `scripts/ahl.py`, and `tests/test_ahl.py`, preserve
+  accurate existing content and make the smallest coherent change needed
+  rather than rewriting those files wholesale.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py doctor`.
+3. Run the safety check if separate.
+4. Confirm `.gitignore` protects transient and reference artifacts.
+5. Confirm docs are practical and not alarmist.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit safety deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_31.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if release-readiness is blocked by safety docs,
+   checks, or ignore rules.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

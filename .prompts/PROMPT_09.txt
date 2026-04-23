@@ -1,0 +1,172 @@
+# PROMPT_09 - Lightweight Helper Scripts
+
+You are implementing the first lightweight helper script layer for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 08 have been attempted.
+
+## Project Brief
+
+This repo should be useful in a manual or semi-manual way before it becomes any
+kind of automated runtime. Helper scripts should support the human operator by
+checking promptset health, scaffolding small artifacts, and producing
+machine-readable output where useful. Scripts must stay small, dependency-free,
+and inspectable.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `runbooks/README.md`, `runbooks/fresh-session-prompt-run.md`,
+   `runbooks/run-closeout.md`, `docs/contracts/README.md`, and
+   `templates/runs/run-manifest.md`.
+4. Inspect existing `scripts/`, `tests/`, and templates if present.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add small Python helper tooling that supports the existing docs and templates
+without creating a hidden autonomous system.
+
+## Required Deliverables
+
+Create or update:
+
+- `scripts/ahl.py`
+- `scripts/README.md`
+- `tests/test_ahl.py`
+- `tests/fixtures/minimal_repo/.prompts/PROMPT_01.txt`
+- `tests/fixtures/minimal_repo/.prompts/PROMPT_02.txt`
+- `docs/scripts.md`
+- `README.md`
+- `AGENT.md`
+
+If a test fixture directory needs placeholder files to preserve directories,
+add them only where necessary.
+
+The minimal fixture is intentionally incomplete. Use it to verify that
+`doctor` reports missing foundations in a structured way rather than treating
+the fixture as a passing full-repo example.
+
+## Script Requirements
+
+Implement `scripts/ahl.py` as a dependency-free Python 3 CLI using the standard
+library only.
+
+It should support these subcommands:
+
+- `doctor`
+- `promptset`
+- `scaffold-run`
+- `new-handoff`
+
+Each subcommand must support `--json` for machine-readable output where
+practical. Human-readable output should be concise.
+
+### `doctor`
+
+Check for expected repo foundations:
+
+- `README.md`
+- `AGENT.md`
+- `.prompts/`
+- `docs/`
+- `runbooks/`
+- `templates/`
+- reference repo directories ignored by `.gitignore` if they exist
+- transient `tmp/` ignored by `.gitignore`
+
+The command should return a nonzero exit code when required foundations are
+missing. JSON output should include stable fields such as `ok`, `checks`, and
+`problems`.
+
+### `promptset`
+
+Inspect `.prompts/PROMPT_*.txt` files and report:
+
+- ordered prompt filenames
+- detected prompt numbers
+- duplicate numbers
+- gaps
+- whether filenames use strict two-digit prompt numbering
+
+JSON output should include stable fields. Avoid parsing prose inside prompt
+files.
+
+### `scaffold-run`
+
+Create a run manifest from `templates/runs/run-manifest.md` if it exists.
+Inputs:
+
+- prompt id or prompt filename
+- optional `--assistant`
+- optional `--permission-posture`
+- optional `--out-dir`, defaulting to `runs`
+
+The generated file should be placed under a run-specific directory or filename
+that includes the prompt id and a timestamp. The script must not overwrite an
+existing file unless a safe explicit flag is implemented.
+
+### `new-handoff`
+
+Create `tmp/HANDOFF.md` from `templates/handoffs/handoff.md` if it exists.
+It should create `tmp/` if needed and refuse to overwrite an existing handoff
+unless `--force` is passed.
+
+## Tests
+
+Use `unittest` from the Python standard library. Tests should cover:
+
+- promptset numbering success
+- promptset detects a gap or malformed filename
+- doctor returns structured failing data for an intentionally incomplete
+  minimal fixture
+- scaffold-run creates an artifact without overwriting
+- new-handoff refuses overwrite unless forced
+
+Do not require network access or paid model calls.
+
+## Docs Requirements
+
+`scripts/README.md` and `docs/scripts.md` must document:
+
+- what the script does
+- what it does not do
+- command examples
+- JSON output stability expectations
+- why this is helper tooling, not autonomous orchestration
+
+Update `README.md` and `AGENT.md` only enough to mention the helper script and
+its appropriate use. Preserve any existing `AGENT.md` guidance about updating
+shared hot-spot files surgically rather than rewriting them wholesale.
+
+## Constraints
+
+- Use only the Python standard library.
+- Do not build a long-running daemon.
+- Do not integrate with model providers.
+- Do not inspect or store raw assistant transcripts.
+- Do not add package managers, lockfiles, or heavy test frameworks.
+- Do not modify reference repos.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py promptset`.
+3. Run `python3 scripts/ahl.py doctor` and inspect output.
+4. Run at least one `--json` mode and verify it is valid JSON.
+5. Confirm docs match actual CLI behavior.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit script deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_10.txt` and
+   state whether the repo is ready for it.
+3. Perform cheap bridging fixes if examples readiness is blocked by script docs
+   or missing templates.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

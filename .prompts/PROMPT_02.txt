@@ -1,0 +1,175 @@
+# PROMPT_02 - Doctrine, Glossary, And Anti-Patterns
+
+You are implementing the foundational doctrine layer for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompt 01 has been attempted.
+
+## Project Brief
+
+This repo is a human-assisted harness lab for disciplined orchestration of
+coding-agent work. It should make repeatable prompt-bounded execution,
+structured handoffs, role boundaries, memory promotion, validation gates, and
+operator-visible routines concrete. It should remain distinct from
+`agent-context-base`, `pi-mono`, and `claw-code`, while selectively adapting
+compatible ideas from each.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/README.md`, `docs/operator-start.md`, and
+   `docs/reference-influences.md` if they exist.
+4. Check `git status --short` and preserve unrelated changes.
+5. If Prompt 01 deliverables are missing, make the smallest bridge fix needed
+   for this prompt to land coherently, but do not redo Prompt 01 wholesale.
+
+## Goal
+
+Create the repo's initial doctrine and vocabulary so later role, skill, memory,
+runbook, script, and example work uses consistent language.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/doctrine/README.md`
+- `docs/doctrine/principles.md`
+- `docs/doctrine/glossary.md`
+- `docs/doctrine/anti-patterns.md`
+- `docs/doctrine/artifact-boundaries.md`
+- `docs/doctrine/design-filters.md`
+- `docs/README.md`
+
+## Doctrine Themes To Capture
+
+The doctrine should clearly define these core ideas:
+
+- session boundaries are a feature, not a limitation
+- the human operator is part of the harness
+- prompt-bounded work is the unit of execution
+- Execute -> Audit -> Preflight -> Bridge -> Reset is a core session rhythm
+- completion and next-prompt readiness are distinct checks
+- adjacent-prompt awareness is a disciplined middle ground between tunnel
+  vision and over-planning
+- repo files and git history are the source of truth
+- raw agent chatter is not durable memory
+- automation should follow proven human-operable routines, not precede them
+- scripts should emit stable structured output when they are used for future
+  automation
+- graph or vector systems, if introduced later, should be derived indexes, not
+  primary truth stores
+
+## Glossary Requirements
+
+`docs/doctrine/glossary.md` must define at least these terms:
+
+- harness
+- human-assisted orchestration
+- operator
+- orchestrator
+- lead
+- worker
+- prompt-bounded work unit
+- prompt-authoring session
+- prompt-execution session
+- repair session
+- bridge artifact
+- completion audit
+- next-prompt preflight
+- memory plane
+- promotion
+- accepted work memory
+- transient run memory
+- run manifest
+- result contract
+- escalation contract
+- readiness report
+- operator control surface
+- derived metadata
+- traceability
+
+Use definitions that are short, precise, and repo-specific.
+
+## Anti-Patterns Requirements
+
+`docs/doctrine/anti-patterns.md` must name and explain concrete failure modes,
+including:
+
+- endless session accumulation
+- always-on handoff generation
+- vague megaplanning
+- conflating implemented with ready
+- loading too many future prompts
+- treating raw transcripts as durable truth
+- metadata hoarding
+- premature graph/vector infrastructure
+- hidden autonomous behavior
+- giant framework gravity
+- patch-loop sprawl
+- reference-repo cloning
+
+For each anti-pattern, include the preferred corrective behavior.
+
+## Artifact Boundary Requirements
+
+`docs/doctrine/artifact-boundaries.md` must distinguish:
+
+- doctrine
+- runtime state
+- roles
+- skills
+- routines
+- contracts
+- templates
+- run manifests
+- reports and findings
+- examples
+- temporary handoffs
+- prompt-authoring artifacts
+- prompt-execution artifacts
+
+The point is to prevent the repo from becoming a memory swamp or a set of
+confusing overlapping markdown buckets.
+
+## Design Filters Requirements
+
+`docs/doctrine/design-filters.md` should provide practical questions future
+sessions can ask before adding new docs, scripts, metadata, or automation.
+Include a compatibility filter for `claw-code` ideas:
+
+- Can the useful part start as a markdown routine, checklist, template, or tiny
+  script?
+- Does it improve fresh-session execution or endcap quality?
+- Does it work without paid API orchestration?
+- Is the operator still able to inspect and override it?
+- Does it preserve repo files and git history as source of truth?
+
+## Constraints
+
+- Do not create the full role taxonomy yet. Prompt 03 owns that.
+- Do not create the full skill taxonomy yet. Prompt 04 owns that.
+- Do not create helper scripts yet.
+- Do not create full templates or runbooks yet.
+- Do not modify files inside reference repos.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required doctrine file exists.
+2. Confirm the glossary terms are defined.
+3. Confirm `docs/README.md` links to the new doctrine files.
+4. Check for contradictions with `README.md` and `AGENT.md`.
+5. Ensure the language is concrete and operational, not vague philosophy.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit the work against this prompt's deliverables.
+2. Inspect `.prompts/PROMPT_03.txt` and state
+   whether the repo is ready for it.
+3. Perform cheap bridging fixes if role-taxonomy readiness is blocked by doc
+   navigation or terminology gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

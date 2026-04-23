@@ -1,0 +1,121 @@
+# PROMPT_18 - Role Packs And Lane Playbooks
+
+You are implementing role-specific playbooks and lane packs for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 17 have been attempted.
+
+## Project Brief
+
+The repo should help a human operator simulate a hierarchical digital
+organization using fresh assistant sessions. This requires role-specific
+playbooks that tell an Orchestrator, Lead, Worker, Reviewer, Auditor, or Repair
+Agent what to load, what to produce, and where to stop.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/roles/README.md`, `docs/roles/org-model.md`,
+   `docs/roles/boundary-matrix.md`, `.agents/skills/README.md`, and
+   `prompt-templates/README.md`.
+4. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create role packs and lane playbooks that let the operator run hierarchy
+experiments manually and consistently.
+
+## Required Deliverables
+
+Create or update:
+
+- `role-packs/README.md`
+- `role-packs/orchestrator.md`
+- `role-packs/lead.md`
+- `role-packs/worker.md`
+- `role-packs/reviewer.md`
+- `role-packs/auditor.md`
+- `role-packs/repair-agent.md`
+- `lane-playbooks/README.md`
+- `lane-playbooks/single-lane-docs-work.md`
+- `lane-playbooks/parallel-lane-docs-and-scripts.md`
+- `lane-playbooks/repair-lane.md`
+- `lane-playbooks/promotion-lane.md`
+- `templates/lane/lane-brief.md`
+- `templates/lane/lane-status.md`
+- `templates/lane/worker-assignment.md`
+- `registry/artifacts.json`
+- `docs/README.md`
+
+## Role Pack Requirements
+
+Each role pack must include:
+
+- purpose
+- smallest startup context
+- allowed scope
+- inputs accepted
+- outputs produced
+- escalation triggers
+- stop conditions
+- compatible skills and prompt templates
+- examples of good and bad instructions for that role
+
+Keep role packs practical enough to paste into a fresh session.
+
+## Lane Playbook Requirements
+
+Lane playbooks must show how to run:
+
+- a single-lane documentation task
+- parallel docs and script lanes without file conflicts
+- a repair lane from a handoff
+- a promotion lane for memory/findings review
+
+Each playbook must include:
+
+- operator setup
+- role sequence
+- artifacts passed between roles
+- expected validations
+- merge or synthesis point
+- failure and escalation handling
+
+## Templates
+
+Create lane templates for:
+
+- lane brief
+- lane status
+- worker assignment
+
+Use compact headings and fields. These templates should complement, not
+duplicate, the contracts from Prompt 07.
+
+## Constraints
+
+- Do not spawn actual agents or build a runtime.
+- Do not require parallel execution; document how to simulate it manually.
+- Do not create domain-specific packs yet. Prompt 28 owns domain packs.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm all role packs and lane playbooks exist.
+2. Confirm they reference existing roles, skills, templates, and runbooks.
+3. Confirm playbooks keep contexts bounded for each role.
+4. Run registry checks if available.
+5. Confirm no playbook requires unavailable automation.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit role-pack and lane-playbook deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_19.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if run-record fixture readiness is blocked by
+   missing lane templates or artifact registry entries.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

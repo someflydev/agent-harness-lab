@@ -1,0 +1,187 @@
+# PROMPT_01 - Foundation Bootstrap
+
+You are implementing the first real foundation pass for `agent-harness-lab`.
+Run this in a fresh coding assistant session.
+
+## Project Brief
+
+`agent-harness-lab` is a human-assisted harness design lab for orchestrating
+hierarchical coding-agent work with subscription-level tools such as Codex,
+Claude Code, Gemini, or similar assistants. It is not trying to become a giant
+API-driven agent platform, a clone of `agent-context-base`, a clone of Pi, or a
+full autonomous `claw-code` style runtime.
+
+The repository should become an execution substrate and operating-model lab for
+prompt-bounded work, human-assisted orchestration, role boundaries, structured
+handoffs, memory promotion, validation gates, and repeatable fresh-session
+choreography. Reference repos may be present beside this project:
+`agent-context-base`, `pi-mono`, and `claw-code`. Study them selectively if
+useful, but do not copy their implementation or vendor-specific assumptions.
+
+## Startup Instructions
+
+1. Inspect the current repo state before editing.
+2. Read `README.md` and `AGENT.md` if they already exist, then read this
+   prompt.
+3. Check whether root files such as `README.md`, `AGENT.md`, `docs/`, and
+   `.gitignore` already exist. Integrate with existing files if they do.
+4. Check `git status --short` and avoid touching unrelated user changes.
+5. Treat the cloned reference repos as local reference material, not as files to
+   commit into this repo.
+6. When updating shared hot-spot files such as `README.md`, `AGENT.md`, and
+   `docs/README.md`, preserve accurate existing structure and content and make
+   the smallest coherent change needed for this prompt. Do not rewrite those
+   files wholesale merely to match a new outline.
+
+## Goal
+
+Create the initial public identity, assistant bootstrap surface, and repo layout
+orientation for `agent-harness-lab`.
+
+This prompt should make the repository understandable before deeper doctrine,
+roles, memory, scripts, or examples exist.
+
+## Required Deliverables
+
+Create or update these files:
+
+- `README.md`
+- `AGENT.md`
+- `.gitignore`
+- `docs/README.md`
+- `docs/guardrails.md`
+- `docs/repo-layout.md`
+- `docs/operator-start.md`
+- `docs/reference-influences.md`
+
+If a file already exists, update it rather than replacing useful existing
+content.
+
+## README Requirements
+
+The root `README.md` must explain:
+
+- what `agent-harness-lab` is
+- what it is not
+- why human-assisted orchestration matters
+- why fresh-session prompt execution is central
+- how this repo relates to `agent-context-base`, `pi-mono`, and `claw-code`
+- what kinds of artifacts the repo will contain
+- how an operator should run the promptset at a high level
+- why the repo favors markdown, templates, runbooks, small scripts, and
+  inspectable artifacts before heavy runtime automation
+
+Keep the README practical and serious. Do not make it theatrical. Do not claim
+that the repo already has features that have not been implemented.
+
+## AGENT.md Requirements
+
+Create a concise assistant bootstrap file for future sessions. It must include:
+
+- the smallest useful first-read order
+- instructions to inspect repo state before acting
+- instructions to run one prompt per fresh session
+- the distinction between prompt-authoring, prompt-execution, and repair or
+  bridge sessions
+- the endcap routine: Execute -> Audit -> Preflight -> Bridge -> Reset
+- validation expectations before claiming completion
+- guidance to create `tmp/HANDOFF.md` only when it materially helps the next
+  session
+- commit hygiene guidance using prompt id prefixes, while not committing unless
+  the operator asks
+- guidance to treat shared hot-spot files such as `README.md`, `AGENT.md`,
+  `docs/README.md`, and later `scripts/README.md`, `scripts/ahl.py`,
+  `tests/test_ahl.py`, and `Makefile` as integration targets that should be
+  updated surgically rather than rewritten wholesale
+- either the core repo guardrails directly or a required reference to
+  `docs/guardrails.md`
+
+Do not import all of `agent-context-base` behavior. Adapt only the relevant
+fresh-session and context-discipline ideas.
+
+## .gitignore Requirements
+
+Add practical ignore rules so future sessions do not accidentally commit local
+reference repos or transient artifacts. Include entries for:
+
+- `agent-context-base/`
+- `pi-mono/`
+- `claw-code/`
+- `.human-notes.md.swp`
+- `tmp/`
+- local runtime state that is likely session-scoped
+- common OS/editor caches
+
+Do not ignore the `.prompts/` directory.
+
+## Docs Requirements
+
+`docs/README.md` should be a navigation index that admits the repo is early and
+will gain more docs in later prompts.
+
+`docs/guardrails.md` should hold the reusable repo guardrails that future
+bootstrap files can reference. Include at least these guardrails:
+
+- keep `agent-harness-lab` distinct from `agent-context-base`, `pi-mono`, and
+  `claw-code`
+- use the cloned reference repos only as inspiration, not implementation copy
+- prefer markdown, templates, small dependency-free scripts, and explicit
+  operator routines before any heavy runtime
+- treat repo files and git history as source of truth
+- treat graph or vector systems, if discussed later, as derived helper indexes
+  only
+- treat raw agent chatter as unvalidated data, not durable shared memory
+- preserve the human-assisted, subscription-friendly workflow
+
+`docs/repo-layout.md` should describe the intended top-level areas, including
+future areas such as `docs/`, `runbooks/`, `templates/`, `scripts/`,
+`examples/`, `experiments/`, `reports/`, `findings/`, `runs/`, and `tmp/`.
+Mark what exists now versus what is planned.
+
+`docs/operator-start.md` should describe how a human operator starts from a
+fresh clone or fresh session, how to run one prompt, and how to close a session.
+
+`docs/reference-influences.md` should summarize the compatible ideas drawn from
+the local reference repos:
+
+- `agent-context-base`: deterministic startup, prompt discipline, explicit
+  validation, runtime-state hygiene
+- `pi-mono`: minimal harness surface, extensibility, skills, prompt templates,
+  session visibility, adapting the harness to the workflow
+- `claw-code`: doctor/status/state/permission posture, machine-readable
+  outputs, parity/checklist thinking, and recoverable operating loops
+
+Be explicit that these are influences, not parent projects to clone.
+
+## Constraints
+
+- Do not build helper scripts yet.
+- Do not create the full doctrine, role taxonomy, memory model, or templates
+  yet. Later prompts own those areas.
+- Do not create a heavy runtime or any provider integration.
+- Do not modify files inside the cloned reference repos.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Verify all required files exist.
+2. Check that `README.md` and `AGENT.md` do not claim unimplemented scripts or
+   runtime features as already available.
+3. Check that `.gitignore` protects local reference repos and transient
+   handoff/runtime artifacts.
+4. Run a quick link/path sanity check manually by reviewing references in the
+   new docs.
+
+## Endcap
+
+Before ending the session:
+
+1. Perform a completion audit against every required deliverable in this prompt.
+2. Inspect `.prompts/PROMPT_02.txt` and
+   state whether the repo is ready for it.
+3. If cheap bridging fixes are needed for Prompt 02 readiness, do them.
+4. Create `tmp/HANDOFF.md` only if a real blocker or non-trivial next-session
+   warning remains.
+5. Do not commit unless the operator explicitly asks.

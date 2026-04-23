@@ -1,0 +1,141 @@
+# PROMPT_11 - Experiments, Reports, And Findings
+
+You are implementing the experiment and findings capture layer for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 10 have been attempted.
+
+## Project Brief
+
+This repo is a lab. It needs a disciplined way to record experiments, reports,
+and findings without turning every session into durable doctrine. Experiments
+should help the operator learn which routines, roles, scripts, prompt shapes,
+and memory practices actually improve harness execution quality.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/memory/promotion-model.md`, `docs/memory/retention-and-pruning.md`,
+   `examples/README.md`, and `runbooks/run-closeout.md`.
+4. Inspect existing `experiments/`, `reports/`, or `findings/` directories if
+   present and integrate rather than replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create structures and templates for lab experiments, reports, findings, and
+promotion of recurring lessons.
+
+## Required Deliverables
+
+Create or update:
+
+- `experiments/README.md`
+- `experiments/catalog.md`
+- `experiments/templates/experiment-plan.md`
+- `experiments/templates/experiment-log.md`
+- `experiments/templates/experiment-closeout.md`
+- `reports/README.md`
+- `reports/templates/session-report.md`
+- `reports/templates/promptset-audit-report.md`
+- `reports/templates/routine-evaluation-report.md`
+- `findings/README.md`
+- `findings/templates/finding-record.md`
+- `findings/templates/pattern-observation.md`
+- `docs/lab-method.md`
+- `docs/README.md`
+
+## Experiment Requirements
+
+`experiments/README.md` must explain:
+
+- what counts as an experiment
+- how experiments differ from ordinary prompt execution
+- when to create an experiment
+- how to close or abandon an experiment
+- how findings may be promoted into doctrine or memory
+- what not to store
+
+`experiments/catalog.md` should provide a simple table for experiment ids,
+status, question, artifacts, and outcome. Include a few placeholder rows or
+examples only if clearly marked as examples.
+
+Templates should support:
+
+- hypothesis or question
+- operator setup
+- prompt/routine being tested
+- variables controlled
+- observations
+- validation evidence
+- result
+- follow-up decision
+- promotion recommendation
+
+## Reports Requirements
+
+`reports/README.md` must distinguish:
+
+- session reports
+- promptset audit reports
+- routine evaluation reports
+- capstone or phase reports
+
+Reports are retrospective evidence. They are not automatically doctrine.
+
+Report templates should be compact and evidence-oriented.
+
+## Findings Requirements
+
+`findings/README.md` must explain:
+
+- what a finding is
+- how a finding differs from a raw observation
+- what evidence is required
+- how findings relate to memory promotion
+- how findings can feed future prompt-authoring sessions
+
+Finding templates should support recurring pattern observations, failures,
+workflow improvements, and anti-pattern sightings.
+
+## Lab Method Requirements
+
+`docs/lab-method.md` should describe the repo's experimental method:
+
+- start from a concrete workflow problem
+- run a bounded prompt or routine
+- record only useful facts
+- validate results
+- decide whether the lesson stays local, becomes a finding, or is promoted
+- avoid overfitting to one model or one tool
+
+## Constraints
+
+- Do not create a metrics platform.
+- Do not introduce databases.
+- Do not store raw transcripts by default.
+- Do not create fake findings that look like real evidence.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm all required experiment, report, and finding files exist.
+2. Confirm `docs/README.md` links to the lab method and directories.
+3. Confirm templates are concrete but not bureaucratic.
+4. Confirm findings are not treated as automatic doctrine.
+5. Run `python3 scripts/ahl.py doctor` if available and update script checks
+   only if the docs promise those checks.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit experiment/report/finding deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_12.txt`
+   and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if quality-readiness is blocked by navigation
+   or artifact naming problems.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

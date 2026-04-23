@@ -1,0 +1,110 @@
+# PROMPT_24 - Experiment Tooling And Findings Workflow
+
+You are implementing lightweight experiment and findings workflow tooling for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 23 have been attempted.
+
+## Project Brief
+
+The repo is a lab. Experiments, routine evaluations, and findings should be
+easy to scaffold and close out, but the tooling should remain lightweight and
+operator-controlled.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `experiments/README.md`, `findings/README.md`, `reports/README.md`,
+   and `docs/lab-method.md`.
+4. Run existing script checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add helper commands and workflow docs for creating experiment plans, logging
+observations, closing experiments, and promoting findings.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/experiment-workflow.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `experiments/catalog.md`
+- `experiments/templates/experiment-plan.md`
+- `experiments/templates/experiment-log.md`
+- `experiments/templates/experiment-closeout.md`
+- `findings/templates/finding-record.md`
+- `reports/templates/routine-evaluation-report.md`
+- `scripts/README.md`
+- `docs/README.md`
+
+## Script Requirements
+
+Add commands such as:
+
+```bash
+python3 scripts/ahl.py experiment new <slug>
+python3 scripts/ahl.py experiment check
+python3 scripts/ahl.py finding new <slug>
+```
+
+The commands should:
+
+- scaffold from existing templates
+- write into `experiments/active/` or a similarly documented directory
+- refuse to overwrite existing files unless `--force` is provided
+- update no catalog automatically unless that behavior is very simple and
+  documented
+- support `--json` where useful
+
+## Workflow Requirements
+
+`docs/experiment-workflow.md` must explain:
+
+- how to start an experiment
+- how to log observations
+- how to close an experiment
+- how to decide whether an observation becomes a finding
+- how a finding can feed a future prompt-authoring session
+- how to avoid treating one-off observations as doctrine
+
+## Test Requirements
+
+Add tests for:
+
+- experiment scaffolding
+- overwrite refusal
+- finding scaffolding
+- JSON output shape
+- experiment check detects missing required fields or files
+
+## Constraints
+
+- Use only the Python standard library.
+- Do not create fake real experiments.
+- Do not mutate durable doctrine automatically.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py experiment check`.
+3. Run an experiment scaffold command in a temporary directory or safe test
+   target if the command supports it.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Confirm docs make promotion optional and reviewed.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit experiment-tooling deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_25.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if memory-tooling readiness is blocked by
+   finding/promotion workflow gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

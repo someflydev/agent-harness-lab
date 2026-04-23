@@ -1,0 +1,112 @@
+# PROMPT_26 - Operator Console Surface
+
+You are implementing the operator console surface for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompts 01 through 25 have been
+attempted.
+
+## Project Brief
+
+The human operator needs a small, discoverable command surface for common lab
+actions. This should be a thin wrapper around `scripts/ahl.py` and docs, not a
+framework and not a long-running service.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/operator-control-surfaces.md`, `docs/commands-and-routines.md`,
+   `scripts/README.md`, and `docs/traceability.md`.
+4. Run existing tests and checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a concise operator console layer that makes common commands easy to
+discover and run.
+
+## Required Deliverables
+
+Create or update:
+
+- `Makefile`
+- `docs/operator-console.md`
+- `scripts/ahl.py`
+- `scripts/README.md`
+- `README.md`
+- `AGENT.md`
+- `docs/commands-and-routines.md`
+- `docs/README.md`
+
+## Makefile Requirements
+
+Add a small `Makefile` with targets such as:
+
+- `help`
+- `doctor`
+- `promptset`
+- `lint-prompts`
+- `check-docs`
+- `test`
+- `trace`
+- `dry-run`
+- `registry`
+- `memory-check`
+- `experiment-check`
+
+Targets should call `python3 scripts/ahl.py ...` and should not hide failures.
+Keep target names stable and documented.
+
+If a command may not exist because prior prompts were not fully implemented,
+either make the target fail clearly or adjust the target list to actual
+implemented commands. Do not create misleading targets.
+
+## Docs Requirements
+
+`docs/operator-console.md` must explain:
+
+- the purpose of the console
+- when to use direct `python3 scripts/ahl.py` calls instead
+- common command recipes
+- how this differs from a runtime
+- what targets are safe and read-only
+- what targets scaffold files
+
+Update `docs/commands-and-routines.md` and `scripts/README.md` to include the
+Makefile surface. Update `README.md`, `AGENT.md`, `docs/README.md`, and
+`scripts/README.md` surgically rather than rewriting them wholesale, and
+preserve any existing `AGENT.md` hot-spot-file integration guidance.
+
+## Script Requirements
+
+If needed, add `python3 scripts/ahl.py help --json` or improve command help so
+the Makefile and docs stay discoverable.
+
+## Constraints
+
+- Do not add external dependencies.
+- Do not create a daemon, TUI, or REPL.
+- Do not add destructive targets.
+- Do not make commands perform commits or staging.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `make help`.
+2. Run `make doctor`.
+3. Run `make promptset`.
+4. Run `make test`.
+5. Run any targets that are safe and expected to pass.
+6. Confirm docs match actual targets.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit operator-console deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_27.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if lane-simulation readiness is blocked by
+   missing command surface docs.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

@@ -1,0 +1,104 @@
+# PROMPT_28 - Domain Pack Starter Kit
+
+You are implementing the domain pack starter kit for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompts 01 through 27 have been
+attempted.
+
+## Project Brief
+
+The repo should start domain-agnostic, but it should have a clean path for
+later specialized org packs or domain packs. Domain packs should extend the
+harness model without contaminating core doctrine or forcing all users into one
+workflow.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/doctrine/design-filters.md`, `docs/architecture/future-runtime-path.md`,
+   `role-packs/README.md`, and `templates/contracts/task-contract.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a starter kit for optional domain packs while keeping the core lab
+domain-agnostic.
+
+## Required Deliverables
+
+Create or update:
+
+- `domain-packs/README.md`
+- `domain-packs/_template/README.md`
+- `domain-packs/_template/pack.json`
+- `domain-packs/_template/roles.md`
+- `domain-packs/_template/routines.md`
+- `domain-packs/_template/templates.md`
+- `domain-packs/_template/validation.md`
+- `domain-packs/_template/examples/README.md`
+- `domain-packs/software-docs/README.md`
+- `domain-packs/software-docs/pack.json`
+- `domain-packs/software-docs/routines.md`
+- `domain-packs/software-docs/validation.md`
+- `schemas/domain-pack.schema.json`
+- `docs/domain-packs.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `docs/README.md`
+
+## Domain Pack Requirements
+
+`domain-packs/README.md` must explain:
+
+- what a domain pack is
+- what belongs in a pack
+- what must remain in core doctrine
+- how packs are optional
+- how packs should be validated
+- when not to create a pack
+
+The `_template` pack should be reusable and compact.
+
+The `software-docs` pack should be a small example pack for documentation-heavy
+software-building work. Keep it intentionally modest.
+
+## Schema And Script Requirements
+
+Add `schemas/domain-pack.schema.json` and a lightweight check command such as:
+
+```bash
+python3 scripts/ahl.py domain-pack check
+```
+
+The command should parse `pack.json`, check required fields, verify referenced
+files exist, and report structured results. Do not implement package
+installation.
+
+## Constraints
+
+- Do not make domain packs required for core usage.
+- Do not build a plugin marketplace.
+- Do not add dependency management.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py domain-pack check`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Confirm core docs remain domain-agnostic.
+5. Confirm the example pack is clearly optional.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit domain-pack deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_29.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if assistant-guide readiness is blocked by
+   domain-pack navigation or command inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

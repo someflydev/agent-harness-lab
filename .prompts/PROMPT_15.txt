@@ -1,0 +1,150 @@
+# PROMPT_15 - Registries And Navigation Data
+
+You are implementing the registry and navigation-data layer for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 14 have been attempted.
+
+## Project Brief
+
+The repo should be easy for a human operator and a fresh assistant session to
+navigate without relying on hidden memory. The first phase created docs,
+templates, runbooks, examples, scripts, and metadata concepts. This prompt
+turns those artifacts into explicit registries and navigation maps that can be
+validated by lightweight tooling.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/README.md`, `docs/commands-and-routines.md`,
+   `docs/operator-control-surfaces.md`, and `scripts/README.md` if present.
+4. Run existing checks if available:
+   - `python3 scripts/ahl.py doctor`
+   - `python3 scripts/ahl.py promptset`
+   - `python3 -m unittest tests/test_ahl.py`
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create machine-readable but human-inspectable registries for the repo's roles,
+routines, templates, prompts, examples, and scripts. Extend helper tooling to
+validate the registries without introducing dependencies.
+
+## Required Deliverables
+
+Create or update:
+
+- `registry/README.md`
+- `registry/artifacts.json`
+- `registry/prompts.json`
+- `registry/roles.json`
+- `registry/routines.json`
+- `registry/templates.json`
+- `registry/examples.json`
+- `registry/scripts.json`
+- `docs/navigation-map.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `docs/README.md`
+- `scripts/README.md`
+
+## Registry Requirements
+
+Each registry JSON file should be small, stable, and easy to inspect. Use plain
+JSON, not a database or generated binary format.
+
+Include stable fields where appropriate:
+
+- `id`
+- `name`
+- `type`
+- `path`
+- `purpose`
+- `owner_role`
+- `status`
+- `inputs`
+- `outputs`
+- `related_docs`
+- `safe_use_notes`
+
+Do not try to catalog every sentence in the repo. Catalog durable artifacts
+that help fresh sessions orient quickly.
+
+Treat `registry/` as a curated navigation index, not an exhaustive mirror of
+the whole repo. Later prompts should update registry files only when a
+registry file is explicitly named in Required Deliverables or when the prompt
+introduces a durable artifact that clearly belongs in one of the curated
+registry indexes. Do not require every new file in the repo to appear in
+`registry/`.
+
+`registry/prompts.json` must list every `PROMPT_XX.txt` file in order and
+include a concise purpose for each.
+
+## Navigation Map Requirements
+
+`docs/navigation-map.md` must explain:
+
+- where an operator starts
+- where a fresh assistant starts
+- where routines live
+- where templates live
+- where examples live
+- where reports/findings live
+- where metadata and schemas live
+- how the registries relate to docs
+- what is source of truth versus derived navigation aid
+
+## Script Requirements
+
+Enhance `scripts/ahl.py` with a lightweight registry check. Use one of these
+approaches:
+
+- add `registry` subcommand with `list`, `check`, and `--json`
+- or add registry checks to an existing `validate` subcommand if Prompt 12
+  already created one
+
+The script should validate:
+
+- registry JSON parses
+- required fields are present
+- referenced local paths exist when they are expected to exist
+- prompt registry ordering matches actual `.prompts/PROMPT_XX.txt` files
+
+Keep implementation standard-library only.
+
+## Test Requirements
+
+Update `tests/test_ahl.py` for registry checks. Tests should use temporary
+fixtures and should not depend on the full repo layout unless that is already
+how prior tests work.
+
+## Constraints
+
+- Do not introduce YAML libraries, package managers, or external dependencies.
+- Do not generate registries from raw transcripts.
+- Do not make registries a second source of truth. They are indexes.
+- Do not treat registries as exhaustive repo mirrors.
+- Do not build a TUI or daemon.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py doctor`.
+3. Run `python3 scripts/ahl.py promptset`.
+4. Run the new registry check command.
+5. Confirm registry docs clearly state that checked-in files remain source of
+   truth.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit registry deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_16.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if prompt-template readiness is blocked by
+   registry or navigation gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

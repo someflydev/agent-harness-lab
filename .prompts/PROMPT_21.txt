@@ -1,0 +1,116 @@
+# PROMPT_21 - Promptset Linter And Readiness Scoring
+
+You are implementing promptset linting and readiness scoring for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 20 have been attempted.
+
+## Project Brief
+
+The `.prompts/` directory is an execution instrument. Prompt files should be
+strictly numbered, self-contained, bounded, validated, and ready for fresh
+sessions. The repo needs a lightweight linter that checks prompt structure
+without pretending to understand every semantic detail.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/quality/promptset-quality.md`, `docs/quality/audit-protocol.md`,
+   and `scripts/README.md`.
+4. Run existing tests and checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Enhance helper tooling with promptset linting and readiness scoring, backed by
+tests and documented limits.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/promptset-linting.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `fixtures/promptsets/valid/PROMPT_01.txt`
+- `fixtures/promptsets/valid/PROMPT_02.txt`
+- `fixtures/promptsets/missing-endcap/PROMPT_01.txt`
+- `fixtures/promptsets/bad-numbering/PROMPT_1.txt`
+- `scripts/README.md`
+- `docs/quality/promptset-quality.md`
+- `docs/README.md`
+
+## Linter Requirements
+
+Add or improve a command such as:
+
+```bash
+python3 scripts/ahl.py promptset lint
+python3 scripts/ahl.py promptset lint --json
+```
+
+It should check:
+
+- strict filename pattern `PROMPT_XX.txt`
+- contiguous numbering
+- no duplicate prompt numbers
+- each prompt has a heading
+- each prompt includes startup instructions
+- each prompt includes required deliverables
+- each prompt includes constraints
+- each prompt includes validation
+- each prompt includes endcap
+- each prompt before the final prompt references the immediate next prompt
+- `registry/prompts.json` matches all prompt files when that registry exists
+
+Readiness scoring can be simple and transparent. For example, count required
+sections present and report missing pieces. Do not invent opaque AI scoring.
+
+## Docs Requirements
+
+`docs/promptset-linting.md` must explain:
+
+- what the linter checks
+- what it cannot check
+- how readiness scoring works
+- how to interpret failures
+- how the linter supports prompt-authoring sessions
+
+## Test Requirements
+
+Add tests for:
+
+- valid promptset passes
+- missing endcap fails
+- bad filename fails
+- JSON output has stable fields
+- missing next-prompt reference is detected
+
+## Constraints
+
+- Use only the Python standard library.
+- Do not make linting depend on model calls.
+- Do not rewrite prompts automatically.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py promptset lint`.
+3. Run `python3 scripts/ahl.py promptset lint --json`.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Confirm the linter does not reject valid strictly numbered
+   `PROMPT_XX.txt` filenames.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit promptset-linter deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_22.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if documentation-link readiness is blocked by
+   linter command behavior or docs mismatch.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

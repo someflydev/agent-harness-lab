@@ -1,0 +1,115 @@
+# PROMPT_31 - Release Readiness And Documentation Polish
+
+You are implementing release-readiness and documentation polish for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 30 have been attempted.
+
+## Project Brief
+
+Before the final capstone, the repo should feel coherent as a standalone lab:
+clear README, stable navigation, working helper commands, tested fixtures,
+bounded docs, and honest limitations. This is a polish and readiness prompt,
+not a new feature expansion prompt.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/README.md`, `docs/navigation-map.md`,
+   `docs/operator-console.md`, and `docs/safety/README.md`.
+4. Run the full local check set available through `make` or `scripts/ahl.py`.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Polish the repo for first public/useful state and remove obvious navigation,
+terminology, validation, or script inconsistencies.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/release-readiness.md`
+- `docs/known-limitations.md`
+- `docs/maintenance.md`
+- `docs/contributing.md`
+- `CHANGELOG.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+- `scripts/README.md`
+- `Makefile`
+- `registry/README.md`
+
+## Release Readiness Requirements
+
+`docs/release-readiness.md` must define the checks required before calling the
+repo usable:
+
+- promptset lint passes
+- docs link check passes
+- registry check passes
+- helper script tests pass
+- dry-run checks pass
+- safety checks pass
+- README and AGENT boot paths are current
+- known limitations are documented
+
+## Known Limitations Requirements
+
+`docs/known-limitations.md` must honestly state:
+
+- the repo is human-assisted first
+- no provider orchestration runtime exists
+- no live multi-agent daemon exists
+- helper scripts are structural checks, not semantic proof
+- dry-runs do not replace real prompt execution
+- graph/vector retrieval is future architecture only
+
+## Maintenance Requirements
+
+`docs/maintenance.md` must explain:
+
+- how to update prompt files
+- how to update registries
+- how to add templates and skills
+- how to add a script command and test
+- how to add a domain pack
+- how to run release-readiness checks
+
+## Changelog Requirements
+
+Create `CHANGELOG.md` with an `Unreleased` section summarizing the initial lab
+buildout. Do not invent version numbers unless the repo already has them.
+
+## Constraints
+
+- Do not add new major feature areas.
+- Do not rewrite shared hot-spot files such as `README.md`, `AGENT.md`,
+  `docs/README.md`, `scripts/README.md`, and `Makefile` wholesale during
+  polish. Integrate with accurate existing content and make the smallest
+  coherent change needed.
+- Do not generate additional prompt files.
+- Do not add CI workflows unless explicitly requested.
+- Do not claim production readiness.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run all safe `make` targets if Makefile exists.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run promptset/docs/registry/dry-run/safety checks if available.
+5. Confirm README and AGENT are current and concise.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit release-readiness deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_32.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if final-capstone readiness is blocked by
+   stale docs, failed checks, or known-limitations gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

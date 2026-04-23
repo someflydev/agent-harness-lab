@@ -1,0 +1,122 @@
+# PROMPT_23 - Dry-Run Harness Simulations
+
+You are implementing deterministic dry-run harness simulations for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 22 have been attempted.
+
+## Project Brief
+
+The repo should validate workflows without paid model calls. Dry-run
+simulations should exercise runbooks, templates, registries, fixtures, and
+script checks using deterministic local artifacts. This borrows the useful
+parity-harness idea from `claw-code` without building a provider runtime.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `examples/README.md`, `fixtures/README.md`,
+   `docs/runtime/execute-audit-preflight-bridge-reset.md`, and
+   `scripts/README.md`.
+4. Run existing script checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create local deterministic dry-run scenarios and script support that prove the
+operating model can be exercised without live agents.
+
+## Required Deliverables
+
+Create or update:
+
+- `dry-runs/README.md`
+- `dry-runs/scenarios/sequential-prompt-run.json`
+- `dry-runs/scenarios/blocked-readiness.json`
+- `dry-runs/scenarios/repair-session.json`
+- `dry-runs/scenarios/lane-delegation.json`
+- `dry-runs/expected/sequential-prompt-run.md`
+- `dry-runs/expected/blocked-readiness.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `docs/dry-run-harness.md`
+- `scripts/README.md`
+- `docs/README.md`
+
+## Scenario Requirements
+
+Each scenario JSON should include:
+
+- scenario id
+- purpose
+- input artifacts
+- routine sequence
+- expected checks
+- expected outputs
+- failure modes covered
+
+Keep scenarios deterministic and small.
+
+## Script Requirements
+
+Add a command such as:
+
+```bash
+python3 scripts/ahl.py dry-run list
+python3 scripts/ahl.py dry-run check sequential-prompt-run
+python3 scripts/ahl.py dry-run check --all --json
+```
+
+The command should:
+
+- parse scenario JSON
+- validate referenced files exist
+- check expected output files exist
+- report pass/fail for structural expectations
+- avoid invoking model providers
+
+It does not need to replay an actual assistant session.
+
+## Docs Requirements
+
+`docs/dry-run-harness.md` must explain:
+
+- what dry-runs prove
+- what they do not prove
+- how they support future prompt/routine changes
+- how they differ from real execution
+- how new dry-run scenarios should be added
+
+## Test Requirements
+
+Add tests for scenario listing, scenario check success, missing artifact
+failure, and JSON output stability.
+
+## Constraints
+
+- Use only standard-library Python.
+- Do not call model APIs.
+- Do not store transcript fixtures.
+- Do not build a workflow engine.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py dry-run list`.
+3. Run `python3 scripts/ahl.py dry-run check --all`.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Confirm docs do not overclaim dry-run coverage.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit dry-run deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_24.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if experiment-tooling readiness is blocked by
+   dry-run docs or scenario format issues.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

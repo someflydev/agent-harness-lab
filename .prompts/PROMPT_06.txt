@@ -1,0 +1,162 @@
+# PROMPT_06 - Memory Planes And Promotion Model
+
+You are implementing the memory model for `agent-harness-lab`. Run this in a
+fresh coding assistant session after Prompts 01 through 05 have been attempted.
+
+## Project Brief
+
+This repo should treat memory as governed shared state, not as a transcript
+dump. Raw agent chatter should not automatically become durable truth.
+Information should move into durable memory only through explicit review,
+validation, or acceptance.
+
+The repo should support human-assisted runs now and future automation later by
+distinguishing memory planes, promotion rules, handoff lifecycles, and local
+runtime artifacts.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/doctrine/artifact-boundaries.md`,
+   `docs/runtime/session-lifecycle.md`, `docs/runtime/bridge-and-reset.md`, and
+   `docs/roles/boundary-matrix.md`.
+4. Check whether memory docs or templates already exist and integrate rather
+   than replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Define memory planes, promotion discipline, retention rules, and practical
+artifact lifecycles for prompt-bounded orchestration.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/memory/README.md`
+- `docs/memory/planes.md`
+- `docs/memory/promotion-model.md`
+- `docs/memory/handoff-lifecycle.md`
+- `docs/memory/run-memory.md`
+- `docs/memory/retention-and-pruning.md`
+- `templates/memory/promotion-record.md`
+- `templates/memory/memory-update-record.md`
+- `templates/memory/handoff-summary.md`
+- `docs/README.md`
+
+## Memory Plane Requirements
+
+`docs/memory/planes.md` must define at least these memory planes:
+
+- ephemeral run memory
+- transient bridge or handoff memory
+- accepted work memory
+- project memory
+- doctrine memory
+- decision memory
+- role-specific local memory
+- promoted validated knowledge
+- archival findings and experiment memory
+
+For each plane, document:
+
+- purpose
+- expected lifespan
+- owner or reviewer
+- examples
+- where it should live in the repo
+- what must not be stored there
+- promotion path, if any
+
+## Promotion Model Requirements
+
+`docs/memory/promotion-model.md` must define how information moves from
+temporary to durable layers. It should answer:
+
+- who can propose promotion
+- who can accept promotion
+- what evidence is needed
+- when promotion should be rejected
+- how to record a promotion decision
+- how to keep durable memory clean
+
+Include explicit warnings against:
+
+- dumping raw transcripts
+- copying temporary task notes into durable memory
+- promoting unverified implementation claims
+- storing metadata just because it exists
+
+## Handoff Lifecycle Requirements
+
+`docs/memory/handoff-lifecycle.md` must explain:
+
+- when `tmp/HANDOFF.md` is appropriate
+- when no handoff should be created
+- what a handoff should include
+- how a repair session should consume it
+- when it should be deleted or superseded
+- why handoffs are not doctrine
+
+This should align with the Bridge and Reset docs from Prompt 05.
+
+## Run Memory Requirements
+
+`docs/memory/run-memory.md` must define how a run should record useful facts
+without preserving a giant transcript. Include examples of useful facts:
+
+- prompt id
+- run id
+- assistant/tool used
+- permission posture
+- changed paths
+- validation performed
+- blockers
+- next-prompt readiness
+- handoff created yes/no
+
+Do not require scripts yet. This is the conceptual model.
+
+## Templates
+
+Create simple markdown templates:
+
+- `templates/memory/promotion-record.md`
+- `templates/memory/memory-update-record.md`
+- `templates/memory/handoff-summary.md`
+
+Templates should use clear headings and compact fields. They should not be
+overly bureaucratic.
+
+## Constraints
+
+- Do not create a database, vector index, or graph model.
+- Do not build helper scripts yet.
+- Do not create full run contract templates beyond memory-specific templates.
+- Do not create persistent runtime files such as `context/MEMORY.md` unless an
+  existing repo convention already requires it. This prompt is about committed
+  docs and templates.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required memory doc and template exists.
+2. Confirm memory planes are distinct and not overlapping buckets.
+3. Confirm promotion requires review or evidence.
+4. Confirm `tmp/HANDOFF.md` is treated as temporary.
+5. Confirm docs link from `docs/README.md`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit memory deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_07.txt` and state whether
+   the repo is ready for it.
+3. Perform cheap bridging fixes if contract/template readiness is blocked by
+   missing memory terminology or doc navigation.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

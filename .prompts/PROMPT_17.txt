@@ -1,0 +1,120 @@
+# PROMPT_17 - Project Skills
+
+You are implementing the project-level skill package layer for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 16 have been attempted.
+
+## Project Brief
+
+The repo should expose reusable harness capabilities as project-level skills
+where that format is useful. Skills should be lightweight instruction packages
+for assistants, not hidden automation and not a vendor-specific dependency.
+
+Use the Agent Skills style where practical: each skill is a directory with a
+`SKILL.md` file and optional references. Keep these skills focused on operating
+`agent-harness-lab` routines.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/skills/taxonomy.md`, `docs/skills/maturity-model.md`,
+   `prompt-templates/README.md`, and `docs/prompt-templates.md`.
+4. Inspect existing `.agents/skills/` or similar directories if present.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a small, high-value set of project skills that future assistants can
+load on demand for common harness tasks.
+
+## Required Deliverables
+
+Create or update:
+
+- `.agents/skills/README.md`
+- `.agents/skills/prompt-runner/SKILL.md`
+- `.agents/skills/completion-auditor/SKILL.md`
+- `.agents/skills/readiness-checker/SKILL.md`
+- `.agents/skills/handoff-composer/SKILL.md`
+- `.agents/skills/memory-promoter/SKILL.md`
+- `.agents/skills/promptset-inspector/SKILL.md`
+- `.agents/skills/role-lane-planner/SKILL.md`
+- `docs/project-skills.md`
+- `registry/artifacts.json`
+- `registry/routines.json`
+- `docs/README.md`
+- `AGENT.md`
+
+## Skill Requirements
+
+Each `SKILL.md` must include:
+
+- valid frontmatter with `name` and `description`
+- when to use the skill
+- required context to read
+- step-by-step behavior
+- expected output
+- stop conditions
+- safety notes
+- references to relevant runbooks/templates
+
+Keep descriptions specific enough that an assistant can choose the right skill.
+
+## Skill Set Requirements
+
+Create these skills:
+
+- `prompt-runner`: run one `PROMPT_XX.txt` in a fresh-session style.
+- `completion-auditor`: compare prompt requirements to implementation.
+- `readiness-checker`: inspect immediate next prompt readiness.
+- `handoff-composer`: write `tmp/HANDOFF.md` only when justified.
+- `memory-promoter`: review whether a fact should move into durable memory.
+- `promptset-inspector`: inspect prompt numbering, scope, and execution order.
+- `role-lane-planner`: decompose Orchestrator/Lead/Worker lanes.
+
+Do not create broad "do everything" skills.
+
+## Docs Requirements
+
+`docs/project-skills.md` must explain:
+
+- why these skills exist
+- how skills differ from roles, routines, templates, and scripts
+- how Codex/Pi/Claude/Gemini-style tools might use them differently
+- why skills remain optional helper context
+- how to add a new skill safely
+
+Update `AGENT.md` to mention `.agents/skills/` as optional on-demand context,
+not mandatory startup context. Preserve any existing `AGENT.md` guidance about
+updating shared hot-spot files surgically rather than rewriting them
+wholesale.
+
+## Constraints
+
+- Do not add executable code inside skills unless a later prompt explicitly
+  does so.
+- Do not make skills load large context by default.
+- Do not claim every assistant will automatically discover them.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required `SKILL.md` exists.
+2. Check skill names match their parent directories.
+3. Confirm each skill has `name` and `description` frontmatter.
+4. Run `python3 scripts/ahl.py registry check` if available.
+5. Confirm `AGENT.md` keeps skill loading optional and bounded.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit project-skill deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_18.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if role-pack readiness is blocked by skill
+   docs or registry gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

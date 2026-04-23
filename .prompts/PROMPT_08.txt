@@ -1,0 +1,159 @@
+# PROMPT_08 - Runbooks And Micro-Routines
+
+You are implementing the practical runbook layer for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompts 01 through 07 have been
+attempted.
+
+## Project Brief
+
+The repo exists to turn recurring prompting habits into named reusable harness
+routines. These routines should be usable now by a human operator running fresh
+assistant sessions and should also prepare the repo for lightweight helper
+scripts and future automation.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/routines/catalog.md`, `docs/runtime/execute-audit-preflight-bridge-reset.md`,
+   `docs/runtime/prompt-authoring-vs-execution.md`, and `docs/contracts/README.md`.
+4. Inspect existing `runbooks/` or routine docs if present and integrate rather
+   than replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create operator-facing runbooks and detailed micro-routine instructions for the
+core human-assisted harness workflow.
+
+## Required Deliverables
+
+Create or update:
+
+- `runbooks/README.md`
+- `runbooks/fresh-session-prompt-run.md`
+- `runbooks/completion-audit.md`
+- `runbooks/next-prompt-preflight.md`
+- `runbooks/bridge-fix-session.md`
+- `runbooks/repair-session.md`
+- `runbooks/promotion-review.md`
+- `runbooks/run-closeout.md`
+- `runbooks/prompt-authoring.md`
+- `runbooks/commit-packaging.md`
+- `docs/routines/micro-routine-library.md`
+- `docs/README.md`
+
+## Runbook Requirements
+
+Each runbook must include:
+
+- purpose
+- when to use it
+- required context to load
+- roles involved
+- step-by-step procedure
+- expected artifacts
+- validation or evidence
+- stop conditions
+- common failure modes
+
+Keep the procedures concrete. Avoid vague advice like "be careful" unless it is
+paired with an observable check.
+
+## Fresh-Session Prompt Run
+
+`runbooks/fresh-session-prompt-run.md` must describe the normal operator flow:
+
+1. Start a fresh assistant session.
+2. Load `AGENT.md`, the current prompt file, and narrow required docs.
+3. Confirm current prompt scope.
+4. Implement only that prompt.
+5. Validate.
+6. Perform completion audit.
+7. Inspect immediate next prompt for readiness.
+8. Bridge only when justified.
+9. Reset cleanly.
+
+Include examples of what not to load.
+
+## Completion Audit
+
+`runbooks/completion-audit.md` must describe how to compare prompt
+requirements against actual files, docs, scripts, and validation evidence. It
+should define "done", "incomplete", and "blocked" precisely.
+
+## Next-Prompt Preflight
+
+`runbooks/next-prompt-preflight.md` must describe how to inspect the immediate
+next prompt without overloading the current session with future work. It should
+produce a readiness judgment and list blockers if any.
+
+## Bridge And Repair
+
+`runbooks/bridge-fix-session.md` and `runbooks/repair-session.md` must explain:
+
+- when a cheap bridge fix is appropriate
+- when to stop and write `tmp/HANDOFF.md`
+- how a repair session should start
+- how to prevent repair work from becoming an unbounded refactor
+
+## Prompt Authoring
+
+`runbooks/prompt-authoring.md` must distinguish prompt-authoring sessions from
+prompt-execution sessions. It should state that prompt files are generated or
+revised in dedicated prompt-authoring sessions, not by ordinary prompt
+execution.
+
+## Commit Packaging
+
+`runbooks/commit-packaging.md` must document commit hygiene:
+
+- commit only when the operator asks
+- group bounded work coherently
+- use prompt id prefixes such as `[PROMPT_08]`
+- do not sweep unrelated changes
+- include validation evidence in the commit body when appropriate
+
+## Micro-Routine Library
+
+`docs/routines/micro-routine-library.md` should turn the catalog from Prompt 04
+into detailed, reusable micro-routines. Include compact sections for:
+
+- scope boundary check
+- assumption diff
+- validation path discovery
+- prompt-vs-implementation check
+- next-prompt readiness check
+- handoff decision
+- memory promotion review
+- run closeout
+- repair triage
+
+## Constraints
+
+- Do not build helper scripts yet. Prompt 09 owns scripts.
+- Do not create example scenarios yet. Prompt 10 owns examples.
+- Do not create heavy runtime concepts or provider integrations.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required runbook exists.
+2. Confirm `runbooks/README.md` links to all runbooks.
+3. Confirm `docs/README.md` links to runbooks and the micro-routine library.
+4. Confirm the runbooks use templates and contracts by reference where useful.
+5. Confirm the workflow remains human-assisted and fresh-session oriented.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit runbook deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_09.txt` and state
+   whether the repo is ready for it.
+3. Perform cheap bridging fixes if script readiness is blocked by missing
+   runbook or template references.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

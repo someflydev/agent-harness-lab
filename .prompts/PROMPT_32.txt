@@ -1,0 +1,146 @@
+# PROMPT_32 - Final Capstone And Operating Baseline
+
+You are implementing the final capstone and operating baseline for the complete
+initial `agent-harness-lab` promptset. Run this in a fresh coding assistant
+session after Prompts 01 through 31 have been attempted.
+
+## Project Brief
+
+This final prompt should leave `agent-harness-lab` as a coherent, usable,
+human-assisted harness lab. It should audit the full implementation sequence,
+repair small inconsistencies, run all available local checks, and record the
+baseline state honestly.
+
+Do not create more prompt files. Future prompt generation should happen only
+after this baseline is used and real findings justify a new dedicated
+prompt-authoring session.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/release-readiness.md`, `docs/known-limitations.md`,
+   `docs/navigation-map.md`, `docs/operator-console.md`, and
+   `docs/capstone/phase-one-audit.md` if present.
+4. Run the available local check suite before editing when feasible.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Perform the final audit, close small gaps, and record the operating baseline
+for the completed initial promptset.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/capstone/final-audit.md`
+- `docs/capstone/operating-baseline.md`
+- `docs/capstone/future-backlog.md`
+- `docs/capstone/promptset-completion-report.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+- `docs/release-readiness.md`
+- `CHANGELOG.md`
+
+## Final Audit Requirements
+
+`docs/capstone/final-audit.md` must audit the full repo across:
+
+- identity and bootstrap
+- doctrine and glossary
+- roles, skills, and role packs
+- routines, runbooks, and prompt templates
+- runtime lifecycle and endcaps
+- memory model and promotion tooling
+- contracts, templates, and schemas
+- helper scripts and tests
+- registries and navigation
+- examples, simulations, and dry-runs
+- experiments, reports, and findings
+- metadata and traceability
+- domain packs
+- assistant usage guides
+- safety and data hygiene
+- release readiness
+
+For each area, record:
+
+- status
+- evidence files
+- checks performed
+- remaining gaps
+- whether the gap blocks baseline usability
+
+## Operating Baseline Requirements
+
+`docs/capstone/operating-baseline.md` must define:
+
+- how an operator starts using the repo
+- what commands are expected to pass
+- what workflows are considered baseline-supported
+- what remains manual
+- what future automation is explicitly not yet implemented
+- how to report or record findings from real usage
+
+## Future Backlog Requirements
+
+`docs/capstone/future-backlog.md` must list future work as backlog items, not
+new prompts. Include categories such as:
+
+- real-world usage findings
+- stronger semantic validation
+- optional local search/indexing
+- richer lane orchestration
+- assistant-specific package adapters
+- additional domain packs
+- eventual graph/vector derived indexes if justified
+
+## Promptset Completion Report Requirements
+
+`docs/capstone/promptset-completion-report.md` must record:
+
+- prompt range completed
+- major artifacts created
+- checks run
+- checks not run and why
+- handoff status
+- recommended next human action
+
+## Constraints
+
+- Do not create new prompt files.
+- Do not add new major feature areas.
+- Do not introduce dependencies.
+- Do not rewrite shared hot-spot files such as `README.md`, `AGENT.md`,
+  `docs/README.md`, and `CHANGELOG.md` wholesale during the final capstone.
+  Integrate with accurate existing content and make the smallest coherent
+  change needed.
+- Do not hide failed checks.
+- Do not claim production runtime capabilities.
+- Do not modify reference repos.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `make test` if available.
+3. Run `make doctor` if available.
+4. Run promptset lint, docs check, registry check, dry-run check, memory check,
+   experiment check, domain-pack check, lane check, and safety check if those
+   commands exist.
+5. Manually verify `README.md`, `AGENT.md`, and `docs/README.md` agree.
+6. Record any failed or unavailable checks honestly in the capstone docs.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit final-capstone deliverables against this prompt.
+2. Confirm no prompt after Prompt 32 is required for the initial promptset.
+3. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains for the
+   operator.
+4. State whether the repo is baseline-usable, incomplete, or blocked.
+5. Do not commit unless the operator explicitly asks.

@@ -1,0 +1,168 @@
+# PROMPT_13 - Operator Control Surfaces And Metadata
+
+You are implementing the operator control surface and metadata design layer for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 12 have been attempted.
+
+## Project Brief
+
+The repo should help a human operator behave like a harness. That means named
+commands or routines should be discoverable, run artifacts should carry useful
+metadata, and traceability should connect prompt-bounded work to commits,
+changed files, audits, readiness checks, and follow-up findings. Metadata must
+pay rent. It should not become a dumping ground.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `scripts/README.md`, `docs/runtime/permission-posture.md`,
+   `docs/contracts/contract-types.md`, `docs/quality/promptset-quality.md`,
+   and `runbooks/commit-packaging.md`.
+4. Run `python3 scripts/ahl.py doctor` and `python3 scripts/ahl.py promptset`
+   if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Define operator-facing control surfaces, command/routine discoverability, and
+metadata structures that support traceability without premature heavy
+automation.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/operator-control-surfaces.md`
+- `docs/commands-and-routines.md`
+- `docs/metadata/README.md`
+- `docs/metadata/run-record.md`
+- `docs/metadata/prompt-to-commit-traceability.md`
+- `docs/metadata/derived-metadata-rules.md`
+- `schemas/run-record.schema.json`
+- `schemas/readiness-report.schema.json`
+- `schemas/promptset-index.schema.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/README.md`
+
+## Control Surface Requirements
+
+`docs/operator-control-surfaces.md` must describe operator-visible modes or
+commands, even if some are currently docs-only routines:
+
+- run current prompt only
+- run current prompt then audit
+- run current prompt plus audit plus preflight next
+- run current prompt plus full endcap workflow
+- generate handoff only
+- inspect promptset health
+- explain why next prompt is not ready
+- collect prompt-to-commit traceability
+- summarize current prompt scope and changed areas
+- retrieve similar prior prompts, handoffs, or doctrine chunks in the future
+
+For each, state whether it is currently a runbook, template, helper-script
+command, or future automation candidate.
+
+## Commands And Routines Requirements
+
+`docs/commands-and-routines.md` should act as a command/routine registry. It
+must include existing helper script commands from `scripts/ahl.py` and
+docs-only routines from `docs/routines/` and `runbooks/`.
+
+Use a table with:
+
+- name
+- type
+- purpose
+- inputs
+- outputs
+- current implementation status
+- safety notes
+
+## Metadata Requirements
+
+`docs/metadata/run-record.md` must define fields that actually pay rent:
+
+- prompt id
+- prompt batch id
+- run id
+- assistant/tool
+- permission posture
+- start/end timestamps
+- changed files and directories
+- docs changed yes/no
+- tests changed yes/no
+- validation commands
+- completion audit status
+- next-prompt ready yes/no
+- readiness blockers
+- handoff created yes/no
+- follow-up fix required yes/no
+- reusable pattern observations
+- associated commit hashes when available
+
+`docs/metadata/prompt-to-commit-traceability.md` must explain how prompt id
+commit prefixes support later analysis.
+
+`docs/metadata/derived-metadata-rules.md` must state:
+
+- repo files and git history remain source of truth
+- generated metadata is derived helper data
+- raw transcripts are not stored by default
+- metadata must serve bounded execution, fresh-session bootstrap, prompt
+  authoring quality, or cross-repo pattern reuse
+
+## Schema Requirements
+
+Create small JSON Schema files under `schemas/` for:
+
+- run record
+- readiness report
+- promptset index
+
+Use Draft 2020-12 or a clearly declared schema version. Keep schemas simple.
+They should support future automation but not require current scripts to become
+heavy.
+
+## Script Enhancement Requirements
+
+If appropriate and still lightweight, enhance `scripts/ahl.py` with a
+`promptset --json` output shape that can be described by
+`schemas/promptset-index.schema.json`, or add a small `metadata-example`
+command that prints a skeleton run record. Do not overbuild.
+
+Update tests for any script changes.
+
+## Constraints
+
+- Do not introduce graph databases, vector databases, or long-running services.
+- Do not create telemetry.
+- Do not index raw transcripts.
+- Do not overfit schemas to speculative future tools.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py promptset --json` if available and inspect the
+   JSON shape.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Confirm docs and schemas agree on field names.
+5. Confirm metadata rules keep repo files and git history as source of truth.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit control-surface and metadata deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_14.txt` and
+   state whether the repo is ready for it.
+3. Perform cheap bridging fixes if capstone readiness is blocked by metadata,
+   schema, or script inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

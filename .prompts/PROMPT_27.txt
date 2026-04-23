@@ -1,0 +1,117 @@
+# PROMPT_27 - Lane Simulation Harness
+
+You are implementing lane simulation artifacts for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompts 01 through 26 have been
+attempted.
+
+## Project Brief
+
+The repo should demonstrate hierarchical agent work without needing expensive
+multi-agent API orchestration. A lane simulation harness should let a human
+operator manually run Orchestrator, Lead, Worker, Reviewer, and Auditor roles
+using files, templates, and dry-run checks.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `role-packs/README.md`, `lane-playbooks/README.md`,
+   `dry-runs/README.md`, and `docs/operator-console.md`.
+4. Run existing tests and checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a deterministic lane simulation workspace and docs that show how
+hierarchical work can be coordinated manually and validated locally.
+
+## Required Deliverables
+
+Create or update:
+
+- `simulations/README.md`
+- `simulations/lane-demo/README.md`
+- `simulations/lane-demo/orchestrator-brief.md`
+- `simulations/lane-demo/lead-plan.md`
+- `simulations/lane-demo/worker-01-task.md`
+- `simulations/lane-demo/worker-01-result.md`
+- `simulations/lane-demo/reviewer-report.md`
+- `simulations/lane-demo/auditor-closeout.md`
+- `simulations/lane-demo/lane-status.json`
+- `schemas/lane-status.schema.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `docs/lane-simulation.md`
+- `docs/README.md`
+
+## Simulation Requirements
+
+The lane demo should be concrete and small. Use a fictional bounded task such
+as improving a documentation area or validating a template library. Do not
+create a real application implementation.
+
+The simulation must show:
+
+- Orchestrator intent
+- Lead decomposition
+- Worker bounded task
+- Worker structured result
+- Reviewer findings
+- Auditor closeout
+- lane status JSON
+- stop/escalation behavior
+
+## Script Requirements
+
+Add or improve a command such as:
+
+```bash
+python3 scripts/ahl.py lane check simulations/lane-demo
+python3 scripts/ahl.py lane status simulations/lane-demo --json
+```
+
+The command should:
+
+- validate required lane files exist
+- parse lane status JSON
+- report missing artifacts
+- report current lane state
+- avoid invoking model providers
+
+## Docs Requirements
+
+`docs/lane-simulation.md` must explain:
+
+- why lane simulation exists
+- how to run it manually
+- how it maps to Orchestrator/Lead/Worker roles
+- how it differs from actual parallel automation
+- how future lane simulations should be added
+
+## Constraints
+
+- Do not build actual sub-agent spawning.
+- Do not require parallel processes.
+- Do not add a daemon.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py lane check simulations/lane-demo`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run `make test` if the Makefile exists.
+5. Confirm the simulation does not claim live multi-agent execution.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit lane-simulation deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_28.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if domain-pack readiness is blocked by
+   simulation docs or registry gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

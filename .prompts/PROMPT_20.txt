@@ -1,0 +1,117 @@
+# PROMPT_20 - Traceability Collector
+
+You are implementing lightweight prompt-to-change traceability tooling for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 19 have been attempted.
+
+## Project Brief
+
+Prompt-bounded work becomes more useful when the repo can connect prompt ids to
+changed files, validation commands, handoffs, readiness status, and eventual
+commits. This should remain a local helper, not a telemetry platform and not a
+database.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/metadata/prompt-to-commit-traceability.md`,
+   `docs/metadata/run-record.md`, `fixtures/README.md`, and `scripts/README.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a dependency-free traceability collector to `scripts/ahl.py` that can
+summarize prompt-related working tree changes and emit a run-record skeleton.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/traceability.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `templates/reports/traceability-summary.md`
+- `fixtures/traceability/working-tree-summary.json`
+- `scripts/README.md`
+- `docs/metadata/prompt-to-commit-traceability.md`
+- `docs/README.md`
+
+## Script Requirements
+
+Enhance `scripts/ahl.py` with a subcommand such as:
+
+```bash
+python3 scripts/ahl.py trace PROMPT_20 --json
+```
+
+The command should collect local facts that are safe and cheap:
+
+- prompt id
+- whether matching prompt file exists
+- current git branch, if available
+- current HEAD commit, if available
+- changed files from `git status --short`
+- whether docs changed
+- whether tests changed
+- whether templates changed
+- whether `tmp/HANDOFF.md` exists
+- suggested run record fields still needing operator input
+
+Use `subprocess.run` safely. If not in a git repo or git is unavailable, return
+a structured degraded result rather than crashing.
+
+Do not inspect raw assistant transcripts.
+
+## Docs Requirements
+
+`docs/traceability.md` must explain:
+
+- what the trace command collects
+- what it deliberately does not collect
+- how prompt id commit prefixes help later analysis
+- how to use trace output during closeout
+- why trace output is derived metadata
+
+## Test Requirements
+
+Tests should cover:
+
+- trace command in a temporary non-git directory
+- trace command in a temporary git repo if feasible
+- JSON output contains stable fields
+- missing prompt id is reported clearly
+
+Keep tests robust on systems where git may not be available. Skip git-specific
+tests cleanly if needed.
+
+## Constraints
+
+- Use only the Python standard library.
+- Do not create commits.
+- Do not stage files.
+- Do not parse full diffs by default.
+- Do not add telemetry or external storage.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py trace PROMPT_20 --json`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Confirm trace docs match actual output.
+5. Confirm degraded no-git behavior is documented or tested.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit traceability deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_21.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if promptset-linter readiness is blocked by
+   trace command or prompt id inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

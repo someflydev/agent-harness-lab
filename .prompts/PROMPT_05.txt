@@ -1,0 +1,177 @@
+# PROMPT_05 - Session Lifecycle And Endcaps
+
+You are implementing the session lifecycle and endcap model for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 04 have been attempted.
+
+## Project Brief
+
+The repo treats fresh-session boundaries as an orchestration primitive. A good
+session does not merely "do the task"; it executes a bounded prompt, audits the
+result, checks readiness for the next prompt, performs cheap bridging fixes
+only when justified, and resets cleanly.
+
+The central pattern is:
+
+Execute -> Audit -> Preflight -> Bridge -> Reset
+
+This repo should make that pattern explicit enough for a human operator to run
+with subscription-level coding assistants before any heavy runtime exists.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read relevant doctrine, role, skill, and routine docs created by prior
+   prompts, especially `docs/doctrine/principles.md`,
+   `docs/doctrine/glossary.md`, `docs/routines/catalog.md`, and
+   `docs/roles/supporting-roles.md`.
+4. Check whether runtime/session docs already exist and integrate rather than
+   replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Define how a prompt-bounded session starts, runs, closes, bridges, and resets.
+Make prompt-authoring, prompt-execution, and repair-session workflows distinct.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/runtime/README.md`
+- `docs/runtime/session-lifecycle.md`
+- `docs/runtime/execute-audit-preflight-bridge-reset.md`
+- `docs/runtime/prompt-authoring-vs-execution.md`
+- `docs/runtime/adjacent-prompt-readiness.md`
+- `docs/runtime/bridge-and-reset.md`
+- `docs/runtime/permission-posture.md`
+- `docs/README.md`
+- `AGENT.md`
+
+## Session Lifecycle Requirements
+
+`docs/runtime/session-lifecycle.md` must describe these phases:
+
+- boot and context selection
+- scope confirmation
+- implementation
+- validation
+- completion audit
+- next-prompt preflight
+- bridge decision
+- handoff creation when justified
+- reset and closeout
+
+For each phase, document:
+
+- purpose
+- inputs
+- expected actions
+- outputs
+- stop conditions
+- common mistakes
+
+The lifecycle should stay tool-agnostic and human-assisted. It should be usable
+with Codex, Claude Code, Gemini, Pi, or similar assistants.
+
+## Endcap Pattern Requirements
+
+`docs/runtime/execute-audit-preflight-bridge-reset.md` must define the core
+routine in operational detail:
+
+- Execute: perform the current bounded prompt/session work.
+- Audit: verify the current prompt was actually implemented thoroughly.
+- Preflight: inspect the next prompt and current repo state for next-session
+  readiness.
+- Bridge: perform cheap high-value bridging fixes or create temporary handoff
+  artifacts when justified.
+- Reset: end cleanly so the next prompt can run safely in a fresh session.
+
+Make clear that Bridge is optional and bounded. It must not become a hidden
+second implementation phase.
+
+## Prompt-Authoring Vs Execution Requirements
+
+`docs/runtime/prompt-authoring-vs-execution.md` must explain:
+
+- `PLAN.md` does not generate `PROMPT_XX` files.
+- A `PROMPT_XX` execution session does not generate `PROMPT_YY`.
+- New prompt files are generated in dedicated prompt-authoring sessions.
+- A prompt-execution session may create a temporary checklist or
+  `tmp/HANDOFF.md` only when the current scope cannot safely close without it.
+- Repair or bridge sessions are separate from ordinary prompt execution.
+
+Use concrete examples.
+
+## Adjacent-Prompt Readiness Requirements
+
+`docs/runtime/adjacent-prompt-readiness.md` must formalize the idea that
+adjacent-prompt awareness is a superpower. It should explain:
+
+- why inspecting only the current prompt is insufficient
+- why over-planning the whole future is wasteful
+- how to inspect only the immediate next prompt
+- how to distinguish "current prompt complete" from "next prompt ready"
+- what blockers should be fixed immediately versus recorded for handoff
+
+## Bridge And Reset Requirements
+
+`docs/runtime/bridge-and-reset.md` must define:
+
+- when to create `tmp/HANDOFF.md`
+- when not to create handoffs
+- what a bridge fix is
+- what bridge fixes are out of scope
+- how to close a session without polluting durable memory
+- how to leave the repo ready for the next fresh session
+
+## Permission Posture Requirements
+
+`docs/runtime/permission-posture.md` must define lightweight run postures:
+
+- read-only inspection
+- workspace-write implementation
+- dangerous/manual operations requiring explicit human approval
+
+Adapt the useful part of `claw-code` permission thinking without building a
+permission runtime. Make the posture useful in prompts, run manifests, and
+operator notes.
+
+## AGENT.md Update
+
+Update `AGENT.md` so future assistants know where to find the runtime/session
+lifecycle docs. Keep it concise. Do not turn `AGENT.md` into a full doctrine
+dump. Preserve any existing hot-spot file integration guidance in `AGENT.md`
+so later prompts keep updating shared files surgically rather than rewriting
+them wholesale.
+
+## Constraints
+
+- Do not create full templates yet. Prompt 07 owns templates.
+- Do not create full runbooks yet. Prompt 08 owns runbooks.
+- Do not build helper scripts yet. Prompt 09 owns scripts.
+- Do not create durable memory files yet beyond documentation.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required runtime doc exists.
+2. Confirm `AGENT.md` points to the runtime docs without becoming bloated.
+3. Confirm the prompt-authoring and prompt-execution distinction is explicit.
+4. Confirm bridge creation is optional and justified, not automatic.
+5. Confirm the docs are practical enough for a human operator to follow.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit lifecycle deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_06.txt` and
+   state whether the repo is ready for it.
+3. Perform cheap bridging fixes if memory-model readiness is blocked by missing
+   runtime terminology or doc navigation.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

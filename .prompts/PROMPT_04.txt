@@ -1,0 +1,160 @@
+# PROMPT_04 - Skill Taxonomy And Routine Catalog
+
+You are implementing the skill taxonomy and first routine catalog for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 03 have been attempted.
+
+## Project Brief
+
+Roles define who is acting. Skills define what capability is being invoked.
+Routines define reusable sequences of behavior that a human operator or coding
+assistant can run. This repo should turn recurring one-off prompting behaviors
+into named, reusable operational building blocks without pretending they are
+fully automated yet.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/doctrine/glossary.md`, `docs/doctrine/artifact-boundaries.md`,
+   `docs/roles/README.md`, and `docs/roles/boundary-matrix.md`.
+4. Check whether skill or routine docs already exist and integrate rather than
+   replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a capability taxonomy and routine catalog that future runbooks,
+templates, helper scripts, and examples can reference.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/skills/README.md`
+- `docs/skills/taxonomy.md`
+- `docs/skills/maturity-model.md`
+- `docs/skills/role-skill-map.md`
+- `docs/routines/README.md`
+- `docs/routines/catalog.md`
+- `docs/routines/routine-record-format.md`
+- `docs/README.md`
+
+## Skill Taxonomy Requirements
+
+`docs/skills/taxonomy.md` must define these skill areas:
+
+- prompt interpretation skills: requirement extraction, scope boundary
+  detection, deliverable enumeration
+- repo analysis skills: structural mapping, convention detection, assumption
+  diffing
+- execution skills: focused file editing, multi-file consistency editing,
+  scaffold generation, patch repair
+- validation skills: test command discovery, smoke-test judgment, artifact
+  verification, prompt-vs-implementation cross-checking
+- transition skills: end-of-session audit, next-prompt preflight, handoff
+  writing, commit summarization
+- process intelligence skills: prompt quality critique, session waste
+  detection, recovery planning, rate-limit-aware chunking
+
+For each skill area, document:
+
+- what the skill is for
+- typical role users
+- inputs
+- outputs
+- failure signals
+- whether it is currently conceptual, human-operated, assistant-executed,
+  template-supported, script-supported, or future-runtime-supported
+
+## Maturity Model Requirements
+
+`docs/skills/maturity-model.md` must define a maturity ladder such as:
+
+- named concept
+- human-operated checklist
+- prompt template
+- assistant routine
+- helper-script supported
+- runtime-automated
+
+Make clear that most early skills should start as concepts, checklists, prompt
+templates, or assistant routines. Do not overclaim automation.
+
+## Role-Skill Map Requirements
+
+`docs/skills/role-skill-map.md` must map roles from Prompt 03 to skill areas.
+For example:
+
+- Orchestrator uses requirement extraction, lane planning, readiness judgment,
+  escalation handling, and synthesis.
+- Lead uses decomposition, assumption tracking, Worker review, and lane-local
+  memory management.
+- Worker uses focused execution, artifact verification, and structured result
+  reporting.
+
+Use tables where helpful.
+
+## Routine Catalog Requirements
+
+`docs/routines/catalog.md` must define an initial catalog of named routines.
+Include at least:
+
+- prompt execution
+- completion audit
+- next-prompt preflight
+- bridge decision
+- handoff generation
+- repair-session startup
+- promotion review
+- run closeout
+- promptset health inspection
+- commit packaging
+- assumption diff
+- scope boundary check
+- validation path discovery
+
+For each routine, provide:
+
+- purpose
+- when to use it
+- primary role
+- required inputs
+- expected outputs
+- stop conditions
+- future automation potential
+
+`docs/routines/routine-record-format.md` should define a simple markdown record
+format that later runbooks and scripts can use.
+
+## Constraints
+
+- Do not write full operational runbooks yet. Prompt 08 owns detailed runbooks.
+- Do not create task/result/review templates yet. Prompt 07 owns templates.
+- Do not build scripts yet. Prompt 09 owns helper scripts.
+- Do not create project-level `.agents/skills` or tool-specific skill packages
+  yet. This prompt is about repo doctrine and taxonomy.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required skill and routine file exists.
+2. Confirm `docs/README.md` links to `docs/skills/README.md` and
+   `docs/routines/README.md`.
+3. Confirm role and skill language stays distinct.
+4. Confirm the routine catalog is practical and not just a list of names.
+5. Confirm no routine claims automation that does not exist.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit skill and routine deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_05.txt` and state
+   whether the repo is ready for it.
+3. Perform cheap bridging fixes if lifecycle readiness is blocked by missing
+   terminology or doc navigation.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

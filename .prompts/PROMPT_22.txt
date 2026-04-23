@@ -1,0 +1,110 @@
+# PROMPT_22 - Documentation Link And Navigation Checker
+
+You are implementing documentation link and navigation checks for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 21 have been attempted.
+
+## Project Brief
+
+The repo will contain many docs, runbooks, templates, registries, fixtures, and
+examples. The operator should be able to navigate it without dead links or
+stale index pages. A lightweight local checker can catch obvious issues without
+introducing a docs framework.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/navigation-map.md`, `docs/README.md`, `registry/README.md`, and
+   `scripts/README.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add dependency-free checks for local markdown links, key navigation indexes,
+and registry path consistency.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/navigation-validation.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `fixtures/docs-links/valid/README.md`
+- `fixtures/docs-links/broken/README.md`
+- `scripts/README.md`
+- `docs/navigation-map.md`
+- `docs/README.md`
+- `README.md`
+
+## Checker Requirements
+
+Add or improve a command such as:
+
+```bash
+python3 scripts/ahl.py docs check
+python3 scripts/ahl.py docs check --json
+```
+
+The checker should:
+
+- scan markdown files in relevant repo docs areas
+- detect local markdown links to missing files
+- ignore external `http` or `https` links by default
+- handle anchors conservatively or document that anchors are not validated
+- check that `docs/README.md` exists
+- check that major top-level documentation directories are linked from an index
+- optionally check registry path references when registry files exist
+
+Keep output concise and structured.
+
+## Docs Requirements
+
+`docs/navigation-validation.md` must explain:
+
+- why link checking matters for fresh-session bootstrap
+- what the checker covers
+- what it intentionally does not cover
+- how to fix common failures
+- how it relates to registry validation
+
+## Test Requirements
+
+Add tests for:
+
+- valid local markdown link
+- broken local markdown link
+- external link ignored
+- JSON output stable
+- missing index page reported
+
+## Constraints
+
+- Use only the Python standard library.
+- Do not add a static site generator.
+- Do not fetch external URLs.
+- Do not enforce a docs style guide beyond navigation integrity.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py docs check`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run `python3 scripts/ahl.py promptset lint` if available.
+5. Confirm docs describe checker limits accurately.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit docs-check deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_23.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if dry-run harness readiness is blocked by
+   navigation or fixture inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

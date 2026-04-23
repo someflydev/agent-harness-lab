@@ -1,0 +1,157 @@
+# PROMPT_03 - Role Taxonomy And Organization Model
+
+You are implementing the role and organization model for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompts 01 and 02 have been
+attempted.
+
+## Project Brief
+
+The repo explores a governed digital organization for human-assisted coding
+agent work. The central hierarchy is Orchestrator -> Leads -> Workers, but the
+repo should also distinguish orchestration roles, cognitive work roles, repo
+intelligence roles, and process/meta roles. Roles are "who is acting"; skills
+are "what capability is being invoked."
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/doctrine/README.md`, `docs/doctrine/principles.md`,
+   `docs/doctrine/glossary.md`, and `docs/doctrine/artifact-boundaries.md`.
+4. Check whether any role docs already exist and integrate rather than replace.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a serious role taxonomy and organizational operating model that future
+contracts, templates, runbooks, examples, and helper scripts can reference.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/roles/README.md`
+- `docs/roles/org-model.md`
+- `docs/roles/orchestrator.md`
+- `docs/roles/lead.md`
+- `docs/roles/worker.md`
+- `docs/roles/supporting-roles.md`
+- `docs/roles/boundary-matrix.md`
+- `docs/roles/escalation-paths.md`
+- `docs/README.md`
+
+## Core Model Requirements
+
+`docs/roles/org-model.md` must explain:
+
+- why hierarchy matters in agent work
+- how context narrows downward
+- how summaries sharpen upward
+- why implementation should usually stay below the Orchestrator
+- how Leads own lanes or workstreams
+- how Workers receive bounded tasks and minimal necessary context
+- how role separation controls cost, context bloat, and failure blast radius
+- how a human operator can manually enact these roles with subscription tools
+
+The model should be domain-agnostic. Do not assume a specific software stack.
+
+## Primary Role Requirements
+
+Define these roles in their own files:
+
+- Orchestrator
+- Lead
+- Worker
+
+For each, document:
+
+- purpose
+- responsibilities
+- context allowed
+- decisions owned
+- outputs produced
+- stop conditions
+- escalation triggers
+- what the role must not do
+- how the role can be played manually by a human using a fresh assistant session
+
+The Orchestrator should interpret intent, plan lanes, assign Leads, review
+cross-team progress, handle escalations, and synthesize lane outputs. It should
+not normally do implementation work directly.
+
+The Lead should decompose a lane, assign bounded tasks, review Worker outputs,
+manage lane-local memory, and summarize upward.
+
+The Worker should do narrowly scoped execution, produce structured output, and
+stop at clear boundaries.
+
+## Supporting Role Requirements
+
+`docs/roles/supporting-roles.md` must define these role families:
+
+- orchestration roles: Session Conductor, Prompt Runner, Completion Auditor,
+  Next-Prompt Readiness Checker, Handoff Composer, Commit Packager
+- cognitive work roles: Planner, Implementer, Reviewer, Validator, Refiner or
+  Repair Agent
+- repo intelligence roles: Repo Cartographer, Convention Keeper, Dependency or
+  Assumption Tracker, Change Impact Estimator
+- process/meta roles: Workflow Critic, Promptset Quality Inspector, Session
+  Economics Monitor, Recovery Planner
+
+For each family, distinguish conceptual roles from procedural roles and from
+future automation candidates.
+
+## Boundary Matrix Requirements
+
+`docs/roles/boundary-matrix.md` must include a matrix that answers:
+
+- who can assign work
+- who can change scope
+- who can approve memory promotion
+- who can declare completion
+- who can create handoff artifacts
+- who can escalate blockers
+- who should inspect the next prompt
+- who should package a commit if the operator asks
+
+Use simple markdown tables.
+
+## Escalation Requirements
+
+`docs/roles/escalation-paths.md` must describe:
+
+- Worker -> Lead escalation
+- Lead -> Orchestrator escalation
+- Orchestrator -> Human Operator escalation
+- when to stop instead of guessing
+- how escalation records should preserve context without dumping transcripts
+
+## Constraints
+
+- Do not create the skill taxonomy yet. Prompt 04 owns that.
+- Do not create full task/result/review templates yet. Prompt 07 owns that.
+- Do not build scripts or runtime automation.
+- Do not add vendor-specific agent assumptions.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Confirm every required role file exists.
+2. Confirm `docs/README.md` links to `docs/roles/README.md`.
+3. Confirm the role docs use glossary terms consistently.
+4. Check that role and skill are not conflated.
+5. Check that the model remains human-assisted and subscription-friendly.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit role deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_04.txt` and
+   state whether the repo is ready for it.
+3. Perform cheap bridging fixes if skill-taxonomy readiness is blocked by role
+   terminology or navigation gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

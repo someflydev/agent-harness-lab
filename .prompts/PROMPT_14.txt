@@ -1,0 +1,182 @@
+# PROMPT_14 - Future Architecture And Phase-One Capstone Audit
+
+You are implementing the future-architecture notes and phase-one capstone
+audit for `agent-harness-lab`. Run this in a fresh coding assistant session
+after Prompts 01 through 13 have been attempted.
+
+## Project Brief
+
+The foundation phase should leave the repo coherent, navigable, and ready for
+the implementation-hardening prompts that follow. Future automation ideas
+should be documented carefully without converting the repo into a heavy runtime
+prematurely.
+
+This phase-one capstone prompt should reconcile the foundational docs and
+scripts, close obvious gaps, and document a measured migration path from
+human-assisted routines to helper scripts, then to richer orchestration only
+after patterns prove themselves.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/README.md`, `docs/operator-control-surfaces.md`,
+   `docs/metadata/derived-metadata-rules.md`, `docs/quality/README.md`, and
+   `scripts/README.md`.
+4. Run available checks:
+   - `python3 scripts/ahl.py doctor`
+   - `python3 scripts/ahl.py promptset`
+   - `python3 -m unittest tests/test_ahl.py`
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add future-facing architecture docs and perform a capstone audit of the
+foundation phase. Update navigation and boot files so the repo feels like a
+coherent lab rather than a pile of docs.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/architecture/README.md`
+- `docs/architecture/future-runtime-path.md`
+- `docs/architecture/traceability-graph-and-semantic-retrieval.md`
+- `docs/architecture/automation-readiness-ladder.md`
+- `docs/architecture/non-goals.md`
+- `docs/capstone/phase-one-audit.md`
+- `docs/capstone/navigation-audit.md`
+- `docs/capstone/open-questions.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+- `scripts/README.md`
+
+## Future Runtime Path Requirements
+
+`docs/architecture/future-runtime-path.md` must describe a gradual path:
+
+1. documented routines
+2. templates and contracts
+3. small helper scripts
+4. structured run metadata
+5. optional local indexes
+6. bounded automation hooks
+7. richer orchestration only after the human-assisted model is proven
+
+Tie the path to practical signals that justify moving up the ladder.
+
+## Traceability, Graph, And Retrieval Requirements
+
+`docs/architecture/traceability-graph-and-semantic-retrieval.md` must explain:
+
+- repo files and git history are source of truth
+- graph-style structure may later help answer "what is connected and why?"
+- semantic retrieval may later help answer "what is similar or likely relevant?"
+- graph-first narrowing and vector-second enrichment may be useful later
+- Neo4j and Qdrant are examples of possible future tools, not current
+  requirements
+- neither graph nor vector storage should become a dumping ground
+- raw transcripts should not be indexed by default
+
+Keep this as architecture guidance, not an implementation plan.
+
+## Automation Readiness Requirements
+
+`docs/architecture/automation-readiness-ladder.md` must define how a routine
+graduates:
+
+- named doc
+- checklist
+- template
+- helper script
+- structured output
+- deterministic tests
+- optional automation hook
+- runtime component
+
+Include criteria for not automating.
+
+## Non-Goals Requirements
+
+`docs/architecture/non-goals.md` must restate foundation-phase non-goals:
+
+- no provider abstraction
+- no always-on multi-agent daemon
+- no full REPL/TUI clone
+- no MCP/plugin/server infrastructure
+- no graph/vector database dependency
+- no raw transcript warehouse
+- no hidden autonomous system
+
+## Phase-One Capstone Audit Requirements
+
+`docs/capstone/phase-one-audit.md` must audit the repo against the foundation
+phase goals:
+
+- identity and bootstrap
+- doctrine and glossary
+- roles
+- skills and routines
+- runtime lifecycle
+- memory model
+- contracts and templates
+- runbooks
+- scripts
+- examples
+- experiments/reports/findings
+- quality
+- metadata and control surfaces
+- future architecture
+
+For each area, record:
+
+- status
+- evidence files
+- gaps
+- recommended next improvement
+
+`docs/capstone/navigation-audit.md` must check whether a new operator can find
+the important docs without knowing the prompt history.
+
+`docs/capstone/open-questions.md` must list unresolved design questions without
+turning them into immediate scope.
+
+## Navigation Updates
+
+Update `README.md`, `AGENT.md`, `docs/README.md`, and `scripts/README.md` to
+reflect the actual foundation-phase state after Prompts 01 through 14 have run.
+Do not claim future architecture is implemented. Preserve the shared
+hot-spot-file integration guidance in `AGENT.md` and update these recurring
+files surgically rather than rewriting them wholesale.
+
+## Constraints
+
+- Do not build a heavy runtime.
+- Do not add dependencies.
+- Do not create new prompt files. The full initial promptset already exists.
+- Do not hide gaps. The capstone audit should be honest.
+- Do not modify reference repos.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py doctor`.
+3. Run `python3 scripts/ahl.py promptset`.
+4. Run any validation subcommand added by prior prompts.
+5. Manually verify key docs navigation from `README.md`, `AGENT.md`, and
+   `docs/README.md`.
+6. Confirm the future architecture docs remain future-facing and do not imply
+   current runtime capabilities.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit capstone deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_15.txt` and state whether the repo is ready for it.
+3. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains for the
+   operator.
+4. Do not commit unless the operator explicitly asks.

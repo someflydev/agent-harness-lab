@@ -1,0 +1,116 @@
+# PROMPT_25 - Memory Tooling And Promotion Queue
+
+You are implementing lightweight memory and promotion-queue tooling for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 24 have been attempted.
+
+## Project Brief
+
+Memory promotion should be explicit, reviewed, and auditable. The repo needs
+small helper surfaces for proposing, reviewing, accepting, and rejecting memory
+promotions without turning memory into a transcript dump.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/memory/README.md`, `docs/memory/promotion-model.md`,
+   `templates/memory/promotion-record.md`, and `findings/README.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a local promotion queue and helper commands that support reviewed memory
+promotion.
+
+## Required Deliverables
+
+Create or update:
+
+- `memory/README.md`
+- `memory/promotion-queue/README.md`
+- `memory/accepted/README.md`
+- `memory/rejected/README.md`
+- `docs/memory/promotion-workflow.md`
+- `templates/memory/promotion-candidate.md`
+- `templates/memory/promotion-decision.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/README.md`
+
+## Memory Directory Requirements
+
+The committed `memory/` directory should be a curated memory workspace, not a
+dump of session state. Include README files that explain:
+
+- what belongs in the promotion queue
+- what belongs in accepted memory
+- what belongs in rejected memory
+- what must never be stored
+- how this differs from local `tmp/` handoffs
+
+Do not create real accepted memory claims unless they are already validated
+repo truths.
+
+## Script Requirements
+
+Add commands such as:
+
+```bash
+python3 scripts/ahl.py memory propose <slug>
+python3 scripts/ahl.py memory check
+python3 scripts/ahl.py memory decision <candidate> --accepted|--rejected
+```
+
+Keep them conservative:
+
+- scaffold candidate and decision files
+- refuse overwrites by default
+- do not auto-promote into doctrine
+- support `--json`
+- validate required headings/fields in queue files
+
+## Workflow Requirements
+
+`docs/memory/promotion-workflow.md` must explain:
+
+- how to propose a memory candidate
+- how to gather evidence
+- how to accept or reject
+- how accepted memory relates to docs and findings
+- how to prune stale candidates
+
+## Test Requirements
+
+Add tests for candidate scaffolding, overwrite refusal, check behavior, and
+decision scaffolding.
+
+## Constraints
+
+- Do not store raw transcripts.
+- Do not make `memory/` a replacement for docs.
+- Do not require a database.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py memory check`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Confirm docs and README files keep memory curated.
+5. Confirm no unvalidated claims were promoted as accepted memory.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit memory-tooling deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_26.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if operator-console readiness is blocked by
+   script command or docs inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.
