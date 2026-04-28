@@ -3,8 +3,8 @@
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
 doctrine, role boundaries, skills, routines, runbooks, runtime session behavior,
-memory governance, contracts, and examples. Later prompts will add reports and
-expanded scripts.
+memory governance, contracts, examples, experiments, reports, findings, and
+lab method. Later prompts will add expanded scripts.
 
 ## Start Here
 
@@ -17,6 +17,8 @@ expanded scripts.
   repos without treating them as parent projects.
 - `scripts.md` - lightweight helper script behavior, examples, JSON fields,
   and automation boundaries.
+- `lab-method.md` - experimental method for bounded trials, evidence,
+  findings, and promotion decisions.
 
 ## Doctrine
 
@@ -110,6 +112,22 @@ expanded scripts.
   observation into durable memory.
 - `../examples/repair-bridge/README.md` - justified transient handoff for an
   incomplete or blocked prompt.
+
+## Lab Evidence
+
+- `lab-method.md` - method for turning concrete workflow problems into bounded
+  trials, reports, findings, and promotion candidates.
+- `../experiments/README.md` - experiment purpose, boundaries, lifecycle, and
+  promotion path.
+- `../experiments/catalog.md` - compact catalog for planned, active, closed,
+  abandoned, or superseded experiments.
+- `../experiments/templates/` - experiment plan, log, and closeout templates.
+- `../reports/README.md` - report types and evidence boundaries.
+- `../reports/templates/` - session, promptset audit, and routine evaluation
+  report templates.
+- `../findings/README.md` - finding definition, evidence requirements, and
+  relationship to memory promotion.
+- `../findings/templates/` - finding record and pattern observation templates.
 
 ## Runtime
 

@@ -9,6 +9,11 @@ exist now; others are planned for later prompts.
   assistant sessions.
 - `docs/` - foundation documentation, guardrails, operator start guidance, repo
   layout notes, reference influence notes, doctrine, and role taxonomy.
+- `experiments/` - bounded trials for harness ideas that are not yet doctrine.
+- `findings/` - reviewed lessons and recurring observations that may inform
+  future prompt-authoring or memory promotion.
+- `reports/` - retrospective summaries of session, promptset, routine, or phase
+  evidence.
 - `README.md` - public identity and high-level project orientation.
 - `AGENT.md` - assistant bootstrap guidance for future sessions.
 - `.gitignore` - local reference repo, transient state, cache, and editor
@@ -26,11 +31,6 @@ of this repo's committed implementation.
   automation once the workflow is stable enough to justify them.
 - `examples/` - worked examples that show how prompt-bounded sessions should
   look in practice.
-- `experiments/` - bounded trials for harness ideas that are not yet doctrine.
-- `reports/` - generated or manually prepared summaries of validation,
-  readiness, and audit results.
-- `findings/` - durable observations and lessons promoted out of session
-  output.
 - `runs/` - inspectable records of significant promptset or workflow runs when
   later prompts define the format.
 - `tmp/` - ignored scratch space for transient handoffs and session-local
