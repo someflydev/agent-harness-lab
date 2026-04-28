@@ -2,9 +2,9 @@
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
-doctrine, role boundaries, skills, routines, runtime session behavior, and
-memory governance. Later prompts will add broader templates, runbooks,
-examples, reports, and scripts.
+doctrine, role boundaries, skills, routines, runtime session behavior, memory
+governance, and contracts. Later prompts will add runbooks, examples, reports,
+and scripts.
 
 ## Start Here
 
@@ -58,6 +58,14 @@ examples, reports, and scripts.
   closeout, repair, promotion, validation, and packaging behaviors.
 - `routines/routine-record-format.md` - simple markdown record shape for future
   runbooks and scripts.
+
+## Contracts
+
+- `contracts/README.md` - contract overview and template library index.
+- `contracts/contract-types.md` - task, result, review, escalation, promotion,
+  run, audit, readiness, handoff, and closeout contract reference.
+- `contracts/contract-composition.md` - practical composition flow through the
+  Orchestrator -> Leads -> Workers hierarchy and closeout loop.
 
 ## Runtime
 
