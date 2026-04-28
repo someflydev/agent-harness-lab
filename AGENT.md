@@ -34,6 +34,12 @@ prompt asks for reference influence or when a narrow comparison is needed.
 When running the promptset, execute one prompt per fresh session unless the
 operator explicitly says otherwise.
 
+## Runtime Guidance
+
+Session lifecycle, endcap, bridge, reset, adjacent-prompt readiness, and
+permission posture guidance lives in `docs/runtime/`. Use those docs when a
+prompt asks for runtime/session behavior or closeout decisions.
+
 ## Endcap Routine
 
 Use this closeout loop for prompt-execution sessions:

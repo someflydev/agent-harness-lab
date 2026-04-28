@@ -2,8 +2,9 @@
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
-doctrine, role boundaries, skills, and routines. Later prompts will add memory
-guidance, templates, runbooks, examples, reports, and scripts.
+doctrine, role boundaries, skills, routines, and runtime session behavior.
+Later prompts will add memory guidance, templates, runbooks, examples, reports,
+and scripts.
 
 ## Start Here
 
@@ -57,3 +58,19 @@ guidance, templates, runbooks, examples, reports, and scripts.
   closeout, repair, promotion, validation, and packaging behaviors.
 - `routines/routine-record-format.md` - simple markdown record shape for future
   runbooks and scripts.
+
+## Runtime
+
+- `runtime/README.md` - runtime/session lifecycle index and usage guidance.
+- `runtime/session-lifecycle.md` - phase model for prompt-bounded sessions from
+  context briefing through reset.
+- `runtime/execute-audit-preflight-bridge-reset.md` - operational closeout
+  rhythm for prompt-execution sessions.
+- `runtime/prompt-authoring-vs-execution.md` - separation between prompt
+  authoring, prompt execution, and repair sessions.
+- `runtime/adjacent-prompt-readiness.md` - immediate next-prompt readiness
+  checks without future-prompt implementation.
+- `runtime/bridge-and-reset.md` - bounded bridge decisions, temporary handoffs,
+  and clean reset behavior.
+- `runtime/permission-posture.md` - stable permission labels for prompts, run
+  manifests, and operator notes.
