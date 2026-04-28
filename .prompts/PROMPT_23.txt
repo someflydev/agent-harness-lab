@@ -31,6 +31,7 @@ operating model can be exercised without live agents.
 Create or update:
 
 - `dry-runs/README.md`
+- `dry-runs/PARITY.md`
 - `dry-runs/scenarios/sequential-prompt-run.json`
 - `dry-runs/scenarios/blocked-readiness.json`
 - `dry-runs/scenarios/repair-session.json`
@@ -76,6 +77,28 @@ The command should:
 - avoid invoking model providers
 
 It does not need to replay an actual assistant session.
+
+Scenario check JSON output should include per-scenario stable fields: `id`,
+`status` (one of `pass`, `fail`, `missing`), and `problems`. Do not use
+prose-only output where a downstream check or script might need to interpret
+results.
+
+## PARITY.md Requirements
+
+`dry-runs/PARITY.md` is the canonical scenario-coverage tracker. Adapted from
+`claw-code`'s `PARITY.md` pattern — a machine-consumable status document that
+tracks which harness capabilities have been exercised by dry-run scenarios.
+
+It must include:
+
+- a summary section with scenario count, last-updated date, and overall status
+- a per-scenario status table with columns: scenario id, capability covered,
+  status (verified / partial / missing), and evidence (scenario file path)
+- a section for known gaps — capabilities not yet covered by any scenario
+
+The `dry-run check` command should be able to read `PARITY.md` and report
+whether any scenarios listed there are missing their backing JSON file.
+Update `PARITY.md` when scenarios are added or retired.
 
 ## Docs Requirements
 

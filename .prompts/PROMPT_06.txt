@@ -43,6 +43,10 @@ Create or update:
 - `templates/memory/promotion-record.md`
 - `templates/memory/memory-update-record.md`
 - `templates/memory/handoff-summary.md`
+- `context/TASK.example.md`
+- `context/SESSION.example.md`
+- `context/MEMORY.example.md`
+- `.gitignore`
 - `docs/README.md`
 
 ## Memory Plane Requirements
@@ -129,14 +133,45 @@ Create simple markdown templates:
 Templates should use clear headings and compact fields. They should not be
 overly bureaucratic.
 
+## Runtime File Examples
+
+Create scaffold examples for the three concrete runtime files that assistants
+will use during live sessions. Adapted from the `agent-context-base` context/
+pattern:
+
+- `context/TASK.example.md`: scaffold for the current active slice — scope,
+  success criteria, immediate steps, blockers, out-of-scope boundaries.
+- `context/SESSION.example.md`: scaffold for the compact working state that
+  carries continuity to the next session — current status, recent decisions,
+  active files, next safe step, what not to reload.
+- `context/MEMORY.example.md`: scaffold for durable repo-local truths —
+  stable commands, known pitfalls, recurring guardrails. Must not accumulate
+  temporary task notes.
+
+These are example scaffolds, not committed runtime state. The actual live
+runtime files (`context/TASK.md`, `context/SESSION.md`, `context/MEMORY.md`)
+must remain local-only; only the `.example.md` scaffold files are committed.
+A later script prompt (`resume`, `checkpoint`) will use these as sources for
+scaffolding missing runtime files.
+
+Update `.gitignore` to add:
+
+```
+context/TASK.md
+context/SESSION.md
+context/MEMORY.md
+tmp/
+```
+
+Do NOT ignore `context/*.example.md` — those scaffold files are committed.
+
 ## Constraints
 
 - Do not create a database, vector index, or graph model.
 - Do not build helper scripts yet.
 - Do not create full run contract templates beyond memory-specific templates.
-- Do not create persistent runtime files such as `context/MEMORY.md` unless an
-  existing repo convention already requires it. This prompt is about committed
-  docs and templates.
+- Do not create persistent live runtime files. The `.example.md` files in
+  `context/` are committed scaffold sources, not live runtime state.
 - Do not generate additional prompt files.
 
 ## Validation
@@ -148,6 +183,8 @@ After editing:
 3. Confirm promotion requires review or evidence.
 4. Confirm `tmp/HANDOFF.md` is treated as temporary.
 5. Confirm docs link from `docs/README.md`.
+6. Confirm `context/TASK.example.md`, `context/SESSION.example.md`, and
+   `context/MEMORY.example.md` exist and have distinct content.
 
 ## Endcap
 

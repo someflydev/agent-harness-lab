@@ -56,6 +56,8 @@ It should support these subcommands:
 
 - `doctor`
 - `promptset`
+- `resume`
+- `checkpoint`
 - `scaffold-run`
 - `new-handoff`
 
@@ -106,6 +108,42 @@ The generated file should be placed under a run-specific directory or filename
 that includes the prompt id and a timestamp. The script must not overwrite an
 existing file unless a safe explicit flag is implemented.
 
+### `resume`
+
+Print a Session Context Briefing — a grounded startup overview for the current
+repo state. Adapted from the `work.py resume` pattern in `agent-context-base`.
+It should report:
+
+- current branch and HEAD commit
+- working-tree cleanliness or changed-file count
+- presence and line count of `context/TASK.md`, `context/SESSION.md`,
+  `context/MEMORY.md`, and `PLAN.md` when they exist
+- count of any `tmp/*.md` files (active local checklists)
+- total runtime-note line count and a posture label: lean (<100 lines),
+  moderate (100-300), or heavy (>300)
+- one recommended next action based on visible state
+
+JSON output should include stable fields: `branch`, `head`, `clean`,
+`runtime_files`, `posture`, `recommendation`.
+
+The command is read-only. It must not modify any files.
+
+### `checkpoint`
+
+Report runtime-file drift and scaffold missing context files. It should:
+
+- check whether `context/TASK.md`, `context/SESSION.md`, and
+  `context/MEMORY.md` exist and report their status
+- scaffold any missing context files from `context/*.example.md` if a
+  matching example exists, otherwise from a built-in minimal scaffold
+- report whether `context/SESSION.md` appears stale: treat it as stale if
+  it exists but contains no line starting with `Next:`, `Next step:`,
+  `## Next`, or similar next-step markers
+- not overwrite existing files unless `--force` is passed
+
+JSON output should include stable fields: `scaffolded`, `existing`, `stale`,
+`ok`.
+
 ### `new-handoff`
 
 Create `tmp/HANDOFF.md` from `templates/handoffs/handoff.md` if it exists.
@@ -122,6 +160,8 @@ Use `unittest` from the Python standard library. Tests should cover:
   minimal fixture
 - scaffold-run creates an artifact without overwriting
 - new-handoff refuses overwrite unless forced
+- resume returns structured JSON with required fields
+- checkpoint scaffolds a missing context file and reports it in JSON
 
 Do not require network access or paid model calls.
 

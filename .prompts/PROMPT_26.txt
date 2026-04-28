@@ -43,6 +43,8 @@ Add a small `Makefile` with targets such as:
 
 - `help`
 - `doctor`
+- `resume`
+- `checkpoint`
 - `promptset`
 - `lint-prompts`
 - `check-docs`
@@ -95,8 +97,10 @@ After editing:
 
 1. Run `make help`.
 2. Run `make doctor`.
-3. Run `make promptset`.
-4. Run `make test`.
+3. Run `make resume`.
+4. Run `make checkpoint`.
+5. Run `make promptset`.
+6. Run `make test`.
 5. Run any targets that are safe and expected to pass.
 6. Confirm docs match actual targets.
 

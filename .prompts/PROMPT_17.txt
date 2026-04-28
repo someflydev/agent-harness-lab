@@ -40,6 +40,7 @@ Create or update:
 - `.agents/skills/memory-promoter/SKILL.md`
 - `.agents/skills/promptset-inspector/SKILL.md`
 - `.agents/skills/role-lane-planner/SKILL.md`
+- `.agents/skills/trajectory-evaluator/SKILL.md`
 - `docs/project-skills.md`
 - `registry/artifacts.json`
 - `registry/routines.json`
@@ -72,6 +73,10 @@ Create these skills:
 - `memory-promoter`: review whether a fact should move into durable memory.
 - `promptset-inspector`: inspect prompt numbering, scope, and execution order.
 - `role-lane-planner`: decompose Orchestrator/Lead/Worker lanes.
+- `trajectory-evaluator`: run after any prompt Endcap — verify
+  deliverables completed, check next-prompt adjacency, suggest commit
+  groupings. See `.agents/skills/trajectory-evaluator/SKILL.md` for the
+  existing draft, which may be trimmed before formalising.
 
 Do not create broad "do everything" skills.
 
@@ -86,9 +91,11 @@ Do not create broad "do everything" skills.
 - how to add a new skill safely
 
 Update `AGENT.md` to mention `.agents/skills/` as optional on-demand context,
-not mandatory startup context. Preserve any existing `AGENT.md` guidance about
-updating shared hot-spot files surgically rather than rewriting them
-wholesale.
+not mandatory startup context. Specifically call out `trajectory-evaluator` as
+the optional closeout skill, loadable via `/skill:trajectory-evaluator` or by
+reading `.agents/skills/trajectory-evaluator/SKILL.md` directly. Preserve any
+existing `AGENT.md` guidance about updating shared hot-spot files surgically
+rather than rewriting them wholesale.
 
 ## Constraints
 

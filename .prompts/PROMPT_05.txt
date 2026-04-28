@@ -53,6 +53,9 @@ Create or update:
 
 `docs/runtime/session-lifecycle.md` must describe these phases:
 
+- session context briefing: a brief grounded startup check of visible repo
+  state (branch, runtime file presence, complexity posture) before loading
+  further context — adapted from `agent-context-base`'s boot sequence
 - boot and context selection
 - scope confirmation
 - implementation
@@ -137,6 +140,12 @@ adjacent-prompt awareness is a superpower. It should explain:
 Adapt the useful part of `claw-code` permission thinking without building a
 permission runtime. Make the posture useful in prompts, run manifests, and
 operator notes.
+
+Each posture must carry a stable machine-readable label (`read-only`,
+`workspace-write`, `manual-required`) so run manifests and future helper
+scripts can key off it without parsing prose. Include a brief allowed/denied
+operation list for each posture so the boundary is explicit and inspectable,
+not assumed.
 
 ## AGENT.md Update
 

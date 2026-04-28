@@ -144,12 +144,26 @@ fresh clone or fresh session, how to run one prompt, and how to close a session.
 `docs/reference-influences.md` should summarize the compatible ideas drawn from
 the local reference repos:
 
-- `agent-context-base`: deterministic startup, prompt discipline, explicit
-  validation, runtime-state hygiene
-- `pi-mono`: minimal harness surface, extensibility, skills, prompt templates,
-  session visibility, adapting the harness to the workflow
-- `claw-code`: doctor/status/state/permission posture, machine-readable
-  outputs, parity/checklist thinking, and recoverable operating loops
+- `agent-context-base`: deterministic startup boot sequence; `work.py resume`
+  session context briefing (branch, runtime file sizes, complexity posture,
+  recommended next step); `checkpoint` drift detection; concrete runtime files
+  (`context/TASK.md`, `context/SESSION.md`, `context/MEMORY.md`) that give a
+  fresh assistant grounded restart state without relying on memory; prompt
+  discipline; explicit validation gates; memory compaction vs. promotion
+  discipline; two-layer model separating operator sequencing from assistant
+  execution
+- `pi-mono`: minimal harness surface; extensibility over framework-gravity;
+  skills as directory packages (`dir/SKILL.md` with frontmatter) loadable on
+  demand, not at boot; prompt templates as named workflow-specific starting
+  points; explicit context files rather than full-directory scans; "adapt the
+  tool to your workflow, not the other way around" as a design filter
+- `claw-code`: doctor/preflight as first command with machine-readable
+  structured output (not prose); stable field names (`ok`, `checks`,
+  `problems`) so downstream automation can key off results without prose
+  parsing; `PARITY.md` as a canonical scenario-coverage tracker with per-lane
+  status tables and evidence links; permission posture as named, inspectable
+  categories with explicit allowed/denied lists; idempotent init with
+  `created/updated/skipped` per-artifact reporting; recoverable operating loops
 
 Be explicit that these are influences, not parent projects to clone.
 
