@@ -1,0 +1,173 @@
+# PROMPT_37 - Live Sequential Runner MVP
+
+You are implementing the live sequential runner MVP for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompt 36 has been
+attempted.
+
+## Project Brief
+
+The outer loop can now plan batches, understand assistant-driver contracts, and
+produce gate reports. This prompt adds the first live runner, still scoped
+tightly: it runs prompts sequentially through an explicitly selected external
+assistant CLI, starts a fresh session per prompt, runs local gates after each
+step, and stops on unsafe or unclear state.
+
+The MVP should be dry-run by default and require explicit live execution flags.
+It should support Codex and Gemini driver contracts where the local environment
+can probe them safely. Pi support can remain contract-only until the dedicated
+Pi adapter prompt.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/requirements.md`,
+   `docs/outer-loop/driver-contracts.md`,
+   `docs/outer-loop/batch-planning.md`, `docs/outer-loop/gates.md`,
+   `docs/outer-loop/safety-boundary.md`, and `scripts/README.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a live sequential runner that can invoke supported assistant CLIs from an
+approved plan while preserving inspectability and stop conditions.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/live-runner.md`
+- `docs/outer-loop/prompt-payloads.md`
+- `docs/outer-loop/run-artifacts.md`
+- `schemas/outer-loop-run-ledger.schema.json`
+- `templates/outer-loop/prompt-payload.md`
+- `templates/outer-loop/run-step-summary.md`
+- `fixtures/outer-loop/runs/live-runner-example.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/outer-loop/roadmap.md`
+- `docs/README.md`
+
+## Runner Requirements
+
+Enhance `scripts/ahl.py` with a command such as:
+
+```bash
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<run-id>/plan.json --dry-run --json
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<run-id>/plan.json --execute --max-prompts 1 --json
+```
+
+The command must:
+
+- default to dry-run unless `--execute` is passed
+- require an existing plan artifact
+- enforce sequential execution
+- reject parallel execution
+- refuse to run if the driver record is invalid
+- build a bounded prompt payload for each prompt
+- invoke a fresh assistant CLI session for each prompt when live execution is
+  explicitly enabled
+- pass model and reasoning/thinking values only when the driver contract says
+  they are supported or explicitly allowed as extra args
+- run the outer gate after each prompt step
+- stop immediately on failed validation, blocked readiness, driver failure,
+  unsafe git state, or unexpected plan mutation
+- write a run ledger under `runs/outer-loop/`
+- avoid storing raw transcripts by default
+
+For live execution, allow a conservative timeout option and record timeout
+failures as `driver-failed`.
+
+## Prompt Payload Requirements
+
+`docs/outer-loop/prompt-payloads.md` and
+`templates/outer-loop/prompt-payload.md` must define the exact prompt sent to a
+fresh assistant session. It should include:
+
+- instruction to run exactly one prompt file
+- prompt id and path
+- required first-read files
+- explicit endcap expectations
+- validation expectations
+- instruction not to commit unless the outer runner/authorized operator asks
+- instruction to preserve unrelated changes
+- instruction to avoid raw transcript dumps
+
+The payload should not paste the entire repo into context. It should tell the
+assistant which local files to read.
+
+## Driver Invocation Requirements
+
+The runner should construct command invocations from driver records rather than
+hardcoded ad hoc strings. If that is too large for this prompt, implement a
+small internal mapping for `manual`, `codex`, and `gemini` and document it as
+temporary technical debt.
+
+Support a `manual` driver that never invokes a model but records the expected
+operator action. This keeps tests deterministic and gives operators a no-quota
+path.
+
+## Run Artifact Requirements
+
+`docs/outer-loop/run-artifacts.md` must explain:
+
+- what files the runner creates
+- which artifacts are safe to commit
+- which artifacts are transient
+- why raw transcripts are not captured by default
+- how final assistant summaries may be captured when a driver supports a
+  bounded final-message output option
+
+Update `.gitignore` only if needed to keep live transient artifacts out of git
+while preserving committed fixtures and templates.
+
+## Test Requirements
+
+Add tests for:
+
+- dry-run runner does not invoke external commands
+- manual driver creates a ledger entry
+- live execution requires `--execute`
+- `--max-prompts` limits execution
+- driver failure is recorded and stops the run
+- gate failure stops subsequent steps
+- prompt payload includes required guardrails
+- JSON output has stable fields
+
+Use fake commands or temporary scripts in tests. Do not invoke real Codex,
+Gemini, Pi, or networked providers in tests.
+
+## Constraints
+
+- Do not run live assistant CLIs during tests.
+- Do not store raw transcripts by default.
+- Do not stage or commit files.
+- Do not push, tag, publish, or delete repository history.
+- Do not add dependencies.
+- Do not build a daemon, TUI, or scheduler.
+- Do not add a Claude subscription driver outside Claude Code.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py outer run` in dry-run mode against a small plan.
+3. Run `python3 scripts/ahl.py outer gate PROMPT_37 --json`.
+4. Run `python3 scripts/ahl.py driver check`.
+5. Run `python3 scripts/ahl.py doctor`.
+6. Confirm docs make live execution opt-in and dry-run default.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit live-runner deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_38.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if commit-planner readiness is blocked by run
+   ledger or artifact-policy inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

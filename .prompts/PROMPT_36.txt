@@ -1,0 +1,165 @@
+# PROMPT_36 - Validation, Audit, And Readiness Gate Integration
+
+You are implementing the validation gate layer for the phase-two outer loop.
+Run this in a fresh coding assistant session after Prompt 35 has been
+attempted.
+
+## Project Brief
+
+The outer runner is only useful if it can stop at the right time. After each
+prompt execution, it must collect validation evidence, audit completion against
+the prompt, inspect next-prompt readiness, and produce a clear status. This
+prompt builds the local gate machinery that a live runner can call.
+
+The gate cannot prove semantic correctness by itself. It should combine
+deterministic checks with structured prompts/templates/skills that guide the
+assistant or operator through the human judgment parts.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/quality/validation-gates.md`,
+   `docs/quality/audit-protocol.md`, `docs/promptset-linting.md`,
+   `docs/outer-loop/batch-planning.md`, `runbooks/completion-audit.md`,
+   `runbooks/next-prompt-preflight.md`, and `scripts/README.md` if they exist.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create an outer-loop gate command and report format that can be run after each
+prompt step.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/gates.md`
+- `docs/outer-loop/completion-audit-integration.md`
+- `docs/outer-loop/readiness-gate.md`
+- `schemas/outer-loop-gate-report.schema.json`
+- `templates/outer-loop/gate-report.md`
+- `fixtures/outer-loop/gates/pass.json`
+- `fixtures/outer-loop/gates/blocked.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/outer-loop/roadmap.md`
+- `docs/README.md`
+
+## Gate Model Requirements
+
+`docs/outer-loop/gates.md` must define gate statuses:
+
+- `pass`
+- `pass-with-warnings`
+- `blocked`
+- `failed-validation`
+- `needs-human-review`
+- `driver-failed`
+- `unsafe-git-state`
+
+It must define the evidence expected after each prompt:
+
+- prompt id
+- changed files
+- validation commands run
+- validation outcomes
+- AHL structural checks run
+- completion audit status
+- next-prompt readiness status
+- handoff status
+- commit-plan status
+- stop-or-continue decision
+
+## Script Requirements
+
+Enhance `scripts/ahl.py` with commands such as:
+
+```bash
+python3 scripts/ahl.py outer gate PROMPT_36 --json
+python3 scripts/ahl.py outer gate PROMPT_36 --plan runs/outer-loop/<run-id>/plan.json --json
+```
+
+The command should:
+
+- inspect the current working tree through `git status --short`
+- run or reference existing AHL checks when available
+- check whether the prompt file exists
+- check whether the immediate next prompt exists, unless this is the final
+  prompt in the requested plan
+- read validation commands from the plan when supplied
+- record which checks were run, skipped, or unavailable
+- return a structured gate report
+- stop short of claiming semantic completion unless an explicit audit artifact
+  exists
+
+If running arbitrary validation commands is too risky for this prompt, implement
+a conservative command allowlist or a `--record-only` mode and document the
+limit clearly.
+
+## Completion Audit Integration
+
+`docs/outer-loop/completion-audit-integration.md` must explain:
+
+- how the gate uses deterministic checks
+- where human or assistant semantic audit remains required
+- how `trajectory-evaluator` or similar project skills can be used at closeout
+- how to represent incomplete, blocked, and unknown states honestly
+
+Do not store raw transcripts as audit evidence.
+
+## Readiness Gate
+
+`docs/outer-loop/readiness-gate.md` must explain:
+
+- how the immediate next prompt is inspected
+- what makes next-prompt readiness pass
+- what counts as a blocker
+- why the runner should stop rather than patch future prompts automatically
+  unless a cheap bridge fix is explicitly in scope
+
+## Test Requirements
+
+Add tests for:
+
+- gate report for existing prompt with no plan
+- gate report detects missing prompt
+- gate report detects missing next prompt when required
+- gate report records skipped validations honestly
+- JSON output has stable fields
+- unsafe git state is represented without crashing
+
+Use standard-library tests and temporary fixtures.
+
+## Constraints
+
+- Do not invoke assistant CLIs.
+- Do not make model calls.
+- Do not stage or commit files.
+- Do not invent semantic proof from structural checks.
+- Do not run destructive validation commands.
+- Do not add external dependencies.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py outer gate PROMPT_36 --json`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run promptset lint if available.
+5. Confirm gate docs state the limits of structural validation.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit validation-gate deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_37.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if live-runner readiness is blocked by gate
+   command or report-format inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

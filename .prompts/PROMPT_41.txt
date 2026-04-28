@@ -1,0 +1,192 @@
+# PROMPT_41 - Outer Loop Capstone And Operating Baseline
+
+You are implementing the phase-two outer-loop capstone for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompt
+40 has been attempted.
+
+## Project Brief
+
+Phase two should leave AHL with a bounded, inspectable outer-loop capability:
+driver contracts, batch plans, dry-runs, gate reports, live sequential runner
+MVP, commit planning, resume/failure handling, and a Pi adapter design. The
+capstone must audit that implementation honestly and record what is safe to
+use.
+
+This prompt should not add a new major feature. It should close small
+inconsistencies, run the available local checks, and document the operating
+baseline.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/README.md`, `docs/outer-loop/roadmap.md`,
+   `docs/outer-loop/live-runner.md`, `docs/outer-loop/commit-planning.md`,
+   `docs/outer-loop/resume-and-recovery.md`,
+   `docs/outer-loop/pi-adapter.md`, and `docs/known-limitations.md`.
+4. Run the available local check suite before editing when feasible.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Audit the phase-two outer-loop implementation, repair small inconsistencies,
+and record the outer-loop operating baseline.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/capstone-audit.md`
+- `docs/outer-loop/operating-baseline.md`
+- `docs/outer-loop/smoke-test-plan.md`
+- `docs/outer-loop/known-limitations.md`
+- `docs/outer-loop/future-work.md`
+- `docs/release-readiness.md`
+- `docs/known-limitations.md`
+- `CHANGELOG.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+- `scripts/README.md`
+
+## Capstone Audit Requirements
+
+`docs/outer-loop/capstone-audit.md` must audit:
+
+- requirements and safety boundary
+- driver contracts and capability probes
+- batch planning
+- dry-run runner
+- validation/audit/readiness gates
+- live sequential runner
+- prompt payloads
+- run artifacts and ledger
+- commit planner
+- explicit commit executor
+- resume and recovery
+- Pi adapter experiment
+- docs navigation
+- script tests
+- known limitations
+
+For each area, record:
+
+- status
+- evidence files
+- checks performed
+- gaps
+- whether the gap blocks outer-loop baseline use
+
+## Operating Baseline Requirements
+
+`docs/outer-loop/operating-baseline.md` must define:
+
+- how an operator prepares a clean repo
+- how to probe drivers
+- how to create a plan for next N prompts
+- how to dry-run the plan
+- how to run one live prompt step with explicit execution
+- how to inspect the gate result
+- how to stop and recover
+- how to generate a commit plan
+- when commit execution is allowed
+- what remains manual
+
+It must include a cautious example for Codex:
+
+```bash
+python3 scripts/ahl.py outer plan --next 10 --driver codex --model gpt-5.5 --reasoning medium --json
+python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<run-id>/plan.json --json
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<run-id>/plan.json --execute --max-prompts 1 --json
+```
+
+Do not imply that every local machine has this model, subscription, or CLI
+available.
+
+## Smoke Test Plan
+
+`docs/outer-loop/smoke-test-plan.md` must define smoke tests:
+
+- driver registry check
+- help-only driver probes
+- plan creation
+- dry-run execution
+- gate report
+- manual-driver run
+- fake-driver failure
+- commit plan generation
+- resume dry-run
+- safety check
+
+Separate tests that require real assistant CLIs from tests that are safe in CI
+or offline. Real assistant CLI tests should be opt-in.
+
+## Known Limitations And Future Work
+
+`docs/outer-loop/known-limitations.md` must honestly state:
+
+- live assistant runs can consume quota
+- structural checks do not prove semantic completion
+- provider CLIs may change behavior
+- local auth is outside AHL
+- transcript capture is intentionally limited
+- commit execution is opt-in and conservative
+- Pi support may remain probe/dry-run only unless verified
+- Claude subscription automation is not supported outside Claude Code
+
+`docs/outer-loop/future-work.md` must list future work as backlog, not new
+prompts:
+
+- richer driver adapters
+- stronger semantic audit assistance
+- opt-in transcript summarization
+- multi-worktree experiments
+- limited parallel lane experiments
+- local search over run metadata
+- API-backed providers when explicitly requested
+
+## Navigation And Release Updates
+
+Update `README.md`, `AGENT.md`, `docs/README.md`, `scripts/README.md`,
+`docs/release-readiness.md`, `docs/known-limitations.md`, and `CHANGELOG.md`
+to reflect the actual phase-two state. Make surgical updates only.
+
+Do not claim production readiness. The right claim is bounded local outer-loop
+support when checks pass and the operator explicitly enables live execution.
+
+## Constraints
+
+- Do not add new major feature areas.
+- Do not generate additional prompt files.
+- Do not introduce dependencies.
+- Do not run real assistant CLI calls unless the operator explicitly approves
+  them during this prompt.
+- Do not stage, commit, push, tag, or publish unless the operator explicitly
+  asks.
+- Do not hide failed or unavailable checks.
+- Do not modify reference repos.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py doctor`.
+3. Run driver checks and help-only probes where safe.
+4. Run outer-loop plan and dry-run commands with a manual driver.
+5. Run outer gate on `PROMPT_41`.
+6. Run commit-plan command in plan-only mode.
+7. Run resume/status commands against fixtures or generated ledgers.
+8. Run docs link and promptset lint checks if available.
+9. Record failed, skipped, or unavailable checks honestly in the capstone docs.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit outer-loop capstone deliverables against this prompt.
+2. Confirm whether the phase-two outer-loop baseline is usable, incomplete, or
+   blocked.
+3. Confirm no further prompt is required for this phase-two baseline.
+4. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains.
+5. Do not commit unless the operator explicitly asks.

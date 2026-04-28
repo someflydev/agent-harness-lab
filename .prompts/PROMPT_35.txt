@@ -1,0 +1,165 @@
+# PROMPT_35 - Sequential Batch Planner And Dry-Run Runner
+
+You are implementing the phase-two batch planner and dry-run runner for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompt
+34 has been attempted.
+
+## Project Brief
+
+Before AHL invokes any assistant CLI, it needs to know what it intends to run.
+The batch planner should turn an operator request such as "run the next 10
+prompts" into an inspectable plan. The dry-run runner should exercise that plan
+without model calls, file edits from assistants, or commits.
+
+This prompt builds planning and simulation only. It should make the future live
+runner safer by forcing prompt order, driver choice, validation expectations,
+and stop conditions into explicit files and structured output.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/requirements.md`,
+   `docs/outer-loop/driver-contracts.md`,
+   `docs/outer-loop/safety-boundary.md`, `scripts/README.md`, and
+   `registry/assistant-drivers.json`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a deterministic plan format and dry-run command for sequential prompt
+batches.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/batch-planning.md`
+- `docs/outer-loop/dry-run-runner.md`
+- `schemas/outer-loop-plan.schema.json`
+- `schemas/outer-loop-dry-run-report.schema.json`
+- `templates/outer-loop/batch-plan.md`
+- `fixtures/outer-loop/plans/valid-next-three.json`
+- `fixtures/outer-loop/plans/missing-prompt.json`
+- `fixtures/outer-loop/reports/dry-run-pass.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/outer-loop/roadmap.md`
+- `docs/README.md`
+
+## Plan Format Requirements
+
+Define a plan that includes:
+
+- plan id
+- created timestamp
+- requested prompt range
+- resolved prompt ids and paths
+- driver id
+- model name, if supplied
+- reasoning or thinking setting, if supplied
+- permission posture
+- per-prompt validation commands
+- required AHL checks
+- stop conditions
+- commit policy: `none`, `plan-only`, or `explicit`
+- transcript capture policy
+- run artifact directory
+
+The default commit policy must be `none` or `plan-only`. The planner must not
+commit or stage files.
+
+## Script Requirements
+
+Enhance `scripts/ahl.py` with commands such as:
+
+```bash
+python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
+python3 scripts/ahl.py outer plan --next 10 --driver codex --json
+python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<run-id>/plan.json --json
+```
+
+The planner should:
+
+- resolve prompt ids from `.prompts/`
+- enforce strict sequential order
+- reject gaps, duplicates, or missing prompt files
+- read driver ids from `registry/assistant-drivers.json`
+- create an inspectable plan artifact under `runs/outer-loop/`
+- refuse to overwrite existing plan artifacts
+- support `--json`
+
+The dry-run runner should:
+
+- read the plan artifact
+- verify every prompt file still exists
+- verify the driver record exists
+- verify expected validation commands are named or derivable
+- verify stop conditions are present
+- simulate per-prompt status without invoking any assistant CLI
+- emit stable JSON with `ok`, `plan_id`, `steps`, and `problems`
+
+## Docs Requirements
+
+`docs/outer-loop/batch-planning.md` must explain:
+
+- when to use explicit `--from` and `--count`
+- how "next N" should be interpreted
+- how promptset lint affects planning
+- how driver/model/reasoning values are recorded
+- why a plan is an artifact, not an execution guarantee
+
+`docs/outer-loop/dry-run-runner.md` must explain:
+
+- what dry-run validates
+- what dry-run cannot prove
+- how dry-run differs from live assistant execution
+- how dry-run reports should be reviewed before `--execute` is ever used
+
+## Test Requirements
+
+Add tests for:
+
+- plan creation for a valid prompt range
+- missing prompt in requested range fails
+- invalid driver id fails
+- `--next` selection works from a fixture promptset
+- dry-run pass JSON has stable fields
+- dry-run detects a missing prompt referenced by a plan
+- plan artifact refuses overwrite
+
+Use temporary directories and standard-library tests.
+
+## Constraints
+
+- Do not invoke assistant CLIs.
+- Do not make model calls.
+- Do not stage, commit, tag, push, or publish.
+- Do not parse raw transcripts.
+- Do not add external dependencies.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py outer plan --from PROMPT_33 --count 1 --driver manual --json`.
+3. Run `python3 scripts/ahl.py outer dry-run` against the created plan.
+4. Run `python3 scripts/ahl.py promptset lint` if available.
+5. Run `python3 scripts/ahl.py doctor`.
+6. Confirm generated run artifacts are either intentionally committed examples
+   or kept out of git according to existing run-artifact policy.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit batch-planner deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_36.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if validation-gate readiness is blocked by plan
+   format or dry-run docs inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

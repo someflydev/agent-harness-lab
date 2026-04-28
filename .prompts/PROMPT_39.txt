@@ -1,0 +1,168 @@
+# PROMPT_39 - Resume, Failure Handling, And Run Ledger Hardening
+
+You are implementing resume and failure-handling support for the phase-two
+outer loop. Run this in a fresh coding assistant session after Prompt 38 has
+been attempted.
+
+## Project Brief
+
+A sequential runner must fail well. It should be able to stop after a blocked
+prompt, explain what happened, preserve enough state to resume safely, and
+avoid rerunning successful prompts accidentally. It should also handle ordinary
+operator realities: quota exhaustion, context exhaustion, auth failures, local
+test failures, dirty worktrees, and interrupted sessions.
+
+This prompt hardens the run ledger and resume commands. It should not expand
+the system into a scheduler or daemon.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/live-runner.md`,
+   `docs/outer-loop/gates.md`, `docs/outer-loop/commit-planning.md`,
+   `docs/outer-loop/run-artifacts.md`, `docs/safety/README.md`, and
+   `scripts/README.md`.
+4. Run existing checks if available.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add durable run ledger semantics, resume commands, and failure classifications
+for interrupted or blocked outer-loop runs.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/resume-and-recovery.md`
+- `docs/outer-loop/failure-classification.md`
+- `docs/outer-loop/run-ledger.md`
+- `schemas/outer-loop-run-ledger.schema.json`
+- `templates/outer-loop/recovery-handoff.md`
+- `fixtures/outer-loop/runs/interrupted-ledger.json`
+- `fixtures/outer-loop/runs/blocked-ledger.json`
+- `fixtures/outer-loop/runs/resumable-ledger.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/outer-loop/roadmap.md`
+- `docs/README.md`
+
+## Ledger Requirements
+
+`docs/outer-loop/run-ledger.md` must define a ledger with:
+
+- run id
+- plan id
+- driver id
+- model and reasoning/thinking values
+- permission posture
+- started and ended timestamps
+- current status
+- per-prompt step records
+- command metadata
+- validation results
+- gate results
+- commit plan and commit hashes when present
+- resume pointer
+- stop reason
+- recovery recommendation
+
+The ledger should store derived metadata and concise summaries, not raw
+assistant transcripts.
+
+## Failure Classification Requirements
+
+`docs/outer-loop/failure-classification.md` must classify:
+
+- driver executable missing
+- driver auth failure
+- driver rate limit or quota exhaustion
+- driver timeout
+- prompt execution failed
+- validation failed
+- completion audit incomplete
+- next-prompt readiness blocked
+- unsafe git state
+- unexpected changed files
+- commit plan refused
+- user interruption
+- unknown failure
+
+For each class, document:
+
+- whether resume is safe
+- whether repair is needed
+- what artifact should explain the state
+- what the runner must not do automatically
+
+## Script Requirements
+
+Enhance `scripts/ahl.py` with commands such as:
+
+```bash
+python3 scripts/ahl.py outer status --run <run-id> --json
+python3 scripts/ahl.py outer resume --run <run-id> --dry-run --json
+python3 scripts/ahl.py outer recovery-handoff --run <run-id>
+```
+
+The commands should:
+
+- read run ledgers from `runs/outer-loop/`
+- identify completed, failed, skipped, and pending prompt steps
+- refuse resume when the worktree is unsafe
+- support dry-run resume planning
+- show the next prompt that would run
+- avoid rerunning completed prompt steps unless an explicit `--rerun` flag is
+  supplied
+- create a recovery handoff from template when needed
+- degrade clearly when ledger files are missing or malformed
+
+Do not make resume perform live assistant invocation unless it reuses the live
+runner command path and still requires explicit execution flags.
+
+## Test Requirements
+
+Add tests for:
+
+- status on completed, blocked, and interrupted ledgers
+- resume dry-run selects the correct next prompt
+- resume refuses unsafe git state
+- resume refuses malformed ledger
+- recovery handoff creation refuses overwrite by default
+- JSON output has stable fields
+
+Use temporary fixtures and standard-library tests.
+
+## Constraints
+
+- Do not build a scheduler or daemon.
+- Do not run assistant CLIs unless through already implemented explicit runner
+  flags.
+- Do not commit, stage, push, tag, or publish.
+- Do not store raw transcripts.
+- Do not add external dependencies.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py outer status` against a fixture or generated run
+   ledger.
+3. Run `python3 scripts/ahl.py outer resume` in dry-run mode.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Confirm docs explain when not to resume.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit resume/failure deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_40.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if Pi-adapter readiness is blocked by driver or
+   ledger inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

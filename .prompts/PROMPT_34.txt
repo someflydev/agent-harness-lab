@@ -1,0 +1,180 @@
+# PROMPT_34 - Assistant Driver Contracts And Capability Probes
+
+You are implementing assistant-driver contracts for the phase-two outer loop.
+Run this in a fresh coding assistant session after Prompt 33 has been
+attempted.
+
+## Project Brief
+
+The outer loop should invoke existing assistant CLIs rather than becoming a
+provider SDK. Driver contracts make that boundary inspectable: they describe
+what command is expected, what capabilities are required, how to probe the
+local environment safely, and which behaviors are unsupported.
+
+The first driver layer should be conservative. It should recognize Codex,
+Gemini, and Pi-style external harnesses where available, but only through local
+CLI contracts and capability probes. It should not perform live model calls in
+this prompt.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/README.md`,
+   `docs/outer-loop/assistant-driver-boundary.md`,
+   `docs/outer-loop/safety-boundary.md`, and `scripts/README.md`.
+4. Inspect local `pi-mono/packages/coding-agent/README.md` only as reference if
+   the directory exists. Do not modify `pi-mono`.
+5. Run existing checks if available.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create driver contracts, schemas, docs, and lightweight capability probes that
+later prompts can use before running live assistant sessions.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/driver-contracts.md`
+- `docs/outer-loop/capability-probes.md`
+- `registry/assistant-drivers.json`
+- `schemas/assistant-driver.schema.json`
+- `fixtures/assistant-drivers/codex.json`
+- `fixtures/assistant-drivers/gemini.json`
+- `fixtures/assistant-drivers/pi.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/README.md`
+- `docs/outer-loop/roadmap.md`
+
+## Driver Contract Requirements
+
+`docs/outer-loop/driver-contracts.md` must define a driver record with fields
+such as:
+
+- driver id
+- display name
+- driver kind: `subscription-cli`, `api-cli`, `external-harness`, or `manual`
+- executable name
+- supported invocation modes
+- prompt input method: argument, stdin, prompt file, or tool-specific option
+- structured output support
+- final-message capture support
+- sandbox or approval controls
+- model selection support
+- reasoning or thinking selection support
+- fresh-session behavior
+- resume behavior
+- known limitations
+- unsupported operations
+
+The docs must distinguish between:
+
+- a driver contract that describes a command
+- a capability probe that checks local availability
+- a live run that may spend quota and change files
+
+## Registry Requirements
+
+`registry/assistant-drivers.json` must include initial records for:
+
+- `codex`
+- `gemini`
+- `pi`
+- `manual`
+
+Keep records conservative. If a capability cannot be verified from repo-local
+or command-help evidence, mark it as unknown or requires verification instead
+of guessing.
+
+Do not add a `claude-subscription` external driver. If Claude is mentioned,
+represent it only as a future API-backed or manual/Claude-Code-local path.
+
+## Schema Requirements
+
+`schemas/assistant-driver.schema.json` must validate the driver registry shape
+at a lightweight level. Use simple JSON Schema constraints and avoid brittle
+tool-specific validation.
+
+## Script Requirements
+
+Enhance `scripts/ahl.py` with driver commands such as:
+
+```bash
+python3 scripts/ahl.py driver list
+python3 scripts/ahl.py driver list --json
+python3 scripts/ahl.py driver check
+python3 scripts/ahl.py driver probe codex --help-only --json
+```
+
+The commands should:
+
+- read `registry/assistant-drivers.json`
+- validate required driver fields
+- report missing or malformed driver records
+- check whether expected executables are present on `PATH` when safe
+- optionally run command help probes only, not live model calls
+- produce stable JSON with `ok`, `drivers`, `checks`, and `problems`
+
+`driver probe` must default to safe inspection only. It must not send a prompt
+to a model, create a session, authenticate, or write outside ordinary AHL
+artifacts.
+
+## Test Requirements
+
+Add tests for:
+
+- valid driver registry passes
+- malformed driver registry fails with structured problems
+- driver list JSON has stable fields
+- unknown driver probe fails clearly
+- help-only probe degrades gracefully when executable is missing
+
+Use only standard-library tests and temporary fixtures.
+
+## Docs Requirements
+
+`docs/outer-loop/capability-probes.md` must explain:
+
+- what probes check
+- what probes deliberately do not check
+- how to interpret missing executables
+- how driver records differ from secrets or local auth state
+- why live model calls are deferred to a later prompt
+
+Update `scripts/README.md` with the new driver commands.
+
+## Constraints
+
+- Do not perform live model calls.
+- Do not store credentials or tokens.
+- Do not add provider SDKs or package dependencies.
+- Do not edit local reference repos.
+- Do not create a generic provider abstraction beyond local CLI driver records.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py driver list`.
+3. Run `python3 scripts/ahl.py driver list --json`.
+4. Run `python3 scripts/ahl.py driver check`.
+5. Run at least one help-only probe and confirm missing executables degrade
+   cleanly.
+6. Run `python3 scripts/ahl.py doctor`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit driver-contract deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_35.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if batch-planner readiness is blocked by
+   driver registry or docs inconsistencies.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

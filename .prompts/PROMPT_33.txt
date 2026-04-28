@@ -1,0 +1,211 @@
+# PROMPT_33 - Outer Loop Requirements And Safety Boundary
+
+You are implementing the phase-two requirements layer for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompts
+01 through 32 have been completed or intentionally baselined.
+
+## Project Brief
+
+The initial promptset established a human-assisted harness lab: prompts,
+runbooks, templates, skills, validation checks, traceability, safety guidance,
+and a small command surface. Phase two may add an outer sequential runner that
+drives existing assistant CLIs one prompt at a time.
+
+This is still not a large autonomous agent platform. The intended capability is
+bounded orchestration of already-authenticated tools such as Codex, Gemini, and
+possibly Pi. Claude subscription automation is out of scope unless it runs
+inside Claude Code itself; any external Claude automation belongs on an
+API-backed path with explicit cost and credential handling.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/capstone/operating-baseline.md`,
+   `docs/capstone/future-backlog.md`, `docs/operator-console.md`,
+   `docs/safety/README.md`, `docs/assistants/subscription-workflow.md`, and
+   `scripts/README.md` if they exist.
+4. Run the available local check suite before editing when feasible.
+5. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Define the outer-loop scope, safety model, and implementation roadmap so later
+phase-two prompts can build the runner without blurring AHL's boundaries.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/README.md`
+- `docs/outer-loop/requirements.md`
+- `docs/outer-loop/safety-boundary.md`
+- `docs/outer-loop/sequential-runner-model.md`
+- `docs/outer-loop/assistant-driver-boundary.md`
+- `docs/outer-loop/non-goals.md`
+- `docs/outer-loop/roadmap.md`
+- `docs/capstone/future-backlog.md`
+- `docs/known-limitations.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+
+If a referenced file does not exist because the first 32 prompts were not fully
+implemented, make the smallest compatible scaffold needed and record the gap
+honestly.
+
+## Requirements Document
+
+`docs/outer-loop/requirements.md` must define the target workflow:
+
+1. choose the next prompt range, for example next 10 prompts
+2. create a batch plan
+3. run prompts sequentially, never in parallel by default
+4. start a fresh assistant CLI session for each prompt
+5. pass the prompt file and bounded startup context
+6. run prompt-required validations after each prompt
+7. run AHL structural checks after each prompt
+8. perform completion audit and next-prompt readiness check
+9. stop on blocker, failed validation, driver failure, or unsafe git state
+10. produce reviewable commit plans and explicit commits only when authorized
+
+Call out the canonical example:
+
+```text
+Run the next 10 planned prompts in sequence, with a fresh Codex gpt-5.5
+medium-reasoning session per prompt file, validating at the end of each run,
+checking the next prompt for readiness, then creating appropriately grouped
+reviewable commits with correct prompt-id prefixes.
+```
+
+Do not claim this example is implemented yet.
+
+## Safety Boundary
+
+`docs/outer-loop/safety-boundary.md` must define:
+
+- dry-run first behavior
+- explicit `--execute` style consent for live assistant invocation
+- no parallel prompt execution in the MVP
+- no hidden provider abstraction
+- no secret storage
+- no raw transcript storage by default
+- no destructive git operations
+- no commit, stage, push, tag, or publish unless explicitly requested
+- clean handling of rate limits, context exhaustion, auth failure, and CLI
+  command failure
+- how the runner should stop rather than improvise after unexpected state
+
+It must explain why bounded automation is allowed only after the baseline
+workflow exists and only when the runner exposes its decisions through files and
+structured output.
+
+## Sequential Runner Model
+
+`docs/outer-loop/sequential-runner-model.md` must define the runner as a local
+wrapper around existing tools. It should identify the major components:
+
+- batch planner
+- assistant driver registry
+- prompt payload builder
+- live runner
+- validation gate runner
+- completion auditor
+- next-prompt readiness checker
+- run ledger
+- commit planner
+- explicit commit executor
+- resume and failure handler
+
+For each component, state whether it exists now, is created in this prompt, or
+belongs to a later phase-two prompt.
+
+## Assistant Driver Boundary
+
+`docs/outer-loop/assistant-driver-boundary.md` must define these terms:
+
+- assistant driver
+- subscription CLI
+- API provider runtime
+- headless invocation
+- prompt payload
+- run ledger entry
+- validation gate
+- commit package
+
+It must explicitly say:
+
+- Codex and Gemini may be driven through their supported CLIs when the operator
+  has authenticated those tools outside AHL.
+- Pi may be adapted as an external harness if its local CLI mode can be driven
+  safely and inspected.
+- Claude subscription automation is not provided by AHL outside Claude Code;
+  any external Claude automation belongs to an explicit API-backed driver in a
+  later phase if the operator asks for it.
+
+Avoid current-product claims that require live web verification unless the
+operator explicitly asks for a docs refresh.
+
+## Non-Goals
+
+`docs/outer-loop/non-goals.md` must state:
+
+- not a TUI clone
+- not a provider SDK
+- not a credential manager
+- not a daemon
+- not a multi-agent scheduler
+- not a transcript warehouse
+- not a semantic proof engine
+- not a replacement for human review
+- not a license or terms workaround
+
+## Roadmap
+
+`docs/outer-loop/roadmap.md` must map the rest of the phase-two promptset:
+
+- driver contracts and capability probes
+- batch planning and dry-runs
+- validation/audit/readiness gate integration
+- live sequential runner
+- commit planning and explicit commit execution
+- resume and failure handling
+- Pi adapter experiment
+- outer-loop capstone
+
+Update `docs/capstone/future-backlog.md` and `docs/known-limitations.md` so
+they point to the new outer-loop docs without claiming implementation.
+
+## Constraints
+
+- Do not implement live assistant invocation in this prompt.
+- Do not add provider credentials, API keys, config files with secrets, or
+  machine-specific paths.
+- Do not create a daemon, TUI, MCP server, or long-running service.
+- Do not add dependencies.
+- Do not modify reference repos.
+- Do not generate additional prompt files beyond the phase-two files already
+  requested by the operator.
+
+## Validation
+
+After editing:
+
+1. Run `python3 scripts/ahl.py doctor` if available.
+2. Run docs link checks if available.
+3. Run promptset lint if available.
+4. Confirm the new docs consistently say the outer loop is designed but not
+   implemented yet.
+5. Confirm README, AGENT, and docs navigation point to the outer-loop docs
+   without making them mandatory startup context.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit outer-loop requirements deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_34.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if driver-contract readiness is blocked by
+   missing navigation or contradictory non-goal language.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.

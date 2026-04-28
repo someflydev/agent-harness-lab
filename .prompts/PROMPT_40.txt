@@ -1,0 +1,149 @@
+# PROMPT_40 - Pi Adapter Experiment
+
+You are implementing a bounded Pi adapter experiment for the phase-two outer
+loop. Run this in a fresh coding assistant session after Prompt 39 has been
+attempted.
+
+## Project Brief
+
+`pi-mono` is a richer TUI and coding-agent harness with provider/model support,
+prompt templates, skills, extensions, sessions, and programmatic modes. AHL
+should not clone Pi. It may, however, learn from Pi and optionally drive Pi as
+an external assistant harness when the local CLI supports a safe headless or
+structured mode.
+
+This prompt should inspect the local `pi-mono` reference, document the adapter
+shape, and implement only the minimum local driver support that can be tested
+without real provider calls.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/assistant-driver-boundary.md`,
+   `docs/outer-loop/driver-contracts.md`,
+   `docs/outer-loop/live-runner.md`,
+   `registry/assistant-drivers.json`, and `scripts/README.md`.
+4. Inspect these reference files if they exist:
+   - `pi-mono/README.md`
+   - `pi-mono/packages/coding-agent/README.md`
+   - `pi-mono/packages/ai/README.md`
+   - `pi-mono/AGENTS.md`
+5. Do not modify `pi-mono`.
+6. Run existing checks if available.
+7. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a Pi adapter design and a conservative local driver integration that
+keeps Pi external to AHL.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/outer-loop/pi-adapter.md`
+- `docs/outer-loop/pi-vs-ahl.md`
+- `docs/outer-loop/provider-harness-comparison.md`
+- `registry/assistant-drivers.json`
+- `fixtures/assistant-drivers/pi.json`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/outer-loop/roadmap.md`
+- `docs/README.md`
+
+## Adapter Design Requirements
+
+`docs/outer-loop/pi-adapter.md` must explain:
+
+- which Pi modes are relevant to AHL, based on local reference docs
+- how Pi differs from Codex and Gemini CLI drivers
+- how Pi provider/model selection should be treated as Pi's responsibility
+- what AHL should pass to Pi as prompt payload
+- what AHL should expect back
+- what output capture is safe
+- what local capabilities must be probed before live use
+- what remains unknown or unverified
+
+Do not claim Pi support beyond what the local reference docs and implemented
+probes justify.
+
+## Comparison Requirements
+
+`docs/outer-loop/pi-vs-ahl.md` must explain:
+
+- Pi as an interactive/programmatic coding-agent harness
+- AHL as a promptset, validation, traceability, and orchestration lab
+- why AHL should avoid reimplementing Pi's TUI/provider runtime
+- when using Pi as the external driver is sensible
+- when direct Codex or Gemini CLI drivers are simpler
+
+`docs/outer-loop/provider-harness-comparison.md` must compare:
+
+- Codex subscription CLI driver
+- Gemini subscription CLI driver
+- Pi external harness driver
+- manual driver
+- future API-backed drivers
+
+Include safety, auth, output capture, model selection, and testing differences.
+
+## Script Requirements
+
+Update driver logic so the `pi` driver can be:
+
+- listed
+- checked against schema
+- probed safely for executable/help availability
+- used in dry-run plans
+- represented in live-runner plans without being invoked in tests
+
+If the local Pi CLI shape is not reliably known, keep live invocation disabled
+for `pi` and mark the driver as `manual-confirmation-required`. This is better
+than guessing a command that may run incorrectly.
+
+## Test Requirements
+
+Add tests for:
+
+- Pi driver registry shape
+- Pi help-only probe degrades when executable is unavailable
+- Pi dry-run planning works
+- Pi live invocation is disabled or guarded when capability is unknown
+- comparison docs are linked from outer-loop navigation
+
+Do not invoke real Pi provider calls in tests.
+
+## Constraints
+
+- Do not modify `pi-mono`.
+- Do not vendor Pi code.
+- Do not add npm dependencies or install Pi.
+- Do not claim AHL is a TUI or provider runtime.
+- Do not run live provider calls.
+- Do not store credentials or transcripts.
+- Do not generate additional prompt files.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py driver list --json`.
+3. Run `python3 scripts/ahl.py driver probe pi --help-only --json` and confirm
+   missing or unknown local availability is handled clearly.
+4. Run `python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json`.
+5. Run `python3 scripts/ahl.py doctor`.
+6. Confirm docs do not blur AHL with Pi.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit Pi-adapter deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_41.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if outer-loop capstone readiness is blocked by
+   adapter docs, driver registry, or probe behavior.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Do not commit unless the operator explicitly asks.
