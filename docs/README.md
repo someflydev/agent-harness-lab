@@ -3,8 +3,8 @@
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
 doctrine, role boundaries, skills, routines, runbooks, runtime session behavior,
-memory governance, and contracts. Later prompts will add examples, reports, and
-scripts.
+memory governance, contracts, and examples. Later prompts will add reports and
+expanded scripts.
 
 ## Start Here
 
@@ -96,6 +96,20 @@ scripts.
   run, audit, readiness, handoff, and closeout contract reference.
 - `contracts/contract-composition.md` - practical composition flow through the
   Orchestrator -> Leads -> Workers hierarchy and closeout loop.
+
+## Examples
+
+- `../examples/README.md` - illustrative scenario index for sequential prompt
+  runs, org-lane delegation, memory promotion, and repair bridges.
+- `../examples/sequential-prompt-run/README.md` - normal prompt execution with
+  manifest, completion audit, readiness report, no-handoff decision, and clean
+  reset.
+- `../examples/org-lane-delegation/README.md` - compact Orchestrator -> Lead ->
+  Worker contract flow.
+- `../examples/memory-promotion/README.md` - reviewed promotion from temporary
+  observation into durable memory.
+- `../examples/repair-bridge/README.md` - justified transient handoff for an
+  incomplete or blocked prompt.
 
 ## Runtime
 
