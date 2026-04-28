@@ -7,6 +7,9 @@ claw-code/
 
 # Session-local handoffs, scratch files, and runtime state
 tmp/
+context/TASK.md
+context/SESSION.md
+context/MEMORY.md
 .runtime/
 .session/
 .cache/
