@@ -104,9 +104,17 @@ fresh assistant session:
 This keeps the project inspectable and makes each session's contribution easy
 to review.
 
+## Helper Scripts
+
+The `scripts/ahl.py` CLI provides small standard-library helpers for local
+checks and scaffolding. Use it to inspect promptset numbering, run a foundation
+doctor check, print a read-only session briefing, and create run or handoff
+artifacts from templates. It supports the manual workflow; it does not run
+assistants, call providers, or decide completion.
+
 ## Current Status
 
 This repository has public identity, assistant bootstrap guidance, early
-documentation orientation, doctrine, and a role taxonomy. It does not yet have
-helper scripts, a memory model, templates, provider integrations, or a heavy
-runtime.
+documentation orientation, doctrine, a role taxonomy, runbooks, templates, and
+lightweight helper scripts. It does not yet have provider integrations or a
+heavy runtime.

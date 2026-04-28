@@ -15,6 +15,8 @@ scripts.
   and what is planned.
 - `reference-influences.md` - compatible ideas adapted from local reference
   repos without treating them as parent projects.
+- `scripts.md` - lightweight helper script behavior, examples, JSON fields,
+  and automation boundaries.
 
 ## Doctrine
 
@@ -80,6 +82,12 @@ scripts.
 - `../runbooks/prompt-authoring.md` - prompt authoring workflow separate from
   prompt execution.
 - `../runbooks/commit-packaging.md` - commit hygiene and prompt-id packaging.
+
+## Scripts
+
+- `scripts.md` - operator-facing guide for `scripts/ahl.py`.
+- `../scripts/README.md` - script directory README with command examples and
+  JSON output expectations.
 
 ## Contracts
 

@@ -40,6 +40,13 @@ Session lifecycle, endcap, bridge, reset, adjacent-prompt readiness, and
 permission posture guidance lives in `docs/runtime/`. Use those docs when a
 prompt asks for runtime/session behavior or closeout decisions.
 
+## Helper Scripts
+
+`scripts/ahl.py` is available for lightweight local checks and scaffolding:
+`doctor`, `promptset`, `resume`, `checkpoint`, `scaffold-run`, and
+`new-handoff`. Treat it as helper tooling for the human-assisted workflow, not
+as an autonomous runner or provider integration.
+
 ## Endcap Routine
 
 Use this closeout loop for prompt-execution sessions:
