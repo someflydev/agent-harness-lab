@@ -2,9 +2,9 @@
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
-doctrine, role boundaries, skills, routines, runtime session behavior, memory
-governance, and contracts. Later prompts will add runbooks, examples, reports,
-and scripts.
+doctrine, role boundaries, skills, routines, runbooks, runtime session behavior,
+memory governance, and contracts. Later prompts will add examples, reports, and
+scripts.
 
 ## Start Here
 
@@ -56,8 +56,30 @@ and scripts.
 - `routines/README.md` - routine catalog index and usage guidance.
 - `routines/catalog.md` - initial routine catalog for prompt execution,
   closeout, repair, promotion, validation, and packaging behaviors.
+- `routines/micro-routine-library.md` - detailed reusable micro-routines for
+  scope checks, audits, readiness checks, handoffs, promotion, closeout, and
+  repair triage.
 - `routines/routine-record-format.md` - simple markdown record shape for future
   runbooks and scripts.
+
+## Runbooks
+
+- `../runbooks/README.md` - operator-facing runbook index.
+- `../runbooks/fresh-session-prompt-run.md` - normal fresh-session prompt
+  execution flow.
+- `../runbooks/completion-audit.md` - prompt requirement and evidence audit.
+- `../runbooks/next-prompt-preflight.md` - immediate next-prompt readiness
+  check.
+- `../runbooks/bridge-fix-session.md` - cheap bridge fix and handoff decision
+  procedure.
+- `../runbooks/repair-session.md` - bounded repair-session startup and
+  execution.
+- `../runbooks/promotion-review.md` - durable memory promotion decision
+  procedure.
+- `../runbooks/run-closeout.md` - final reset and closeout procedure.
+- `../runbooks/prompt-authoring.md` - prompt authoring workflow separate from
+  prompt execution.
+- `../runbooks/commit-packaging.md` - commit hygiene and prompt-id packaging.
 
 ## Contracts
 

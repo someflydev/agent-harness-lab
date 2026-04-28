@@ -1,9 +1,9 @@
 # Routines
 
 Routines are reusable sequences of behavior that an operator or assistant can
-run. They are practical operating building blocks, but they are not full
-runbooks yet. Detailed runbooks, templates, and helper scripts belong to later
-prompts.
+run. They are practical operating building blocks. The runbooks in
+`../../runbooks/` provide operator-facing procedures, while this directory keeps
+the smaller reusable routine vocabulary.
 
 Routines differ from skills. A skill is a capability, such as artifact
 verification. A routine sequences skills into a repeatable activity, such as a
@@ -13,6 +13,9 @@ completion audit.
 
 - `catalog.md` - initial routine catalog with purpose, inputs, outputs, stop
   conditions, and automation potential.
+- `micro-routine-library.md` - detailed reusable micro-routines for scope,
+  assumptions, validation discovery, audit, readiness, handoff, promotion,
+  closeout, and repair triage.
 - `routine-record-format.md` - simple markdown record format for future
   runbooks and scripts.
 
