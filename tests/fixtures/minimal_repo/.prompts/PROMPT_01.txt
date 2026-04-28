@@ -1,0 +1,4 @@
+# PROMPT_01 - Minimal Fixture
+
+This fixture prompt exists so tests can verify promptset numbering behavior in
+an intentionally incomplete repository.
