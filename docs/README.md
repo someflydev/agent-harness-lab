@@ -2,9 +2,9 @@
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
-doctrine, role boundaries, skills, routines, and runtime session behavior.
-Later prompts will add memory guidance, templates, runbooks, examples, reports,
-and scripts.
+doctrine, role boundaries, skills, routines, runtime session behavior, and
+memory governance. Later prompts will add broader templates, runbooks,
+examples, reports, and scripts.
 
 ## Start Here
 
@@ -74,3 +74,16 @@ and scripts.
   and clean reset behavior.
 - `runtime/permission-posture.md` - stable permission labels for prompts, run
   manifests, and operator notes.
+
+## Memory
+
+- `memory/README.md` - memory model index and usage guidance.
+- `memory/planes.md` - memory planes, ownership, lifespan, storage location,
+  and promotion paths.
+- `memory/promotion-model.md` - review and evidence requirements for promoting
+  temporary observations into durable memory.
+- `memory/handoff-lifecycle.md` - lifecycle for temporary bridge handoffs such
+  as `tmp/HANDOFF.md`.
+- `memory/run-memory.md` - compact run fact model without transcript dumping.
+- `memory/retention-and-pruning.md` - retention rules and cleanup triggers for
+  temporary and durable memory.
