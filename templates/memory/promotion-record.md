@@ -1,5 +1,15 @@
 # Promotion Record
 
+- Artifact id:
+- Date:
+- Owner role:
+
+## Scope
+
+- Promotion scope:
+- Inputs:
+- Expected durable output:
+
 ## Candidate
 
 - Fact:
@@ -20,4 +30,6 @@
 - Durable update made:
 - Validation performed:
 - Temporary notes to delete or supersede:
+- Open issues or blockers:
 - Follow-up:
+- Next step:
