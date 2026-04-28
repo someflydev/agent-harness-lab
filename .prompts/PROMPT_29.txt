@@ -65,6 +65,10 @@ you cannot verify from the repo. If uncertain, phrase guidance generically.
 - how to keep sessions bounded
 - how to avoid wasting quota on broad context loads
 - how to recover from rate limits or context exhaustion
+- how future outer wrappers may drive supported subscription CLIs one prompt at
+  a time without changing the repo's core operating model
+- the distinction between subscription-CLI usage, API-backed provider runtimes,
+  and manual copy/paste workflows
 
 ## Context Loading Requirements
 
@@ -84,6 +88,8 @@ matrix for:
   documentation. Use repo-local, tool-agnostic guidance.
 - Do not add provider-specific config files.
 - Do not claim automatic skill discovery for all tools.
+- Do not claim that this repo currently implements cross-provider orchestration
+  or an outer sequential runner.
 - When updating shared hot-spot files such as `README.md`, `AGENT.md`, and
   `docs/README.md`, integrate with existing accurate content rather than
   rewriting those files wholesale.

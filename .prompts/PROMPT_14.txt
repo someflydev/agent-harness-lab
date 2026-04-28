@@ -66,6 +66,11 @@ Create or update:
 
 Tie the path to practical signals that justify moving up the ladder.
 
+Reserve space for a possible post-baseline outer sequential runner that invokes
+external assistant CLIs one prompt at a time. Frame that runner as a future
+automation candidate after the initial baseline, not as part of the foundation
+phase and not as a provider abstraction layer.
+
 ## Traceability, Graph, And Retrieval Requirements
 
 `docs/architecture/traceability-graph-and-semantic-retrieval.md` must explain:
@@ -101,7 +106,7 @@ Include criteria for not automating.
 
 `docs/architecture/non-goals.md` must restate foundation-phase non-goals:
 
-- no provider abstraction
+- no provider abstraction in the foundation phase
 - no always-on multi-agent daemon
 - no full REPL/TUI clone
 - no MCP/plugin/server infrastructure
@@ -154,7 +159,9 @@ files surgically rather than rewriting them wholesale.
 
 - Do not build a heavy runtime.
 - Do not add dependencies.
-- Do not create new prompt files. The full initial promptset already exists.
+- Do not create new prompt files during this foundation prompt. The full
+  initial promptset already exists; any later `PROMPT_33+` files belong to a
+  separate post-baseline prompt-authoring phase.
 - Do not hide gaps. The capstone audit should be honest.
 - Do not modify reference repos.
 

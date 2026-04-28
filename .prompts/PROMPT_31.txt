@@ -61,6 +61,8 @@ repo usable:
 
 - the repo is human-assisted first
 - no provider orchestration runtime exists
+- any outer sequential runner is post-baseline future work until explicitly
+  implemented and validated
 - no live multi-agent daemon exists
 - helper scripts are structural checks, not semantic proof
 - dry-runs do not replace real prompt execution

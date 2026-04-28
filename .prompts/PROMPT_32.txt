@@ -11,9 +11,10 @@ human-assisted harness lab. It should audit the full implementation sequence,
 repair small inconsistencies, run all available local checks, and record the
 baseline state honestly.
 
-Do not create more prompt files. Future prompt generation should happen only
-after this baseline is used and real findings justify a new dedicated
-prompt-authoring session.
+Do not create more prompt files as part of completing the initial baseline.
+Future prompt generation, including any `PROMPT_33+` second-phase promptset,
+should happen only in a dedicated prompt-authoring session after the baseline
+scope is understood.
 
 ## Startup Instructions
 
@@ -92,6 +93,8 @@ new prompts. Include categories such as:
 - real-world usage findings
 - stronger semantic validation
 - optional local search/indexing
+- post-baseline outer sequential runner for supported assistant CLIs
+- driver adapters for Codex, Gemini, Pi, or other tools when justified
 - richer lane orchestration
 - assistant-specific package adapters
 - additional domain packs
@@ -110,7 +113,9 @@ new prompts. Include categories such as:
 
 ## Constraints
 
-- Do not create new prompt files.
+- Do not create new prompt files while executing this final baseline prompt.
+  If `PROMPT_33+` files exist, treat them as optional phase-two backlog rather
+  than missing baseline work.
 - Do not add new major feature areas.
 - Do not introduce dependencies.
 - Do not rewrite shared hot-spot files such as `README.md`, `AGENT.md`,
@@ -139,8 +144,12 @@ After editing:
 Before ending the session:
 
 1. Audit final-capstone deliverables against this prompt.
-2. Confirm no prompt after Prompt 32 is required for the initial promptset.
-3. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains for the
+2. Confirm no prompt after Prompt 32 is required for the initial promptset. If
+   `PROMPT_33+` files exist, state that they belong to a separate phase-two
+   promptset.
+3. If `.prompts/PROMPT_33.txt` exists, inspect it only enough to confirm it is
+   optional post-baseline work, not required initial-baseline scope.
+4. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains for the
    operator.
-4. State whether the repo is baseline-usable, incomplete, or blocked.
-5. Do not commit unless the operator explicitly asks.
+5. State whether the repo is baseline-usable, incomplete, or blocked.
+6. Do not commit unless the operator explicitly asks.

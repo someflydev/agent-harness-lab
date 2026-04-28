@@ -72,6 +72,8 @@ implemented commands. Do not create misleading targets.
 - how this differs from a runtime
 - what targets are safe and read-only
 - what targets scaffold files
+- why batch prompt execution and provider/assistant invocation remain
+  post-baseline automation candidates rather than initial console targets
 
 Update `docs/commands-and-routines.md` and `scripts/README.md` to include the
 Makefile surface. Update `README.md`, `AGENT.md`, `docs/README.md`, and
@@ -89,6 +91,8 @@ the Makefile and docs stay discoverable.
 - Do not create a daemon, TUI, or REPL.
 - Do not add destructive targets.
 - Do not make commands perform commits or staging.
+- Do not add batch-run targets that invoke assistant providers or CLIs in this
+  prompt.
 - Do not generate additional prompt files.
 
 ## Validation

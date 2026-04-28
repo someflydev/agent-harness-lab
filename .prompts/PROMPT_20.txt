@@ -59,6 +59,11 @@ The command should collect local facts that are safe and cheap:
 - whether `tmp/HANDOFF.md` exists
 - suggested run record fields still needing operator input
 
+The suggested missing fields should leave room for future outer-loop metadata
+such as assistant driver, model, reasoning or thinking setting, permission
+posture, and invocation command. Do not require those fields to be populated by
+the trace command yet.
+
 Use `subprocess.run` safely. If not in a git repo or git is unavailable, return
 a structured degraded result rather than crashing.
 
