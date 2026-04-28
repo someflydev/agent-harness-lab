@@ -106,7 +106,7 @@ to review.
 
 ## Current Status
 
-This is the initial foundation pass. The repository has public identity,
-assistant bootstrap guidance, and early documentation orientation. It does not
-yet have helper scripts, a doctrine system, role taxonomy, memory model,
-templates, provider integrations, or a heavy runtime.
+This repository has public identity, assistant bootstrap guidance, early
+documentation orientation, doctrine, and a role taxonomy. It does not yet have
+helper scripts, a memory model, templates, provider integrations, or a heavy
+runtime.

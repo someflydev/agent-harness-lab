@@ -8,7 +8,7 @@ exist now; others are planned for later prompts.
 - `.prompts/` - ordered prompt files intended to be run one at a time in fresh
   assistant sessions.
 - `docs/` - foundation documentation, guardrails, operator start guidance, repo
-  layout notes, and reference influence notes.
+  layout notes, reference influence notes, doctrine, and role taxonomy.
 - `README.md` - public identity and high-level project orientation.
 - `AGENT.md` - assistant bootstrap guidance for future sessions.
 - `.gitignore` - local reference repo, transient state, cache, and editor

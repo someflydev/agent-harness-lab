@@ -10,8 +10,8 @@ Short, repo-specific definitions for `agent-harness-lab`.
   results, and decides what becomes durable.
 - **orchestrator** - The coordinating role that sequences work, preserves
   boundaries, and keeps the repo ready for the next prompt.
-- **lead** - A session role responsible for owning the active prompt's scope,
-  integration, audit, and closeout.
+- **lead** - A session role responsible for owning a lane or workstream,
+  decomposing bounded tasks, reviewing Worker outputs, and summarizing upward.
 - **worker** - A bounded execution role responsible for a specific assigned
   slice of work under the lead's coordination.
 - **prompt-bounded work unit** - The scope of work defined by one prompt and its

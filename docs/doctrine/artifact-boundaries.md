@@ -17,8 +17,8 @@ artifact.
 ## Roles
 
 Roles describe responsibilities and boundaries for human and assistant
-participants. Full role taxonomy belongs to later role-specific work, not this
-doctrine pass.
+participants. Role taxonomy belongs in `docs/roles/`; doctrine should only keep
+the durable boundary that roles describe who is acting.
 
 ## Skills
 

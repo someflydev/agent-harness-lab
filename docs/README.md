@@ -1,9 +1,9 @@
 # Documentation
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
-is early, so these pages focus on foundation, orientation, guardrails, and
-initial doctrine. Later prompts will add roles, memory guidance, templates,
-runbooks, examples, reports, and scripts.
+is early, so these pages focus on foundation, orientation, guardrails, initial
+doctrine, and role boundaries. Later prompts will add memory guidance,
+templates, runbooks, examples, reports, and scripts.
 
 ## Start Here
 
@@ -26,3 +26,17 @@ runbooks, examples, reports, and scripts.
   handoffs.
 - `doctrine/design-filters.md` - practical filters for adding docs, scripts,
   metadata, automation, and compatible reference ideas.
+
+## Roles
+
+- `roles/README.md` - role taxonomy index and usage guidance.
+- `roles/org-model.md` - Orchestrator -> Leads -> Workers organization model.
+- `roles/orchestrator.md` - Orchestrator purpose, authority, outputs, and
+  boundaries.
+- `roles/lead.md` - Lead purpose, lane ownership, outputs, and boundaries.
+- `roles/worker.md` - Worker purpose, bounded execution, outputs, and
+  boundaries.
+- `roles/supporting-roles.md` - supporting role families for orchestration,
+  cognitive work, repo intelligence, and process review.
+- `roles/boundary-matrix.md` - authority boundaries across roles.
+- `roles/escalation-paths.md` - escalation triggers and record shape.
