@@ -2,8 +2,8 @@
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
-doctrine, and role boundaries. Later prompts will add memory guidance,
-templates, runbooks, examples, reports, and scripts.
+doctrine, role boundaries, skills, and routines. Later prompts will add memory
+guidance, templates, runbooks, examples, reports, and scripts.
 
 ## Start Here
 
@@ -40,3 +40,20 @@ templates, runbooks, examples, reports, and scripts.
   cognitive work, repo intelligence, and process review.
 - `roles/boundary-matrix.md` - authority boundaries across roles.
 - `roles/escalation-paths.md` - escalation triggers and record shape.
+
+## Skills
+
+- `skills/README.md` - skill taxonomy index and usage guidance.
+- `skills/taxonomy.md` - skill areas, purpose, inputs, outputs, failure
+  signals, and current support level.
+- `skills/maturity-model.md` - maturity ladder for skills from named concepts
+  through possible runtime automation.
+- `skills/role-skill-map.md` - mapping between roles and common skill areas.
+
+## Routines
+
+- `routines/README.md` - routine catalog index and usage guidance.
+- `routines/catalog.md` - initial routine catalog for prompt execution,
+  closeout, repair, promotion, validation, and packaging behaviors.
+- `routines/routine-record-format.md` - simple markdown record shape for future
+  runbooks and scripts.
