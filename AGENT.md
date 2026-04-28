@@ -60,8 +60,23 @@ Before claiming completion:
 ## Commit Hygiene
 
 Do not commit unless the operator asks. When commits are requested, prefer
-small reviewable groups and prefix messages with the prompt id, for example
+small reviewable commits grouped by coherent change, not one large catch-all
+commit. Prefix every commit subject with the active prompt id, for example
 `[PROMPT_01] Bootstrap foundation docs`.
+
+Use multi-line commit messages in Tim Pope style: a short imperative subject,
+a blank line, then wrapped explanatory body lines when useful. Create those
+messages with a heredoc so body lines are real newlines and no raw `\n`
+characters appear in the commit message, for example:
+
+```sh
+git commit -F - <<'EOF'
+[PROMPT_01] Bootstrap foundation docs
+
+Explain why this change belongs together and call out any meaningful
+validation or follow-up context.
+EOF
+```
 
 ## Hot-Spot Files
 
