@@ -9,6 +9,7 @@ a runtime engine.
 
 | Surface | Current form | Purpose | Primary inputs | Expected outputs |
 | --- | --- | --- | --- | --- |
+| Run common local checks from a console | Makefile target | Make stable helper commands discoverable without memorizing subcommands. | `Makefile`, `scripts/ahl.py`, active prompt id for trace. | Human command output and normal exit codes. |
 | Run current prompt only | Runbook | Execute one active prompt inside its stated scope. | `AGENT.md`, active prompt, required prompt docs, `git status --short`. | Prompt deliverables and validation notes. |
 | Run current prompt then audit | Runbook | Execute one prompt and check delivered artifacts against requirements. | Active prompt, changed files, validation evidence. | Completion audit status and unmet requirements if any. |
 | Run current prompt plus audit plus preflight next | Runbook | Add immediate next-prompt readiness after completion audit. | Active prompt, next prompt, changed files, docs indexes. | Completion audit plus ready, risky, or blocked readiness statement. |
@@ -24,6 +25,7 @@ a runtime engine.
 
 | Surface | Status |
 | --- | --- |
+| Run common local checks from a console | `make help`, backed by `python3 scripts/ahl.py help`. |
 | Run current prompt only | `runbooks/fresh-session-prompt-run.md` and prompt startup instructions. |
 | Run current prompt then audit | `runbooks/completion-audit.md`. |
 | Run current prompt plus audit plus preflight next | `runbooks/next-prompt-preflight.md` plus completion audit. |

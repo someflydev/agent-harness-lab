@@ -116,12 +116,21 @@ assistants, call providers, or decide completion.
 Common local checks:
 
 ```sh
+make help
+make doctor
+make promptset
+make test
 python3 scripts/ahl.py promptset
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py docs check
 python3 scripts/ahl.py validate
 python3 -m unittest tests/test_ahl.py
 ```
+
+The Makefile is a concise operator console for stable, common actions. Direct
+`python3 scripts/ahl.py ...` calls remain the right choice for JSON output,
+extra arguments, and scaffold commands that are intentionally not exposed as
+routine targets.
 
 Quality guidance lives in `docs/quality/`. Those docs define validation gates,
 promptset quality, audit protocol, severity, completion states, and failure

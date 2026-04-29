@@ -23,6 +23,8 @@ exist, but richer orchestration remains future work.
   and automation boundaries.
 - `traceability.md` - prompt-to-change trace command behavior, closeout use,
   and derived-metadata boundaries.
+- `operator-console.md` - Makefile console purpose, targets, safety, recipes,
+  and runtime boundaries.
 - `operator-control-surfaces.md` - operator-visible control surfaces, current
   status, and automation boundaries.
 - `commands-and-routines.md` - registry of helper commands, docs-only
@@ -132,6 +134,8 @@ exist, but richer orchestration remains future work.
 ## Scripts
 
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
+- `operator-console.md` - Makefile console wrapper around common helper
+  commands.
 - `promptset-linting.md` - details for `scripts/ahl.py promptset lint`.
 - `navigation-validation.md` - details for `scripts/ahl.py docs check`.
 - `dry-run-harness.md` - details for `scripts/ahl.py dry-run list` and

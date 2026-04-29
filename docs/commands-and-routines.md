@@ -7,6 +7,19 @@ assistant-executed.
 
 | Name | Type | Purpose | Inputs | Outputs | Current implementation status | Safety notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `make help` / `help` | Operator console/helper-script command | List stable Makefile targets and their underlying commands. | `Makefile`, `scripts/ahl.py`, optional `--json` for direct script use. | Human list or JSON command discovery. | Implemented by `Makefile` and `scripts/ahl.py help`. | Read-only. |
+| `make doctor` | Operator console target | Run the foundation doctor through the console surface. | Repo root and `.gitignore`. | Human summary from `doctor`. | Implemented in `Makefile`. | Read-only. |
+| `make resume` | Operator console target | Print a grounded session context briefing through the console surface. | Git state, runtime notes, `tmp/*.md`. | Human briefing from `resume`. | Implemented in `Makefile`. | Read-only. |
+| `make checkpoint` | Operator console target | Scaffold missing local context files through the console surface. | `context/*.example.md` when present. | `context/TASK.md`, `context/SESSION.md`, `context/MEMORY.md` when missing. | Implemented in `Makefile`. | Writes only missing context files; no `--force` path through Makefile. |
+| `make promptset` | Operator console target | Inspect prompt numbering through the console surface. | `.prompts/PROMPT_*.txt`. | Human promptset summary. | Implemented in `Makefile`. | Read-only. |
+| `make lint-prompts` | Operator console target | Run promptset prose and registry linting through the console surface. | Prompt files and `registry/prompts.json`. | Human lint summary. | Implemented in `Makefile`. | Read-only. |
+| `make check-docs` | Operator console target | Run markdown navigation and local link checks through the console surface. | Docs scan roots and registries. | Human docs check summary. | Implemented in `Makefile`. | Read-only. |
+| `make test` | Operator console target | Run helper CLI unit tests. | `tests/test_ahl.py`. | unittest results. | Implemented in `Makefile`. | Read-only. |
+| `make trace` | Operator console target | Summarize prompt-related working tree traceability. | `PROMPT` make variable, default `PROMPT_26`. | Human trace summary. | Implemented in `Makefile`. | Read-only. |
+| `make dry-run` | Operator console target | Validate all deterministic dry-run scenarios. | `dry-runs/PARITY.md`, scenario manifests, expected files. | Human dry-run check summary. | Implemented in `Makefile`. | Read-only. |
+| `make registry` | Operator console target | Validate curated registry indexes through the console surface. | `registry/*.json`. | Human registry check summary. | Implemented in `Makefile`. | Read-only. |
+| `make memory-check` | Operator console target | Check reviewed memory promotion candidates. | `memory/promotion-queue/*.md`. | Human memory check summary. | Implemented in `Makefile`. | Read-only. |
+| `make experiment-check` | Operator console target | Check active experiment records. | `experiments/active/*`. | Human experiment check summary. | Implemented in `Makefile`. | Read-only. |
 | `doctor` | Helper-script command | Check expected repo foundations and ignore rules. | Repo root, `.gitignore`, foundation paths. | Human summary or JSON checks. | Implemented in `scripts/ahl.py`. | Read-only. |
 | `promptset` | Helper-script command | Inspect prompt filenames, numbering, gaps, duplicates, and strict two-digit naming. | `.prompts/PROMPT_*.txt`, optional `--json`. | Human summary or promptset JSON index. | Implemented in `scripts/ahl.py`. | Read-only; does not assess prompt prose quality. |
 | `validate` | Helper-script command | Run a lightweight structural validation gate. | Repo foundations, quality directories, promptset data. | Human summary or JSON checks. | Implemented in `scripts/ahl.py`. | Read-only; does not replace prompt-specific validation. |

@@ -61,6 +61,11 @@ standard Endcap routine below is enough.
 `new-handoff`. Treat it as helper tooling for the human-assisted workflow, not
 as an autonomous runner or provider integration.
 
+The repo also has a small Makefile console for common helper actions. Use
+`make help` for the stable target list, and use direct `python3 scripts/ahl.py`
+calls when you need JSON output, extra arguments, or scaffold commands outside
+the Makefile surface.
+
 ## Endcap Routine
 
 Use this closeout loop for prompt-execution sessions:
@@ -127,6 +132,7 @@ Current and expected hot spots include:
 - `README.md`
 - `AGENT.md`
 - `docs/README.md`
+- `docs/operator-console.md`
 - `scripts/README.md`
 - `scripts/ahl.py`
 - `tests/test_ahl.py`

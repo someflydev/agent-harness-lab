@@ -5,6 +5,8 @@
 filenames, scaffolds run and handoff artifacts from templates, validates
 deterministic dry-run scenario manifests, and reports a compact session context
 briefing. It also scaffolds and checks reviewed memory promotion artifacts.
+The repo Makefile provides a small operator console for the most common
+commands; this script remains the underlying command source.
 
 It is intentionally dependency-free and uses only the Python standard library.
 Future architecture docs may describe richer orchestration candidates, but
@@ -13,6 +15,7 @@ justifies more.
 
 ## What It Does
 
+- `help` lists common operator console commands and supports `--json`.
 - `doctor` checks expected repo foundations and ignore rules.
 - `promptset` reports prompt filenames, numbers, duplicate numbers, gaps, and
   strict two-digit naming.
@@ -57,6 +60,10 @@ justifies more.
 ## Examples
 
 ```sh
+make help
+make doctor
+make test
+python3 scripts/ahl.py help --json
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py doctor --json
 python3 scripts/ahl.py promptset
@@ -87,11 +94,36 @@ python3 scripts/ahl.py metadata-example PROMPT_13 --assistant codex --json
 Generated files refuse to overwrite existing files unless the command exposes
 and receives `--force`.
 
+## Makefile Console
+
+The stable Makefile targets are:
+
+- `help`
+- `doctor`
+- `resume`
+- `checkpoint`
+- `promptset`
+- `lint-prompts`
+- `check-docs`
+- `test`
+- `trace`
+- `dry-run`
+- `registry`
+- `memory-check`
+- `experiment-check`
+
+Most targets are read-only wrappers around `scripts/ahl.py`. `checkpoint`
+scaffolds missing `context/*.md` files and refuses to overwrite them through
+the Makefile path. Use direct script commands for JSON output, non-default
+arguments, `--force`, or scaffolds such as `scaffold-run`, `new-handoff`,
+`memory propose`, `memory decision`, `experiment new`, and `finding new`.
+
 ## JSON Stability
 
 JSON output is meant for lightweight local checks. Stable top-level fields are:
 
 - `doctor`: `ok`, `checks`, `problems`
+- `help`: `ok`, `commands`, `makefile_targets`
 - `promptset`: `ok`, `prompts`, `filenames`, `numbers`, `duplicates`, `gaps`,
   `strict_two_digit`, `malformed`
 - `promptset lint`: `ok`, `prompt_dir`, `summary`, `problems`, `numbering`,
