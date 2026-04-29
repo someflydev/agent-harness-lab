@@ -3,8 +3,8 @@
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
 doctrine, role boundaries, skills, routines, runbooks, runtime session behavior,
-memory governance, contracts, quality gates, examples, experiments, reports,
-findings, and lab method. Later prompts will add expanded scripts.
+memory governance, contracts, quality gates, metadata, examples, experiments,
+reports, findings, and lab method. Later prompts will add expanded scripts.
 
 ## Start Here
 
@@ -17,6 +17,10 @@ findings, and lab method. Later prompts will add expanded scripts.
   repos without treating them as parent projects.
 - `scripts.md` - lightweight helper script behavior, examples, JSON fields,
   and automation boundaries.
+- `operator-control-surfaces.md` - operator-visible control surfaces, current
+  status, and automation boundaries.
+- `commands-and-routines.md` - registry of helper commands, docs-only
+  routines, runbooks, inputs, outputs, status, and safety notes.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
@@ -92,6 +96,22 @@ findings, and lab method. Later prompts will add expanded scripts.
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
+
+## Metadata
+
+- `metadata/README.md` - metadata purpose, document index, schema links, and
+  acceptable uses.
+- `metadata/run-record.md` - run record fields for prompt-bounded execution
+  traceability.
+- `metadata/prompt-to-commit-traceability.md` - use of prompt id commit
+  prefixes for later git analysis.
+- `metadata/derived-metadata-rules.md` - rules keeping metadata derived and
+  subordinate to repo files and git history.
+- `../schemas/run-record.schema.json` - JSON Schema for run records.
+- `../schemas/readiness-report.schema.json` - JSON Schema for readiness
+  reports.
+- `../schemas/promptset-index.schema.json` - JSON Schema for
+  `scripts/ahl.py promptset --json`.
 
 ## Contracts
 

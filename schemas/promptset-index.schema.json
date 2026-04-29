@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-harness-lab/promptset-index.schema.json",
+  "title": "Promptset Index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "prompt_dir",
+    "prompts",
+    "filenames",
+    "numbers",
+    "duplicates",
+    "gaps",
+    "strict_two_digit",
+    "malformed"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "prompt_dir": {
+      "type": "string"
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["filename", "number", "strict"],
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "number": {
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "strict": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "filenames": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "numbers": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "duplicates": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "strict_two_digit": {
+      "type": "boolean"
+    },
+    "malformed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
