@@ -169,6 +169,17 @@ class AhlTest(unittest.TestCase):
         self.assertIn("context/TASK.md", data["scaffolded"])
         self.assertTrue((self.root / "context" / "TASK.md").exists())
 
+    def test_metadata_example_returns_run_record_skeleton(self):
+        code, output = self.run_cli("metadata-example", "13", "--assistant", "codex", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["prompt_id"], "PROMPT_13")
+        self.assertEqual(data["assistant_tool"], "codex")
+        self.assertEqual(data["permission_posture"], "workspace-write")
+        self.assertEqual(data["completion_audit_status"], "not_started")
+        self.assertIn("changed_files", data)
+
 
 if __name__ == "__main__":
     unittest.main()

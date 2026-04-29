@@ -21,6 +21,7 @@ It is intentionally dependency-free and uses only the Python standard library.
   `templates/runs/run-manifest.md`.
 - `new-handoff` creates `tmp/HANDOFF.md` from
   `templates/handoffs/handoff.md`.
+- `metadata-example` prints a skeleton run record for metadata-aware closeout.
 
 ## What It Does Not Do
 
@@ -40,6 +41,7 @@ python3 scripts/ahl.py resume --json
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09 --assistant codex --permission-posture workspace-write
 python3 scripts/ahl.py new-handoff
+python3 scripts/ahl.py metadata-example PROMPT_13 --assistant codex --json
 ```
 
 Generated files refuse to overwrite existing files unless the command exposes
@@ -58,6 +60,12 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`
 - `scaffold-run`: `ok`, `created`, `run_id`, `prompt_id`
 - `new-handoff`: `ok`, `created`
+- `metadata-example`: `prompt_id`, `prompt_batch_id`, `run_id`,
+  `assistant_tool`, `permission_posture`, `started_at`, `ended_at`,
+  `changed_files`, `changed_directories`, `docs_changed`, `tests_changed`,
+  `validation_commands`, `completion_audit_status`, `next_prompt_ready`,
+  `readiness_blockers`, `handoff_created`, `follow_up_fix_required`,
+  `reusable_pattern_observations`, `associated_commit_hashes`
 
 Additional fields may be added when useful, but existing field meanings should
 remain stable.

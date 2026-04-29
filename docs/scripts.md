@@ -15,6 +15,7 @@ python3 scripts/ahl.py resume
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09
 python3 scripts/ahl.py new-handoff
+python3 scripts/ahl.py metadata-example PROMPT_13
 ```
 
 Each command supports `--json` where machine-readable output is practical.
@@ -34,6 +35,8 @@ Each command supports `--json` where machine-readable output is practical.
   `context/SESSION.md`, and `context/MEMORY.md`.
 - `scaffold-run` creates a timestamped run manifest from the run template.
 - `new-handoff` creates `tmp/HANDOFF.md` from the handoff template.
+- `metadata-example` prints a skeleton run record using the fields documented
+  in `metadata/run-record.md`.
 
 Generated artifacts refuse to overwrite existing files unless the command has
 an explicit `--force` flag and it is supplied.
@@ -51,6 +54,12 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`
 - `scaffold-run`: `ok`, `created`, `run_id`, `prompt_id`
 - `new-handoff`: `ok`, `created`
+- `metadata-example`: `prompt_id`, `prompt_batch_id`, `run_id`,
+  `assistant_tool`, `permission_posture`, `started_at`, `ended_at`,
+  `changed_files`, `changed_directories`, `docs_changed`, `tests_changed`,
+  `validation_commands`, `completion_audit_status`, `next_prompt_ready`,
+  `readiness_blockers`, `handoff_created`, `follow_up_fix_required`,
+  `reusable_pattern_observations`, `associated_commit_hashes`
 
 These fields are suitable for small local checks and smoke tests. The script is
 not a provider integration surface.

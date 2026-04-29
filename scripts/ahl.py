@@ -391,6 +391,45 @@ def command_new_handoff(args: argparse.Namespace) -> int:
     return emit(data, args.json, ["created tmp/HANDOFF.md"], 0)
 
 
+def command_metadata_example(args: argparse.Namespace) -> int:
+    prompt_id = normalize_prompt_id(args.prompt)
+    today = (
+        dt.datetime.now(dt.timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+    data: dict[str, Any] = {
+        "prompt_id": prompt_id,
+        "prompt_batch_id": args.prompt_batch_id,
+        "run_id": f"{prompt_id}-YYYYMMDD-HHMMSS",
+        "assistant_tool": args.assistant,
+        "permission_posture": args.permission_posture,
+        "started_at": today,
+        "ended_at": None,
+        "changed_files": [],
+        "changed_directories": [],
+        "docs_changed": False,
+        "tests_changed": False,
+        "validation_commands": [],
+        "completion_audit_status": "not_started",
+        "next_prompt_ready": None,
+        "readiness_blockers": [],
+        "handoff_created": False,
+        "follow_up_fix_required": False,
+        "reusable_pattern_observations": [],
+        "associated_commit_hashes": [],
+    }
+    human = [
+        f"Run record skeleton for {prompt_id}",
+        f"- Run id: {data['run_id']}",
+        f"- Assistant/tool: {data['assistant_tool']}",
+        f"- Permission posture: {data['permission_posture']}",
+        "- Fill changed files, validation, audit, readiness, and commit hashes when known.",
+    ]
+    return emit(data, args.json, human, 0)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ahl", description="Small helper tooling for agent-harness-lab.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -429,6 +468,18 @@ def build_parser() -> argparse.ArgumentParser:
     handoff.add_argument("--force", action="store_true", help="Overwrite tmp/HANDOFF.md if it exists.")
     handoff.add_argument("--json", action="store_true")
     handoff.set_defaults(func=command_new_handoff)
+
+    metadata = subparsers.add_parser("metadata-example", help="Print a skeleton run record.")
+    metadata.add_argument("prompt")
+    metadata.add_argument("--assistant", default="unspecified")
+    metadata.add_argument(
+        "--permission-posture",
+        choices=("read-only", "workspace-write", "manual-required"),
+        default="workspace-write",
+    )
+    metadata.add_argument("--prompt-batch-id", default="promptset")
+    metadata.add_argument("--json", action="store_true")
+    metadata.set_defaults(func=command_metadata_example)
 
     return parser
 
