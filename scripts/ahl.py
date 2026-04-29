@@ -35,6 +35,7 @@ REQUIRED_REGISTRY_FIELDS = ("id", "name", "type", "path", "purpose", "status", "
 DOCS_SCAN_ROOTS = (
     "README.md",
     "AGENT.md",
+    "dry-runs",
     "docs",
     "runbooks",
     "templates",
@@ -50,6 +51,7 @@ DOCS_SCAN_ROOTS = (
 )
 DOCS_NAV_INDEX = "docs/README.md"
 DOCS_INDEX_DIRS = (
+    "dry-runs",
     "runbooks",
     "templates",
     "scripts",
@@ -108,6 +110,22 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "required": ("prompt_id", "prompt_file_exists", "branch", "head", "changed_files", "docs_changed"),
     },
 }
+DRY_RUN_REQUIRED_FIELDS = (
+    "id",
+    "purpose",
+    "input_artifacts",
+    "routine_sequence",
+    "expected_checks",
+    "expected_outputs",
+    "failure_modes_covered",
+)
+DRY_RUN_LIST_FIELDS = (
+    "input_artifacts",
+    "routine_sequence",
+    "expected_checks",
+    "expected_outputs",
+    "failure_modes_covered",
+)
 
 
 def repo_root() -> Path:
@@ -979,6 +997,162 @@ def command_fixtures(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def dry_run_dirs(root: Path) -> tuple[Path, Path]:
+    base = root / "dry-runs"
+    return base / "scenarios", base / "expected"
+
+
+def dry_run_scenario_files(root: Path) -> list[Path]:
+    scenarios_dir, _expected_dir = dry_run_dirs(root)
+    if not scenarios_dir.is_dir():
+        return []
+    return sorted(scenarios_dir.glob("*.json"))
+
+
+def dry_run_ids(root: Path) -> list[str]:
+    return [path.stem for path in dry_run_scenario_files(root)]
+
+
+def parity_scenario_ids(root: Path) -> tuple[list[str], list[str]]:
+    parity_path = root / "dry-runs" / "PARITY.md"
+    if not parity_path.is_file():
+        return [], ["missing dry-run parity tracker: dry-runs/PARITY.md"]
+
+    ids: list[str] = []
+    problems: list[str] = []
+    in_table = False
+    for line in parity_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            if in_table:
+                break
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) < 4:
+            continue
+        header = cells[0].lower()
+        if header == "scenario id":
+            in_table = True
+            continue
+        if set(cells[0]) <= {"-", ":"}:
+            continue
+        if in_table and cells[0]:
+            ids.append(cells[0])
+
+    if not ids:
+        problems.append("dry-runs/PARITY.md: no scenario rows found")
+    return ids, problems
+
+
+def relative_path_exists(root: Path, value: Any) -> tuple[bool, str | None]:
+    if not isinstance(value, str) or not value:
+        return False, "path value must be a non-empty string"
+    candidate = (root / value).resolve()
+    try:
+        candidate.relative_to(root.resolve())
+    except ValueError:
+        return False, f"path escapes repository root: {value}"
+    if not candidate.exists():
+        return False, f"referenced path does not exist: {value}"
+    return True, None
+
+
+def dry_run_check_one(root: Path, scenario_id: str) -> dict[str, Any]:
+    path = root / "dry-runs" / "scenarios" / f"{scenario_id}.json"
+    problems: list[str] = []
+    if not path.is_file():
+        return {"id": scenario_id, "status": "missing", "problems": [f"missing scenario file: {path.relative_to(root)}"]}
+
+    data, problem = load_json_file(path)
+    if problem:
+        return {"id": scenario_id, "status": "fail", "problems": [problem]}
+    if not isinstance(data, dict):
+        return {"id": scenario_id, "status": "fail", "problems": ["scenario top-level value must be an object"]}
+
+    missing = [field for field in DRY_RUN_REQUIRED_FIELDS if field not in data]
+    if missing:
+        problems.append("missing required fields: " + ", ".join(missing))
+    if data.get("id") != scenario_id:
+        problems.append(f"id field must match scenario filename: {scenario_id}")
+
+    for field in DRY_RUN_LIST_FIELDS:
+        value = data.get(field)
+        if not isinstance(value, list) or not value:
+            problems.append(f"{field} must be a non-empty list")
+
+    for field in ("input_artifacts", "expected_outputs"):
+        value = data.get(field)
+        if isinstance(value, list):
+            for item in value:
+                ok, path_problem = relative_path_exists(root, item)
+                if not ok and path_problem:
+                    problems.append(f"{field}: {path_problem}")
+
+    return {"id": scenario_id, "status": "fail" if problems else "pass", "problems": problems}
+
+
+def dry_run_check_data(root: Path, requested_id: str | None = None, check_all: bool = False) -> dict[str, Any]:
+    listed_ids = dry_run_ids(root)
+    parity_ids, parity_problems = parity_scenario_ids(root)
+    ids = sorted(set(listed_ids).union(parity_ids)) if check_all else [requested_id or ""]
+    results = [dry_run_check_one(root, scenario_id) for scenario_id in ids if scenario_id]
+
+    scenario_file_ids = set(listed_ids)
+    parity_missing = [scenario_id for scenario_id in parity_ids if scenario_id not in scenario_file_ids]
+    problems = list(parity_problems)
+    problems.extend(f"dry-runs/PARITY.md: missing backing JSON for {scenario_id}" for scenario_id in parity_missing)
+    for result in results:
+        problems.extend(f"{result['id']}: {problem}" for problem in result["problems"])
+
+    ok = not problems
+    return {
+        "ok": ok,
+        "scenario_count": len(results),
+        "checked": [result["id"] for result in results],
+        "results": results,
+        "parity": {
+            "path": "dry-runs/PARITY.md",
+            "scenario_ids": parity_ids,
+            "missing_backing_json": parity_missing,
+            "problems": parity_problems,
+        },
+        "problems": problems,
+    }
+
+
+def dry_run_list_data(root: Path) -> dict[str, Any]:
+    scenarios = []
+    for path in dry_run_scenario_files(root):
+        data, problem = load_json_file(path)
+        scenario_id = path.stem
+        purpose = ""
+        if isinstance(data, dict):
+            scenario_id = str(data.get("id") or scenario_id)
+            purpose = str(data.get("purpose") or "")
+        scenarios.append({"id": scenario_id, "path": str(path.relative_to(root)), "purpose": purpose, "ok": problem is None})
+    return {"ok": True, "scenario_count": len(scenarios), "scenarios": scenarios}
+
+
+def command_dry_run(args: argparse.Namespace) -> int:
+    root = repo_root()
+    if args.action == "list":
+        data = dry_run_list_data(root)
+        human = [f"dry-run scenarios: {data['scenario_count']}"]
+        human.extend(f"- {item['id']}: {item['path']}" for item in data["scenarios"])
+        return emit(data, args.json, human, 0)
+
+    if not args.all and not args.scenario:
+        raise SystemExit("dry-run check requires a scenario id or --all")
+    data = dry_run_check_data(root, requested_id=args.scenario, check_all=args.all)
+    human = ["dry-run check: ok" if data["ok"] else "dry-run check: problems found"]
+    for result in data["results"]:
+        human.append(f"- {result['id']}: {result['status']}")
+        human.extend(f"  - {problem}" for problem in result["problems"])
+    if data["parity"]["missing_backing_json"]:
+        human.append("- parity missing backing JSON: " + ", ".join(data["parity"]["missing_backing_json"]))
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def normalize_prompt_id(value: str) -> str:
     path_name = Path(value).name
     strict = STRICT_PROMPT_RE.match(path_name)
@@ -1202,6 +1376,13 @@ def build_parser() -> argparse.ArgumentParser:
     fixtures.add_argument("action", choices=("check",))
     fixtures.add_argument("--json", action="store_true")
     fixtures.set_defaults(func=command_fixtures)
+
+    dry_run = subparsers.add_parser("dry-run", help="List and structurally check deterministic dry-run scenarios.")
+    dry_run.add_argument("action", choices=("list", "check"))
+    dry_run.add_argument("scenario", nargs="?", help="Scenario id to check.")
+    dry_run.add_argument("--all", action="store_true", help="Check every scenario and PARITY.md backing file.")
+    dry_run.add_argument("--json", action="store_true")
+    dry_run.set_defaults(func=command_dry_run)
 
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")

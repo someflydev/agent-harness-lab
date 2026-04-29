@@ -2,8 +2,9 @@
 
 `scripts/ahl.py` is a small Python 3 helper CLI for local
 `agent-harness-lab` work. It checks repository foundations, inspects prompt
-filenames, scaffolds run and handoff artifacts from templates, and reports a
-compact session context briefing.
+filenames, scaffolds run and handoff artifacts from templates, validates
+deterministic dry-run scenario manifests, and reports a compact session context
+briefing.
 
 It is intentionally dependency-free and uses only the Python standard library.
 Future architecture docs may describe richer orchestration candidates, but
@@ -23,6 +24,9 @@ justifies more.
   registry path consistency without fetching external URLs.
 - `registry list` and `registry check` list and validate curated registry JSON
   indexes.
+- `dry-run list` and `dry-run check` list deterministic scenario manifests,
+  validate their referenced artifacts, and check `dry-runs/PARITY.md` backing
+  files.
 - `resume` prints a read-only Session Context Briefing for visible repo state.
 - `trace` summarizes prompt-related working tree changes and emits a run-record
   skeleton for closeout.
@@ -56,6 +60,9 @@ python3 scripts/ahl.py docs check
 python3 scripts/ahl.py docs check --json
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
+python3 scripts/ahl.py dry-run list
+python3 scripts/ahl.py dry-run check sequential-prompt-run
+python3 scripts/ahl.py dry-run check --all --json
 python3 scripts/ahl.py resume --json
 python3 scripts/ahl.py trace PROMPT_20 --json
 python3 scripts/ahl.py checkpoint
@@ -82,6 +89,9 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `registry`
 - `registry list`: `ok`, `registries`
 - `registry check`: `ok`, `checks`, `problems`, `registries`
+- `dry-run list`: `ok`, `scenario_count`, `scenarios`
+- `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
+  `problems`; each result includes stable `id`, `status`, and `problems`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,

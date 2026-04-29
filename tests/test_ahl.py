@@ -288,6 +288,7 @@ class AhlTest(unittest.TestCase):
 
     def write_docs_index(self):
         for dirname in (
+            "dry-runs",
             "runbooks",
             "templates",
             "scripts",
@@ -308,6 +309,7 @@ class AhlTest(unittest.TestCase):
                 [
                     "# Docs",
                     "",
+                    "- [Dry runs](../dry-runs/README.md)",
                     "- [Runbooks](../runbooks/README.md)",
                     "- [Templates](../templates/README.md)",
                     "- [Scripts](../scripts/README.md)",
@@ -535,6 +537,96 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertFalse(data["ok"])
         self.assertTrue(any("invalid prompt id references" in problem for problem in data["problems"]))
+
+    def write_minimal_dry_run_set(self):
+        self.write("AGENT.md", "# Agent\n")
+        self.write("runbooks/fresh-session-prompt-run.md", "# Runbook\n")
+        self.write("dry-runs/expected/sequential-prompt-run.md", "# Expected\n")
+        self.write(
+            "dry-runs/PARITY.md",
+            "\n".join(
+                [
+                    "# Dry-Run Parity",
+                    "",
+                    "| Scenario id | Capability covered | Status | Evidence |",
+                    "| --- | --- | --- | --- |",
+                    "| sequential-prompt-run | Normal run | verified | dry-runs/scenarios/sequential-prompt-run.json |",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            "dry-runs/scenarios/sequential-prompt-run.json",
+            json.dumps(
+                {
+                    "id": "sequential-prompt-run",
+                    "purpose": "Exercise a normal prompt run.",
+                    "input_artifacts": [
+                        "AGENT.md",
+                        "runbooks/fresh-session-prompt-run.md",
+                    ],
+                    "routine_sequence": ["load context", "audit"],
+                    "expected_checks": ["artifacts exist"],
+                    "expected_outputs": ["dry-runs/expected/sequential-prompt-run.md"],
+                    "failure_modes_covered": ["missing artifact"],
+                }
+            ),
+        )
+
+    def test_dry_run_list_reports_scenarios(self):
+        self.write_minimal_dry_run_set()
+
+        code, output = self.run_cli("dry-run", "list", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["scenario_count"], 1)
+        self.assertEqual(data["scenarios"][0]["id"], "sequential-prompt-run")
+
+    def test_dry_run_check_accepts_successful_scenario(self):
+        self.write_minimal_dry_run_set()
+
+        code, output = self.run_cli("dry-run", "check", "sequential-prompt-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["results"][0]["status"], "pass")
+
+    def test_dry_run_check_detects_missing_artifact(self):
+        self.write_minimal_dry_run_set()
+        (self.root / "AGENT.md").unlink()
+
+        code, output = self.run_cli("dry-run", "check", "sequential-prompt-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(data["results"][0]["status"], "fail")
+        self.assertTrue(any("referenced path does not exist: AGENT.md" in problem for problem in data["problems"]))
+
+    def test_dry_run_check_json_has_stable_fields(self):
+        self.write_minimal_dry_run_set()
+
+        code, output = self.run_cli("dry-run", "check", "--all", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "scenario_count", "checked", "results", "parity", "problems"):
+            self.assertIn(key, data)
+        for key in ("id", "status", "problems"):
+            self.assertIn(key, data["results"][0])
+
+    def test_dry_run_check_reports_parity_missing_backing_json(self):
+        self.write_minimal_dry_run_set()
+        (self.root / "dry-runs" / "scenarios" / "sequential-prompt-run.json").unlink()
+
+        code, output = self.run_cli("dry-run", "check", "--all", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertIn("sequential-prompt-run", data["parity"]["missing_backing_json"])
+        self.assertEqual(data["results"][0]["status"], "missing")
 
     def test_doctor_fails_structurally_for_minimal_fixture(self):
         fixture = ROOT / "tests" / "fixtures" / "minimal_repo"
