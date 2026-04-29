@@ -6,8 +6,9 @@ role boundaries, skills, routines, runbooks, runtime session behavior, memory
 governance, contracts, quality gates, metadata, examples, deterministic
 dry-run harness checks, experiments, reports, findings, lab method, capstone
 audits, and future-facing architecture. Role packs and lane playbooks now
-provide pasteable manual hierarchy routines. Helper scripts exist, but richer
-orchestration remains future work.
+provide pasteable manual hierarchy routines. The committed memory workspace
+supports reviewed promotion candidates and decision records. Helper scripts
+exist, but richer orchestration remains future work.
 
 ## Start Here
 
@@ -42,6 +43,8 @@ orchestration remains future work.
   findings, and promotion decisions.
 - `experiment-workflow.md` - helper-command workflow for starting, logging,
   closing, checking, and promoting experiment evidence.
+- `memory/promotion-workflow.md` - reviewed memory candidate, evidence,
+  decision, accepted-memory, and pruning workflow.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
   severity, completion states, and failure classes.
 - `architecture/README.md` - future-facing architecture guidance and
@@ -52,6 +55,8 @@ orchestration remains future work.
   Orchestrator, Lead, Worker, Reviewer, Auditor, and Repair Agent sessions.
 - `../lane-playbooks/README.md` - manual lane routines for documentation,
   docs-and-scripts, repair, and promotion work.
+- `../memory/README.md` - curated memory workspace for promotion queue and
+  decision records.
 
 ## Doctrine
 
@@ -175,6 +180,10 @@ orchestration remains future work.
   templates.
 - `../templates/lane/` - compact lane brief, lane status, and Worker
   assignment templates that complement contract templates.
+- `../templates/memory/promotion-candidate.md` - queued memory promotion
+  candidate template.
+- `../templates/memory/promotion-decision.md` - accepted or rejected memory
+  promotion decision template.
 
 ## Metadata
 
@@ -283,8 +292,15 @@ orchestration remains future work.
   and promotion paths.
 - `memory/promotion-model.md` - review and evidence requirements for promoting
   temporary observations into durable memory.
+- `memory/promotion-workflow.md` - command-backed workflow for proposing,
+  reviewing, accepting, rejecting, and pruning memory candidates.
 - `memory/handoff-lifecycle.md` - lifecycle for temporary bridge handoffs such
   as `tmp/HANDOFF.md`.
 - `memory/run-memory.md` - compact run fact model without transcript dumping.
 - `memory/retention-and-pruning.md` - retention rules and cleanup triggers for
   temporary and durable memory.
+- `../memory/README.md` - curated committed memory workspace boundary.
+- `../memory/promotion-queue/README.md` - queued candidate boundary and check
+  expectations.
+- `../memory/accepted/README.md` - accepted decision record boundary.
+- `../memory/rejected/README.md` - rejected decision record boundary.
