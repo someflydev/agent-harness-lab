@@ -5,6 +5,7 @@ is early, so these pages focus on foundation, orientation, guardrails, doctrine,
 role boundaries, skills, routines, runbooks, runtime session behavior, memory
 governance, contracts, quality gates, metadata, examples, experiments,
 reports, findings, lab method, capstone audits, and future-facing architecture.
+Role packs and lane playbooks now provide pasteable manual hierarchy routines.
 Helper scripts exist, but richer orchestration remains future work.
 
 ## Start Here
@@ -36,6 +37,10 @@ Helper scripts exist, but richer orchestration remains future work.
   automation boundaries.
 - `capstone/phase-one-audit.md` - foundation-phase audit of covered areas,
   gaps, and next improvements.
+- `../role-packs/README.md` - pasteable role startup briefs for manual
+  Orchestrator, Lead, Worker, Reviewer, Auditor, and Repair Agent sessions.
+- `../lane-playbooks/README.md` - manual lane routines for documentation,
+  docs-and-scripts, repair, and promotion work.
 
 ## Doctrine
 
@@ -62,6 +67,10 @@ Helper scripts exist, but richer orchestration remains future work.
   cognitive work, repo intelligence, and process review.
 - `roles/boundary-matrix.md` - authority boundaries across roles.
 - `roles/escalation-paths.md` - escalation triggers and record shape.
+- `../role-packs/README.md` - pasteable startup packs that turn role doctrine
+  into bounded fresh-session instructions.
+- `../lane-playbooks/README.md` - lane-level operating playbooks using role
+  packs, templates, and validation points.
 
 ## Skills
 
@@ -147,6 +156,8 @@ Helper scripts exist, but richer orchestration remains future work.
   implementation promptset and how operators should use them.
 - `../prompt-templates/README.md` - index of copyable routine prompt
   templates.
+- `../templates/lane/` - compact lane brief, lane status, and Worker
+  assignment templates that complement contract templates.
 
 ## Metadata
 

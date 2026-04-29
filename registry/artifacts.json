@@ -106,6 +106,45 @@
       "outputs": ["focused SKILL.md instructions", "on-demand routine context"],
       "related_docs": ["docs/project-skills.md", "docs/skills/README.md"],
       "safe_use_notes": "Load skills only when relevant; do not treat them as automatic discovery or hidden automation."
+    },
+    {
+      "id": "artifact-role-packs",
+      "name": "Role Packs",
+      "type": "artifact_family",
+      "path": "role-packs/README.md",
+      "purpose": "Provide pasteable startup briefs for Orchestrator, Lead, Worker, Reviewer, Auditor, and Repair Agent sessions.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["operator request", "active prompt", "role boundaries", "lane assignments"],
+      "outputs": ["role-specific startup context", "scope boundaries", "expected outputs"],
+      "related_docs": ["docs/roles/README.md", "docs/roles/boundary-matrix.md", "prompt-templates/README.md"],
+      "safe_use_notes": "Role packs guide manual fresh sessions; they do not spawn agents or grant autonomous authority."
+    },
+    {
+      "id": "artifact-lane-playbooks",
+      "name": "Lane Playbooks",
+      "type": "artifact_family",
+      "path": "lane-playbooks/README.md",
+      "purpose": "Describe manual lane routines for single-lane docs work, parallel docs and scripts work, repair, and promotion review.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["lane brief", "role packs", "contracts", "validation expectations"],
+      "outputs": ["manual lane procedure", "handoff points", "validation and escalation guidance"],
+      "related_docs": ["role-packs/README.md", "templates/lane/lane-brief.md", "docs/contracts/contract-composition.md"],
+      "safe_use_notes": "Playbooks simulate hierarchy manually and must not require unavailable parallel automation."
+    },
+    {
+      "id": "artifact-lane-templates",
+      "name": "Lane Templates",
+      "type": "artifact_family",
+      "path": "templates/lane",
+      "purpose": "Provide compact lane brief, lane status, and Worker assignment skeletons for manual lane coordination.",
+      "owner_role": "lead",
+      "status": "active",
+      "inputs": ["lane scope", "role assignment", "validation plan"],
+      "outputs": ["lane brief", "lane status", "worker assignment"],
+      "related_docs": ["lane-playbooks/README.md", "templates/contracts/task-contract.md", "prompt-templates/lead-worker-task.md"],
+      "safe_use_notes": "Lane templates complement contract templates and should stay compact rather than duplicating every contract field."
     }
   ]
 }
