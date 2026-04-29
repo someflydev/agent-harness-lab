@@ -5,9 +5,10 @@ prompt-bounded work. They are separate from roles: a role says who is
 responsible, while a skill says what capability is being used.
 
 This directory defines the early skill taxonomy for `agent-harness-lab`. It is
-doctrine and navigation, not a tool package system. Project-level `.agents`
-skill packages, provider-specific adapters, and helper scripts belong to later
-work after the manual workflow is stable.
+doctrine and navigation, not the package directory itself. Optional
+project-level `.agents/skills/` packages now provide focused assistant-loadable
+routine instructions while keeping provider-specific adapters and helper
+automation out of scope.
 
 ## Documents
 
@@ -17,6 +18,8 @@ work after the manual workflow is stable.
   runtime automation.
 - `role-skill-map.md` - how Orchestrator, Lead, Worker, and supporting roles
   commonly invoke skill areas.
+- `../project-skills.md` - how optional `.agents/skills/` packages differ from
+  roles, routines, templates, and scripts.
 
 ## Use
 

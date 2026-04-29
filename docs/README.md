@@ -26,6 +26,8 @@ Helper scripts exist, but richer orchestration remains future work.
   relationships, and source-of-truth boundaries.
 - `prompt-templates.md` - reusable prompt template library guidance and
   boundaries.
+- `project-skills.md` - optional project-level skill packages, boundaries, and
+  safe addition rules.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
@@ -69,6 +71,8 @@ Helper scripts exist, but richer orchestration remains future work.
 - `skills/maturity-model.md` - maturity ladder for skills from named concepts
   through possible runtime automation.
 - `skills/role-skill-map.md` - mapping between roles and common skill areas.
+- `project-skills.md` - optional `.agents/skills/` package guidance for
+  assistant-loadable routine instructions.
 
 ## Routines
 

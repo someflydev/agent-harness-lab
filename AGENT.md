@@ -41,6 +41,19 @@ Session lifecycle, endcap, bridge, reset, adjacent-prompt readiness, and
 permission posture guidance lives in `docs/runtime/`. Use those docs when a
 prompt asks for runtime/session behavior or closeout decisions.
 
+## Project Skills
+
+Optional project-level skills live in `.agents/skills/`. They are on-demand
+instruction packages for recurring harness routines, not mandatory startup
+context and not hidden automation. Load one only when it matches the active
+task, either through a tool command such as `/skill:trajectory-evaluator` or by
+reading the relevant `.agents/skills/<name>/SKILL.md` file directly.
+
+The closeout-focused `trajectory-evaluator` skill is available at
+`.agents/skills/trajectory-evaluator/SKILL.md` for post-Endcap evaluation. Use
+it when a prompt or operator asks for trajectory evaluation; otherwise the
+standard Endcap routine below is enough.
+
 ## Helper Scripts
 
 `scripts/ahl.py` is available for lightweight local checks and scaffolding:

@@ -93,6 +93,19 @@
       "outputs": ["run records", "readiness reports", "promptset indexes"],
       "related_docs": ["schemas/run-record.schema.json", "schemas/readiness-report.schema.json", "schemas/promptset-index.schema.json"],
       "safe_use_notes": "Metadata is derived from repo files and git history; do not treat it as independent truth."
+    },
+    {
+      "id": "artifact-project-skills",
+      "name": "Project Skills",
+      "type": "artifact_family",
+      "path": ".agents/skills/README.md",
+      "purpose": "Expose optional assistant-loadable instruction packages for recurring harness routines.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["runbooks", "prompt templates", "skill taxonomy", "operator requests"],
+      "outputs": ["focused SKILL.md instructions", "on-demand routine context"],
+      "related_docs": ["docs/project-skills.md", "docs/skills/README.md"],
+      "safe_use_notes": "Load skills only when relevant; do not treat them as automatic discovery or hidden automation."
     }
   ]
 }

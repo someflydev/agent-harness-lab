@@ -93,6 +93,19 @@
       "outputs": ["human summary", "JSON summary"],
       "related_docs": ["registry/README.md", "scripts/README.md"],
       "safe_use_notes": "Read-only check; registries remain navigation aids."
+    },
+    {
+      "id": "routine-project-skill-loading",
+      "name": "Project Skill Loading",
+      "type": "routine",
+      "path": ".agents/skills/README.md",
+      "purpose": "Load a focused project skill only when a task matches its description.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["operator request", "active prompt", "skill description", "required context named by the skill"],
+      "outputs": ["bounded assistant routine context"],
+      "related_docs": ["docs/project-skills.md", "docs/skills/README.md"],
+      "safe_use_notes": "Do not preload the full skill tree or assume every assistant discovers skills automatically."
     }
   ]
 }
