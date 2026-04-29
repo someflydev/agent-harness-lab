@@ -24,6 +24,8 @@ Helper scripts exist, but richer orchestration remains future work.
   routines, runbooks, inputs, outputs, status, and safety notes.
 - `navigation-map.md` - start points, durable artifact areas, registry
   relationships, and source-of-truth boundaries.
+- `prompt-templates.md` - reusable prompt template library guidance and
+  boundaries.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
@@ -134,6 +136,13 @@ Helper scripts exist, but richer orchestration remains future work.
 - `../registry/templates.json` - curated index of reusable template groups.
 - `../registry/examples.json` - curated index of examples and evidence areas.
 - `../registry/scripts.json` - curated index of helper scripts and commands.
+
+## Prompt Templates
+
+- `prompt-templates.md` - how reusable prompt templates differ from the
+  implementation promptset and how operators should use them.
+- `../prompt-templates/README.md` - index of copyable routine prompt
+  templates.
 
 ## Metadata
 

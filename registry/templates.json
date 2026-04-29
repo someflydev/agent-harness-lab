@@ -4,6 +4,19 @@
   "source_of_truth_note": "Template files are authoritative; this registry helps fresh sessions find them.",
   "items": [
     {
+      "id": "template-prompt-library",
+      "name": "Prompt Template Library",
+      "type": "template_group",
+      "path": "prompt-templates",
+      "purpose": "Provide reusable copyable prompts for routine prompt runs, audits, preflights, handoffs, repairs, promotion reviews, role assignments, reviews, and commit packaging.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["operator request", "routine scope", "required context", "stop conditions"],
+      "outputs": ["filled routine prompt", "assignment prompt", "review prompt", "closeout prompt"],
+      "related_docs": ["docs/prompt-templates.md", "runbooks/README.md", "docs/routines/micro-routine-library.md"],
+      "safe_use_notes": "Prompt templates are reusable launch prompts, not a second promptset; fill placeholders with concrete values before use."
+    },
+    {
       "id": "template-contracts",
       "name": "Contract Templates",
       "type": "template_group",
