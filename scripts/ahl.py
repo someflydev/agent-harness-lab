@@ -30,6 +30,38 @@ REQUIRED_REGISTRY_FILES = (
     "scripts.json",
 )
 REQUIRED_REGISTRY_FIELDS = ("id", "name", "type", "path", "purpose", "status", "related_docs", "safe_use_notes")
+PROMPT_ID_RE = re.compile(r"^PROMPT_\d{2}$")
+PROMPT_ID_FIELDS = {"prompt_id", "active_prompt", "next_prompt"}
+FIXTURE_SPECS: dict[str, dict[str, Any]] = {
+    "fixtures/run-records/success.json": {
+        "schema": "schemas/run-record.schema.json",
+        "required": ("prompt_id", "run_id", "assistant_tool", "validation_commands", "completion_audit_status"),
+    },
+    "fixtures/run-records/blocked.json": {
+        "schema": "schemas/run-record.schema.json",
+        "required": ("prompt_id", "run_id", "assistant_tool", "validation_commands", "completion_audit_status"),
+    },
+    "fixtures/readiness-reports/ready.json": {
+        "schema": "schemas/readiness-report.schema.json",
+        "required": ("artifact_id", "active_prompt", "next_prompt", "readiness_label", "blockers", "next_step"),
+    },
+    "fixtures/readiness-reports/blocked.json": {
+        "schema": "schemas/readiness-report.schema.json",
+        "required": ("artifact_id", "active_prompt", "next_prompt", "readiness_label", "blockers", "next_step"),
+    },
+    "fixtures/promptset-index/valid.json": {
+        "schema": "schemas/promptset-index.schema.json",
+        "required": ("ok", "prompt_dir", "prompts", "filenames", "numbers", "duplicates", "gaps"),
+    },
+    "fixtures/lane-records/single-lane.json": {
+        "schema": "schemas/lane-record.schema.json",
+        "required": ("lane_id", "prompt_id", "owner_role", "scope", "status", "inputs", "outputs"),
+    },
+    "fixtures/traceability/prompt-to-commit.json": {
+        "schema": "schemas/traceability-record.schema.json",
+        "required": ("traceability_id", "prompt_id", "source_artifact", "commit_links", "validation_evidence"),
+    },
+}
 
 
 def repo_root() -> Path:
@@ -382,6 +414,99 @@ def command_registry(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def load_json_file(path: Path) -> tuple[Any | None, str | None]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8")), None
+    except json.JSONDecodeError as exc:
+        return None, f"{path}: invalid JSON at line {exc.lineno}: {exc.msg}"
+
+
+def prompt_id_references(value: Any) -> list[tuple[str, Any]]:
+    found: list[tuple[str, Any]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in PROMPT_ID_FIELDS:
+                found.append((key, item))
+            found.extend(prompt_id_references(item))
+    elif isinstance(value, list):
+        for item in value:
+            found.extend(prompt_id_references(item))
+    return found
+
+
+def fixture_check_data(root: Path) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+    fixture_root = root / "fixtures"
+
+    def add_check(name: str, path: str, ok: bool, **extra: Any) -> None:
+        check = {"name": name, "path": path, "ok": ok}
+        check.update(extra)
+        checks.append(check)
+
+    add_check("fixtures directory", "fixtures", fixture_root.is_dir())
+    if not fixture_root.is_dir():
+        problems.append("missing fixtures directory: fixtures")
+        return {"ok": False, "checks": checks, "problems": problems, "fixtures": []}
+
+    fixtures: list[dict[str, Any]] = []
+    for rel, spec in FIXTURE_SPECS.items():
+        path = root / rel
+        schema_rel = spec["schema"]
+        schema_path = root / schema_rel
+        exists = path.is_file()
+        add_check(f"{rel} exists", rel, exists, schema=schema_rel)
+        if not exists:
+            problems.append(f"missing fixture: {rel}")
+            continue
+
+        schema_exists = schema_path.is_file()
+        add_check(f"{rel} schema exists", schema_rel, schema_exists)
+        if not schema_exists:
+            problems.append(f"{rel}: expected schema file is missing: {schema_rel}")
+
+        data, problem = load_json_file(path)
+        if problem:
+            add_check(f"{rel} parses", rel, False)
+            problems.append(problem)
+            continue
+        add_check(f"{rel} parses", rel, True)
+        if not isinstance(data, dict):
+            problems.append(f"{rel}: top-level value must be an object")
+            continue
+
+        missing = [field for field in spec["required"] if field not in data]
+        add_check(f"{rel} required top-level fields", rel, not missing, missing=missing)
+        if missing:
+            problems.append(f"{rel}: missing top-level fields: {', '.join(missing)}")
+
+        bad_prompt_ids = [
+            f"{field}={value!r}"
+            for field, value in prompt_id_references(data)
+            if not isinstance(value, str) or not PROMPT_ID_RE.fullmatch(value)
+        ]
+        add_check(f"{rel} prompt id references", rel, not bad_prompt_ids, bad_prompt_ids=bad_prompt_ids)
+        if bad_prompt_ids:
+            problems.append(f"{rel}: invalid prompt id references: {', '.join(bad_prompt_ids)}")
+
+        fixtures.append({"path": rel, "schema": schema_rel})
+
+    known = set(FIXTURE_SPECS)
+    extra = sorted(str(path.relative_to(root)) for path in fixture_root.glob("**/*.json") if str(path.relative_to(root)) not in known)
+    add_check("no unexpected fixture JSON files", "fixtures", not extra, extra=extra)
+    if extra:
+        problems.append("unexpected fixture JSON files: " + ", ".join(extra))
+
+    return {"ok": not problems, "checks": checks, "problems": problems, "fixtures": fixtures}
+
+
+def command_fixtures(args: argparse.Namespace) -> int:
+    data = fixture_check_data(repo_root())
+    human = ["fixtures: ok" if data["ok"] else "fixtures: problems found"]
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def normalize_prompt_id(value: str) -> str:
     path_name = Path(value).name
     strict = STRICT_PROMPT_RE.match(path_name)
@@ -594,6 +719,11 @@ def build_parser() -> argparse.ArgumentParser:
     registry.add_argument("action", choices=("list", "check"))
     registry.add_argument("--json", action="store_true")
     registry.set_defaults(func=command_registry)
+
+    fixtures = subparsers.add_parser("fixtures", help="Validate artificial JSON fixtures structurally.")
+    fixtures.add_argument("action", choices=("check",))
+    fixtures.add_argument("--json", action="store_true")
+    fixtures.set_defaults(func=command_fixtures)
 
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")

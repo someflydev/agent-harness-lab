@@ -198,6 +198,135 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["ok"])
         self.assertTrue(any("ordering does not match" in problem for problem in data["problems"]))
 
+    def write_minimal_fixture_set(self):
+        for spec in ahl.FIXTURE_SPECS.values():
+            self.write(spec["schema"], "{}\n")
+
+        self.write(
+            "fixtures/run-records/success.json",
+            json.dumps(
+                {
+                    "prompt_id": "PROMPT_19",
+                    "run_id": "fixture-success",
+                    "assistant_tool": "codex-fixture",
+                    "validation_commands": [],
+                    "completion_audit_status": "passed",
+                }
+            ),
+        )
+        self.write(
+            "fixtures/run-records/blocked.json",
+            json.dumps(
+                {
+                    "prompt_id": "PROMPT_19",
+                    "run_id": "fixture-blocked",
+                    "assistant_tool": "codex-fixture",
+                    "validation_commands": [],
+                    "completion_audit_status": "failed",
+                }
+            ),
+        )
+        self.write(
+            "fixtures/readiness-reports/ready.json",
+            json.dumps(
+                {
+                    "artifact_id": "ready",
+                    "active_prompt": "PROMPT_19",
+                    "next_prompt": "PROMPT_20",
+                    "readiness_label": "ready",
+                    "blockers": [],
+                    "next_step": "Run the next prompt.",
+                }
+            ),
+        )
+        self.write(
+            "fixtures/readiness-reports/blocked.json",
+            json.dumps(
+                {
+                    "artifact_id": "blocked",
+                    "active_prompt": "PROMPT_19",
+                    "next_prompt": "PROMPT_20",
+                    "readiness_label": "blocked",
+                    "blockers": ["Artificial blocker."],
+                    "next_step": "Repair the blocker.",
+                }
+            ),
+        )
+        self.write(
+            "fixtures/promptset-index/valid.json",
+            json.dumps(
+                {
+                    "ok": True,
+                    "prompt_dir": ".prompts",
+                    "prompts": [],
+                    "filenames": [],
+                    "numbers": [],
+                    "duplicates": [],
+                    "gaps": [],
+                }
+            ),
+        )
+        self.write(
+            "fixtures/lane-records/single-lane.json",
+            json.dumps(
+                {
+                    "lane_id": "fixture-lane",
+                    "prompt_id": "PROMPT_19",
+                    "owner_role": "worker",
+                    "scope": "Test lane.",
+                    "status": "completed",
+                    "inputs": [],
+                    "outputs": [],
+                }
+            ),
+        )
+        self.write(
+            "fixtures/traceability/prompt-to-commit.json",
+            json.dumps(
+                {
+                    "traceability_id": "fixture-trace",
+                    "prompt_id": "PROMPT_19",
+                    "source_artifact": ".prompts/PROMPT_19.txt",
+                    "commit_links": [],
+                    "validation_evidence": [],
+                }
+            ),
+        )
+
+    def test_fixtures_check_accepts_expected_fixture_set(self):
+        self.write_minimal_fixture_set()
+
+        code, output = self.run_cli("fixtures", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(len(data["fixtures"]), len(ahl.FIXTURE_SPECS))
+
+    def test_fixtures_check_detects_invalid_prompt_id(self):
+        self.write_minimal_fixture_set()
+        self.write(
+            "fixtures/lane-records/single-lane.json",
+            json.dumps(
+                {
+                    "lane_id": "fixture-lane",
+                    "prompt_id": "PROMPT_9",
+                    "owner_role": "worker",
+                    "scope": "Test lane.",
+                    "status": "completed",
+                    "inputs": [],
+                    "outputs": [],
+                }
+            ),
+        )
+
+        code, output = self.run_cli("fixtures", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("invalid prompt id references" in problem for problem in data["problems"]))
+
     def test_doctor_fails_structurally_for_minimal_fixture(self):
         fixture = ROOT / "tests" / "fixtures" / "minimal_repo"
         shutil.copytree(fixture, self.root, dirs_exist_ok=True)
