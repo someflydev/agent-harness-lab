@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "_template",
+  "name": "Domain Pack Template",
+  "status": "template",
+  "purpose": "Reusable starter structure for optional domain packs.",
+  "description": "A compact pack skeleton that shows the expected manifest and documentation files without adding domain-specific doctrine.",
+  "entrypoint": "README.md",
+  "files": [
+    "README.md",
+    "roles.md",
+    "routines.md",
+    "templates.md",
+    "validation.md",
+    "examples/README.md"
+  ],
+  "optional": true,
+  "core_doctrine_changes": false,
+  "validation": {
+    "command": "python3 scripts/ahl.py domain-pack check",
+    "notes": "Checks manifest shape and referenced files only."
+  }
+}

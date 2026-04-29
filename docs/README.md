@@ -3,12 +3,12 @@
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, doctrine,
 role boundaries, skills, routines, runbooks, runtime session behavior, memory
-governance, contracts, quality gates, metadata, examples, deterministic
-dry-run harness checks, experiments, reports, findings, lab method, capstone
-audits, lane simulations, and future-facing architecture. Role packs and lane
-playbooks now provide pasteable manual hierarchy routines. The committed
-memory workspace supports reviewed promotion candidates and decision records.
-Helper scripts exist, but richer orchestration remains future work.
+governance, contracts, quality gates, metadata, optional domain packs, examples,
+deterministic dry-run harness checks, experiments, reports, findings, lab
+method, capstone audits, lane simulations, and future-facing architecture. Role
+packs and lane playbooks now provide pasteable manual hierarchy routines. The
+committed memory workspace supports reviewed promotion candidates and decision
+records. Helper scripts exist, but richer orchestration remains future work.
 
 ## Start Here
 
@@ -39,6 +39,8 @@ Helper scripts exist, but richer orchestration remains future work.
   and prompt-authoring use.
 - `project-skills.md` - optional project-level skill packages, boundaries, and
   safe addition rules.
+- `domain-packs.md` - optional domain pack purpose, use pattern, current
+  starters, and boundaries.
 - `dry-run-harness.md` - deterministic dry-run scenario purpose, limits,
   parity tracking, and addition workflow.
 - `lane-simulation.md` - manual lane simulation purpose, role mapping,
@@ -61,6 +63,7 @@ Helper scripts exist, but richer orchestration remains future work.
   docs-and-scripts, repair, and promotion work.
 - `../memory/README.md` - curated memory workspace for promotion queue and
   decision records.
+- `../domain-packs/README.md` - optional domain pack starter kit and examples.
 
 ## Doctrine
 
@@ -102,6 +105,14 @@ Helper scripts exist, but richer orchestration remains future work.
 - `skills/role-skill-map.md` - mapping between roles and common skill areas.
 - `project-skills.md` - optional `.agents/skills/` package guidance for
   assistant-loadable routine instructions.
+
+## Domain Packs
+
+- `domain-packs.md` - optional domain pack use pattern and boundaries.
+- `../domain-packs/README.md` - domain pack index and validation guidance.
+- `../domain-packs/_template/README.md` - reusable pack starter structure.
+- `../domain-packs/software-docs/README.md` - modest example pack for
+  documentation-heavy software-building work.
 
 ## Routines
 
@@ -151,6 +162,8 @@ Helper scripts exist, but richer orchestration remains future work.
 - `memory/promotion-workflow.md` - workflow details for
   `scripts/ahl.py memory propose`, `scripts/ahl.py memory check`, and
   `scripts/ahl.py memory decision`.
+- `domain-packs.md` - workflow details for
+  `scripts/ahl.py domain-pack check`.
 
 ## Architecture
 
@@ -216,6 +229,8 @@ Helper scripts exist, but richer orchestration remains future work.
   simulation status files.
 - `../schemas/traceability-record.schema.json` - JSON Schema for compact
   prompt-to-commit traceability records.
+- `../schemas/domain-pack.schema.json` - JSON Schema for optional domain pack
+  manifests.
 - `../fixtures/README.md` - artificial JSON fixtures and lightweight fixture
   check limits.
 - `../fixtures/traceability/working-tree-summary.json` - artificial

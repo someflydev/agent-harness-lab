@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "software-docs",
+  "name": "Software Docs",
+  "status": "example",
+  "purpose": "Optional guidance for documentation-heavy software-building work.",
+  "description": "A modest example pack for checking docs claims, navigation, and validation evidence alongside code or workflow changes.",
+  "entrypoint": "README.md",
+  "files": [
+    "README.md",
+    "routines.md",
+    "validation.md"
+  ],
+  "optional": true,
+  "core_doctrine_changes": false,
+  "validation": {
+    "command": "python3 scripts/ahl.py domain-pack check",
+    "notes": "Use with docs checks and prompt-specific validation."
+  }
+}
