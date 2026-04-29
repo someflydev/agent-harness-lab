@@ -1,0 +1,24 @@
+{
+  "artifact_id": "fixture-blocked-report",
+  "active_prompt": "PROMPT_19",
+  "next_prompt": "PROMPT_20",
+  "owner_role": "operator",
+  "prerequisites_checked": [
+    "Fixture directory exists.",
+    "Traceability schema exists."
+  ],
+  "readiness_label": "blocked",
+  "blockers": [
+    "Artificial blocker: prompt-to-commit traceability fields are missing."
+  ],
+  "warnings": [],
+  "evidence": [
+    "Artificial blocked report for schema coverage."
+  ],
+  "cheap_bridge_fixes_applied": [],
+  "files_to_inspect_first": [
+    "fixtures/traceability/prompt-to-commit.json"
+  ],
+  "handoff_recommendation": "Create a handoff only if the real blocker cannot be fixed cheaply.",
+  "next_step": "Repair the missing traceability fields before PROMPT_20."
+}

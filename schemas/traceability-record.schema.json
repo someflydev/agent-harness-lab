@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-harness-lab/traceability-record.schema.json",
+  "title": "Traceability Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "traceability_id",
+    "prompt_id",
+    "source_artifact",
+    "commit_links",
+    "validation_evidence",
+    "notes"
+  ],
+  "properties": {
+    "traceability_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_id": {
+      "type": "string",
+      "pattern": "^PROMPT_[0-9]{2}$"
+    },
+    "source_artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["commit", "subject", "relationship"],
+        "properties": {
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{7,40}$"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string",
+            "enum": ["implements", "fixes", "documents", "validates"]
+          }
+        }
+      }
+    },
+    "validation_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

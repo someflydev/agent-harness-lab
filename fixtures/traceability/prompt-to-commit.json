@@ -1,0 +1,16 @@
+{
+  "traceability_id": "fixture-prompt-to-commit",
+  "prompt_id": "PROMPT_19",
+  "source_artifact": ".prompts/PROMPT_19.txt",
+  "commit_links": [
+    {
+      "commit": "0123abc",
+      "subject": "[PROMPT_19] Add fixture schema examples",
+      "relationship": "implements"
+    }
+  ],
+  "validation_evidence": [
+    "Artificial commit link for schema coverage; not generated from live git."
+  ],
+  "notes": "Fixture data only. Prompt 20 may implement real collection."
+}

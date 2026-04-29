@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "prompt_dir": ".prompts",
+  "prompts": [
+    {
+      "filename": "PROMPT_01.txt",
+      "number": 1,
+      "strict": true
+    },
+    {
+      "filename": "PROMPT_02.txt",
+      "number": 2,
+      "strict": true
+    }
+  ],
+  "filenames": [
+    "PROMPT_01.txt",
+    "PROMPT_02.txt"
+  ],
+  "numbers": [
+    1,
+    2
+  ],
+  "duplicates": [],
+  "gaps": [],
+  "strict_two_digit": true,
+  "malformed": []
+}

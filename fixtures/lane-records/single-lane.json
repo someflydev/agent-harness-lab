@@ -1,0 +1,24 @@
+{
+  "lane_id": "fixture-docs-lane",
+  "prompt_id": "PROMPT_19",
+  "owner_role": "worker",
+  "scope": "Add artificial metadata fixtures and checks.",
+  "status": "completed",
+  "inputs": [
+    ".prompts/PROMPT_19.txt",
+    "schemas/run-record.schema.json"
+  ],
+  "outputs": [
+    "fixtures/README.md",
+    "fixtures/lane-records/single-lane.json"
+  ],
+  "validation": [
+    {
+      "command": "python3 scripts/ahl.py fixtures check",
+      "status": "passed",
+      "summary": "Artificial lane example passed lightweight fixture checks."
+    }
+  ],
+  "blockers": [],
+  "handoff_required": false
+}

@@ -1,0 +1,36 @@
+{
+  "prompt_id": "PROMPT_19",
+  "prompt_batch_id": "artificial-fixtures",
+  "run_id": "fixture-success-run",
+  "assistant_tool": "codex-fixture",
+  "permission_posture": "workspace-write",
+  "started_at": "2026-04-28T15:00:00Z",
+  "ended_at": "2026-04-28T15:20:00Z",
+  "changed_files": [
+    "fixtures/run-records/success.json",
+    "schemas/lane-record.schema.json"
+  ],
+  "changed_directories": [
+    "fixtures",
+    "schemas"
+  ],
+  "docs_changed": true,
+  "tests_changed": true,
+  "validation_commands": [
+    {
+      "command": "python3 -m unittest tests/test_ahl.py",
+      "status": "passed",
+      "exit_code": 0,
+      "summary": "Artificial example of passing test evidence."
+    }
+  ],
+  "completion_audit_status": "passed",
+  "next_prompt_ready": true,
+  "readiness_blockers": [],
+  "handoff_created": false,
+  "follow_up_fix_required": false,
+  "reusable_pattern_observations": [
+    "Artificial examples can keep schema checks grounded without storing transcripts."
+  ],
+  "associated_commit_hashes": []
+}

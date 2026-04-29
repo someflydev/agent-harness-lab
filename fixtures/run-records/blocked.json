@@ -1,0 +1,30 @@
+{
+  "prompt_id": "PROMPT_19",
+  "prompt_batch_id": "artificial-fixtures",
+  "run_id": "fixture-blocked-run",
+  "assistant_tool": "codex-fixture",
+  "permission_posture": "manual-required",
+  "started_at": "2026-04-28T16:00:00Z",
+  "ended_at": null,
+  "changed_files": [],
+  "changed_directories": [],
+  "docs_changed": false,
+  "tests_changed": false,
+  "validation_commands": [
+    {
+      "command": "python3 scripts/ahl.py fixtures check",
+      "status": "skipped",
+      "exit_code": null,
+      "summary": "Artificial blocker example; required fixture directory was unavailable."
+    }
+  ],
+  "completion_audit_status": "failed",
+  "next_prompt_ready": false,
+  "readiness_blockers": [
+    "Artificial blocker: fixture/schema examples were not available."
+  ],
+  "handoff_created": true,
+  "follow_up_fix_required": true,
+  "reusable_pattern_observations": [],
+  "associated_commit_hashes": []
+}

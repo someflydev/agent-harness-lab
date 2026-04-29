@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-harness-lab/lane-record.schema.json",
+  "title": "Lane Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lane_id",
+    "prompt_id",
+    "owner_role",
+    "scope",
+    "status",
+    "inputs",
+    "outputs",
+    "validation",
+    "blockers",
+    "handoff_required"
+  ],
+  "properties": {
+    "lane_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_id": {
+      "type": "string",
+      "pattern": "^PROMPT_[0-9]{2}$"
+    },
+    "owner_role": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["planned", "active", "completed", "blocked"]
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "status", "summary"],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "skipped"]
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "handoff_required": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "artifact_id": "fixture-ready-report",
+  "active_prompt": "PROMPT_19",
+  "next_prompt": "PROMPT_20",
+  "owner_role": "operator",
+  "prerequisites_checked": [
+    "Fixture directory exists.",
+    "Traceability schema exists."
+  ],
+  "readiness_label": "ready",
+  "blockers": [],
+  "warnings": [],
+  "evidence": [
+    "Artificial ready report for schema coverage."
+  ],
+  "cheap_bridge_fixes_applied": [],
+  "files_to_inspect_first": [
+    "schemas/traceability-record.schema.json",
+    "fixtures/traceability/prompt-to-commit.json"
+  ],
+  "handoff_recommendation": "No handoff needed for this artificial example.",
+  "next_step": "Run PROMPT_20 in a fresh session."
+}
