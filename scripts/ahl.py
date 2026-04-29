@@ -35,6 +35,7 @@ REQUIRED_REGISTRY_FIELDS = ("id", "name", "type", "path", "purpose", "status", "
 DOCS_SCAN_ROOTS = (
     "README.md",
     "AGENT.md",
+    "domain-packs",
     "dry-runs",
     "docs",
     "runbooks",
@@ -52,6 +53,7 @@ DOCS_SCAN_ROOTS = (
 )
 DOCS_NAV_INDEX = "docs/README.md"
 DOCS_INDEX_DIRS = (
+    "domain-packs",
     "dry-runs",
     "runbooks",
     "templates",
@@ -149,6 +151,19 @@ LANE_STATUS_REQUIRED_FIELDS = (
 )
 LANE_STATES = ("pending", "active", "review", "audited", "blocked", "escalated", "done")
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+DOMAIN_PACK_ID_RE = re.compile(r"^_template$|^[a-z0-9][a-z0-9-]*$")
+DOMAIN_PACK_REQUIRED_FIELDS = (
+    "schema_version",
+    "id",
+    "name",
+    "status",
+    "purpose",
+    "entrypoint",
+    "files",
+    "optional",
+    "core_doctrine_changes",
+)
+DOMAIN_PACK_STATUSES = ("template", "example", "draft", "active", "retired")
 EXPERIMENT_TEMPLATE_FILES = (
     ("experiments/templates/experiment-plan.md", "experiment-plan.md"),
     ("experiments/templates/experiment-log.md", "experiment-log.md"),
@@ -240,6 +255,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "name": "test",
         "command": "python3 -m unittest tests/test_ahl.py",
         "summary": "Run helper CLI unit tests.",
+        "safety": "read-only",
+    },
+    {
+        "name": "domain-pack",
+        "command": "python3 scripts/ahl.py domain-pack check",
+        "summary": "Validate optional domain pack manifests.",
         "safety": "read-only",
     },
     {
@@ -1469,6 +1490,145 @@ def command_lane(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def domain_pack_manifest_paths(root: Path) -> list[Path]:
+    base = root / "domain-packs"
+    if not base.is_dir():
+        return []
+    return sorted(base.glob("*/pack.json"))
+
+
+def validate_domain_pack_path(pack_dir: Path, root: Path, value: Any) -> tuple[bool, str | None]:
+    if not isinstance(value, str) or not value:
+        return False, "path value must be a non-empty string"
+    candidate = (pack_dir / value).resolve()
+    try:
+        candidate.relative_to(pack_dir.resolve())
+    except ValueError:
+        return False, f"path escapes pack directory: {value}"
+    if not candidate.exists():
+        return False, f"referenced path does not exist: {pack_dir.relative_to(root)}/{value}"
+    return True, None
+
+
+def domain_pack_check_one(root: Path, manifest: Path) -> dict[str, Any]:
+    pack_dir = manifest.parent
+    rel_manifest = str(manifest.relative_to(root))
+    rel_dir = str(pack_dir.relative_to(root))
+    problems: list[str] = []
+    checked_files: list[str] = []
+
+    data, problem = load_json_file(manifest)
+    if problem:
+        return {
+            "id": pack_dir.name,
+            "path": rel_dir,
+            "manifest": rel_manifest,
+            "status": "fail",
+            "checked_files": checked_files,
+            "problems": [problem],
+        }
+    if not isinstance(data, dict):
+        return {
+            "id": pack_dir.name,
+            "path": rel_dir,
+            "manifest": rel_manifest,
+            "status": "fail",
+            "checked_files": checked_files,
+            "problems": ["manifest top-level value must be an object"],
+        }
+
+    missing = [field for field in DOMAIN_PACK_REQUIRED_FIELDS if field not in data]
+    if missing:
+        problems.append("missing required fields: " + ", ".join(missing))
+
+    pack_id = data.get("id")
+    if not isinstance(pack_id, str) or not DOMAIN_PACK_ID_RE.fullmatch(pack_id):
+        problems.append("id must be _template or a lowercase slug")
+    elif pack_id != pack_dir.name:
+        problems.append(f"id must match pack directory name: {pack_dir.name}")
+
+    if not isinstance(data.get("schema_version"), int) or data.get("schema_version", 0) < 1:
+        problems.append("schema_version must be an integer >= 1")
+    for field in ("name", "purpose", "entrypoint"):
+        if not isinstance(data.get(field), str) or not data.get(field):
+            problems.append(f"{field} must be a non-empty string")
+
+    status = data.get("status")
+    if not isinstance(status, str) or status not in DOMAIN_PACK_STATUSES:
+        problems.append("status must be one of: " + ", ".join(DOMAIN_PACK_STATUSES))
+    if data.get("optional") is not True:
+        problems.append("optional must be true")
+    if data.get("core_doctrine_changes") is not False:
+        problems.append("core_doctrine_changes must be false")
+
+    entrypoint = data.get("entrypoint")
+    if isinstance(entrypoint, str):
+        ok, path_problem = validate_domain_pack_path(pack_dir, root, entrypoint)
+        checked_files.append(f"{rel_dir}/{entrypoint}")
+        if not ok and path_problem:
+            problems.append(f"entrypoint: {path_problem}")
+
+    files = data.get("files")
+    if not isinstance(files, list) or not files:
+        problems.append("files must be a non-empty list")
+    else:
+        seen: set[str] = set()
+        for item in files:
+            if not isinstance(item, str) or not item:
+                problems.append("files entries must be non-empty strings")
+                continue
+            if item in seen:
+                problems.append(f"duplicate file reference: {item}")
+            seen.add(item)
+            checked_files.append(f"{rel_dir}/{item}")
+            ok, path_problem = validate_domain_pack_path(pack_dir, root, item)
+            if not ok and path_problem:
+                problems.append(f"files: {path_problem}")
+        if isinstance(entrypoint, str) and entrypoint not in seen:
+            problems.append("entrypoint must also be listed in files")
+
+    return {
+        "id": pack_id if isinstance(pack_id, str) else pack_dir.name,
+        "path": rel_dir,
+        "manifest": rel_manifest,
+        "status": "fail" if problems else "pass",
+        "checked_files": sorted(set(checked_files)),
+        "problems": problems,
+    }
+
+
+def domain_pack_check_data(root: Path) -> dict[str, Any]:
+    base = root / "domain-packs"
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+
+    checks.append({"name": "domain pack directory", "path": "domain-packs", "ok": base.is_dir()})
+    if not base.is_dir():
+        problems.append("missing domain pack directory: domain-packs")
+        return {"ok": False, "checks": checks, "problems": problems, "packs": []}
+
+    manifests = domain_pack_manifest_paths(root)
+    checks.append({"name": "domain pack manifests", "path": "domain-packs/*/pack.json", "ok": bool(manifests), "count": len(manifests)})
+    if not manifests:
+        problems.append("no domain pack manifests found")
+
+    packs = [domain_pack_check_one(root, manifest) for manifest in manifests]
+    for pack in packs:
+        problems.extend(f"{pack['manifest']}: {problem}" for problem in pack["problems"])
+
+    return {"ok": not problems, "checks": checks, "problems": problems, "packs": packs}
+
+
+def command_domain_pack(args: argparse.Namespace) -> int:
+    data = domain_pack_check_data(repo_root())
+    human = ["domain-pack check: ok" if data["ok"] else "domain-pack check: problems found"]
+    human.append(f"- packs checked: {len(data['packs'])}")
+    for pack in data["packs"]:
+        human.append(f"- {pack['id']}: {pack['status']}")
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def validate_slug(value: str) -> str:
     if not SLUG_RE.fullmatch(value):
         raise SystemExit("slug must use lowercase letters, numbers, and hyphens")
@@ -2036,6 +2196,11 @@ def build_parser() -> argparse.ArgumentParser:
     lane.add_argument("directory", help="Lane simulation directory, such as simulations/lane-demo.")
     lane.add_argument("--json", action="store_true")
     lane.set_defaults(func=command_lane)
+
+    domain_pack = subparsers.add_parser("domain-pack", help="Validate optional domain pack manifests.")
+    domain_pack.add_argument("action", choices=("check",))
+    domain_pack.add_argument("--json", action="store_true")
+    domain_pack.set_defaults(func=command_domain_pack)
 
     experiment = subparsers.add_parser("experiment", help="Scaffold and check lightweight experiment artifacts.")
     experiment.add_argument("action", choices=("new", "check"))

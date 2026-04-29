@@ -297,6 +297,7 @@ class AhlTest(unittest.TestCase):
 
     def write_docs_index(self):
         for dirname in (
+            "domain-packs",
             "dry-runs",
             "runbooks",
             "templates",
@@ -319,6 +320,7 @@ class AhlTest(unittest.TestCase):
                 [
                     "# Docs",
                     "",
+                    "- [Domain packs](../domain-packs/README.md)",
                     "- [Dry runs](../dry-runs/README.md)",
                     "- [Runbooks](../runbooks/README.md)",
                     "- [Templates](../templates/README.md)",
@@ -706,6 +708,65 @@ class AhlTest(unittest.TestCase):
         self.assertIn("simulations/lane-demo/worker-01-result.md", data["missing_artifacts"])
         self.assertTrue(any("missing required fields" in problem for problem in data["problems"]))
         self.assertTrue(any("state must be one of" in problem for problem in data["problems"]))
+
+    def write_minimal_domain_pack(self):
+        self.write("domain-packs/docs-pack/README.md", "# Docs Pack\n")
+        self.write("domain-packs/docs-pack/routines.md", "# Routines\n")
+        self.write(
+            "domain-packs/docs-pack/pack.json",
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "id": "docs-pack",
+                    "name": "Docs Pack",
+                    "status": "draft",
+                    "purpose": "Test pack.",
+                    "entrypoint": "README.md",
+                    "files": ["README.md", "routines.md"],
+                    "optional": True,
+                    "core_doctrine_changes": False,
+                }
+            ),
+        )
+
+    def test_domain_pack_check_accepts_valid_manifest(self):
+        self.write_minimal_domain_pack()
+
+        code, output = self.run_cli("domain-pack", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["packs"][0]["id"], "docs-pack")
+        self.assertEqual(data["packs"][0]["status"], "pass")
+
+    def test_domain_pack_check_detects_missing_reference_and_required_flags(self):
+        self.write("domain-packs/bad/README.md", "# Bad\n")
+        self.write(
+            "domain-packs/bad/pack.json",
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "id": "bad",
+                    "name": "Bad",
+                    "status": "draft",
+                    "purpose": "Bad pack.",
+                    "entrypoint": "README.md",
+                    "files": ["README.md", "missing.md"],
+                    "optional": False,
+                    "core_doctrine_changes": True,
+                }
+            ),
+        )
+
+        code, output = self.run_cli("domain-pack", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("optional must be true" in problem for problem in data["problems"]))
+        self.assertTrue(any("core_doctrine_changes must be false" in problem for problem in data["problems"]))
+        self.assertTrue(any("missing.md" in problem for problem in data["problems"]))
 
     def write_experiment_templates(self):
         self.write(
