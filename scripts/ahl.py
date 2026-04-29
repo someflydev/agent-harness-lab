@@ -128,6 +128,26 @@ DRY_RUN_LIST_FIELDS = (
     "expected_outputs",
     "failure_modes_covered",
 )
+LANE_REQUIRED_FILES = (
+    "README.md",
+    "orchestrator-brief.md",
+    "lead-plan.md",
+    "worker-01-task.md",
+    "worker-01-result.md",
+    "reviewer-report.md",
+    "auditor-closeout.md",
+    "lane-status.json",
+)
+LANE_STATUS_REQUIRED_FIELDS = (
+    "lane_id",
+    "simulation",
+    "state",
+    "roles",
+    "artifacts",
+    "current_step",
+    "stop_escalation",
+)
+LANE_STATES = ("pending", "active", "review", "audited", "blocked", "escalated", "done")
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 EXPERIMENT_TEMPLATE_FILES = (
     ("experiments/templates/experiment-plan.md", "experiment-plan.md"),
@@ -232,6 +252,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "name": "dry-run",
         "command": "python3 scripts/ahl.py dry-run check --all",
         "summary": "Validate deterministic dry-run scenarios.",
+        "safety": "read-only",
+    },
+    {
+        "name": "lane-check",
+        "command": "python3 scripts/ahl.py lane check simulations/lane-demo",
+        "summary": "Validate a manual lane simulation workspace.",
         "safety": "read-only",
     },
     {
@@ -1280,6 +1306,169 @@ def command_dry_run(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def lane_dir(root: Path, value: str) -> tuple[Path, str | None]:
+    path = (root / value).resolve()
+    try:
+        path.relative_to(root.resolve())
+    except ValueError:
+        return path, f"lane path escapes repository root: {value}"
+    return path, None
+
+
+def lane_status_path(root: Path, directory: str) -> tuple[Path, str, str | None]:
+    path, problem = lane_dir(root, directory)
+    rel = str(path.relative_to(root.resolve())) if not problem else directory
+    return path / "lane-status.json", rel, problem
+
+
+def lane_status_data(root: Path, directory: str) -> dict[str, Any]:
+    status_path, lane_rel, path_problem = lane_status_path(root, directory)
+    resolved_root = root.resolve()
+    problems: list[str] = []
+    if path_problem:
+        problems.append(path_problem)
+        return {
+            "ok": False,
+            "lane_dir": lane_rel,
+            "status_path": str(status_path),
+            "state": None,
+            "status": None,
+            "problems": problems,
+        }
+
+    rel_status = str(status_path.relative_to(resolved_root))
+    if not status_path.is_file():
+        problems.append(f"missing lane status JSON: {rel_status}")
+        return {
+            "ok": False,
+            "lane_dir": lane_rel,
+            "status_path": rel_status,
+            "state": None,
+            "status": None,
+            "problems": problems,
+        }
+
+    data, problem = load_json_file(status_path)
+    if problem:
+        problems.append(problem)
+        return {
+            "ok": False,
+            "lane_dir": lane_rel,
+            "status_path": rel_status,
+            "state": None,
+            "status": None,
+            "problems": problems,
+        }
+    if not isinstance(data, dict):
+        problems.append(f"{rel_status}: top-level value must be an object")
+        return {
+            "ok": False,
+            "lane_dir": lane_rel,
+            "status_path": rel_status,
+            "state": None,
+            "status": data,
+            "problems": problems,
+        }
+
+    missing = [field for field in LANE_STATUS_REQUIRED_FIELDS if field not in data]
+    if missing:
+        problems.append(f"{rel_status}: missing required fields: {', '.join(missing)}")
+    state = data.get("state")
+    if not isinstance(state, str) or state not in LANE_STATES:
+        problems.append(f"{rel_status}: state must be one of: {', '.join(LANE_STATES)}")
+    if not isinstance(data.get("roles"), dict) or not data.get("roles"):
+        problems.append(f"{rel_status}: roles must be a non-empty object")
+    if not isinstance(data.get("artifacts"), list) or not data.get("artifacts"):
+        problems.append(f"{rel_status}: artifacts must be a non-empty list")
+    if not isinstance(data.get("stop_escalation"), dict):
+        problems.append(f"{rel_status}: stop_escalation must be an object")
+
+    return {
+        "ok": not problems,
+        "lane_dir": lane_rel,
+        "status_path": rel_status,
+        "state": state if isinstance(state, str) else None,
+        "status": data,
+        "problems": problems,
+    }
+
+
+def lane_check_data(root: Path, directory: str) -> dict[str, Any]:
+    lane_path, path_problem = lane_dir(root, directory)
+    resolved_root = root.resolve()
+    lane_rel = str(lane_path.relative_to(resolved_root)) if not path_problem else directory
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+
+    def add_check(name: str, path: str, ok: bool, **extra: Any) -> None:
+        check = {"name": name, "path": path, "ok": ok}
+        check.update(extra)
+        checks.append(check)
+
+    if path_problem:
+        add_check("lane directory", directory, False)
+        problems.append(path_problem)
+        return {"ok": False, "lane_dir": lane_rel, "checks": checks, "missing_artifacts": [], "state": None, "problems": problems}
+
+    add_check("lane directory", lane_rel, lane_path.is_dir())
+    if not lane_path.is_dir():
+        problems.append(f"missing lane directory: {lane_rel}")
+        return {"ok": False, "lane_dir": lane_rel, "checks": checks, "missing_artifacts": [], "state": None, "problems": problems}
+
+    missing_artifacts: list[str] = []
+    for filename in LANE_REQUIRED_FILES:
+        rel = f"{lane_rel}/{filename}"
+        exists = (lane_path / filename).is_file()
+        add_check(f"{filename} exists", rel, exists)
+        if not exists:
+            missing_artifacts.append(rel)
+            problems.append(f"missing lane artifact: {rel}")
+
+    status = lane_status_data(root, directory)
+    add_check("lane status parses", status["status_path"], status["ok"], state=status["state"])
+    problems.extend(status["problems"])
+
+    status_data = status.get("status")
+    if isinstance(status_data, dict):
+        artifact_values = status_data.get("artifacts")
+        if isinstance(artifact_values, list):
+            for item in artifact_values:
+                ok, path_problem = relative_path_exists(root, item)
+                add_check(f"status artifact exists: {item}", str(item), ok)
+                if not ok and path_problem:
+                    problems.append(f"lane-status.json artifacts: {path_problem}")
+
+    return {
+        "ok": not problems,
+        "lane_dir": lane_rel,
+        "checks": checks,
+        "missing_artifacts": missing_artifacts,
+        "state": status["state"],
+        "status": status_data if isinstance(status_data, dict) else None,
+        "problems": problems,
+    }
+
+
+def command_lane(args: argparse.Namespace) -> int:
+    root = repo_root()
+    if args.action == "status":
+        data = lane_status_data(root, args.directory)
+        human = [
+            f"lane status: {data['lane_dir']}",
+            f"- state: {data['state'] or 'unknown'}",
+        ]
+        human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+    data = lane_check_data(root, args.directory)
+    human = ["lane check: ok" if data["ok"] else "lane check: problems found"]
+    human.append(f"- lane: {data['lane_dir']}")
+    human.append(f"- state: {data['state'] or 'unknown'}")
+    human.append(f"- missing artifacts: {len(data['missing_artifacts'])}")
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def validate_slug(value: str) -> str:
     if not SLUG_RE.fullmatch(value):
         raise SystemExit("slug must use lowercase letters, numbers, and hyphens")
@@ -1841,6 +2030,12 @@ def build_parser() -> argparse.ArgumentParser:
     dry_run.add_argument("--all", action="store_true", help="Check every scenario and PARITY.md backing file.")
     dry_run.add_argument("--json", action="store_true")
     dry_run.set_defaults(func=command_dry_run)
+
+    lane = subparsers.add_parser("lane", help="Inspect manual lane simulation artifacts.")
+    lane.add_argument("action", choices=("check", "status"))
+    lane.add_argument("directory", help="Lane simulation directory, such as simulations/lane-demo.")
+    lane.add_argument("--json", action="store_true")
+    lane.set_defaults(func=command_lane)
 
     experiment = subparsers.add_parser("experiment", help="Scaffold and check lightweight experiment artifacts.")
     experiment.add_argument("action", choices=("new", "check"))

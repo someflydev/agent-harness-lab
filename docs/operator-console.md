@@ -22,6 +22,7 @@ make check-docs
 make test
 make trace PROMPT=PROMPT_26
 make dry-run
+make lane-check
 make registry
 make memory-check
 make experiment-check
@@ -43,6 +44,7 @@ Read-only targets:
 - `test`
 - `trace`
 - `dry-run`
+- `lane-check`
 - `registry`
 - `memory-check`
 - `experiment-check`

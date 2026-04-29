@@ -639,6 +639,74 @@ class AhlTest(unittest.TestCase):
         self.assertIn("sequential-prompt-run", data["parity"]["missing_backing_json"])
         self.assertEqual(data["results"][0]["status"], "missing")
 
+    def write_minimal_lane_demo(self):
+        for filename in ahl.LANE_REQUIRED_FILES:
+            if filename == "lane-status.json":
+                continue
+            self.write(f"simulations/lane-demo/{filename}", f"# {filename}\n")
+        self.write(
+            "simulations/lane-demo/lane-status.json",
+            json.dumps(
+                {
+                    "lane_id": "lane-demo",
+                    "simulation": "template-docs-refresh",
+                    "state": "done",
+                    "roles": {
+                        "orchestrator": "set intent",
+                        "lead": "planned docs validation",
+                        "worker-01": "checked template index",
+                        "reviewer": "reported no blocking findings",
+                        "auditor": "closed simulation",
+                    },
+                    "artifacts": [
+                        "simulations/lane-demo/orchestrator-brief.md",
+                        "simulations/lane-demo/lead-plan.md",
+                        "simulations/lane-demo/worker-01-result.md",
+                        "simulations/lane-demo/reviewer-report.md",
+                        "simulations/lane-demo/auditor-closeout.md",
+                    ],
+                    "current_step": "closed",
+                    "stop_escalation": {"needed": False, "reason": "No blocker."},
+                }
+            ),
+        )
+
+    def test_lane_check_accepts_complete_demo(self):
+        self.write_minimal_lane_demo()
+
+        code, output = self.run_cli("lane", "check", "simulations/lane-demo", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["state"], "done")
+        self.assertEqual(data["missing_artifacts"], [])
+
+    def test_lane_status_reports_current_state(self):
+        self.write_minimal_lane_demo()
+
+        code, output = self.run_cli("lane", "status", "simulations/lane-demo", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["lane_dir"], "simulations/lane-demo")
+        self.assertEqual(data["state"], "done")
+        self.assertIn("roles", data["status"])
+
+    def test_lane_check_reports_missing_artifacts_and_bad_status(self):
+        self.write_minimal_lane_demo()
+        (self.root / "simulations" / "lane-demo" / "worker-01-result.md").unlink()
+        self.write("simulations/lane-demo/lane-status.json", json.dumps({"state": "moving"}))
+
+        code, output = self.run_cli("lane", "check", "simulations/lane-demo", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertIn("simulations/lane-demo/worker-01-result.md", data["missing_artifacts"])
+        self.assertTrue(any("missing required fields" in problem for problem in data["problems"]))
+        self.assertTrue(any("state must be one of" in problem for problem in data["problems"]))
+
     def write_experiment_templates(self):
         self.write(
             "experiments/templates/experiment-plan.md",

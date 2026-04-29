@@ -1,4 +1,4 @@
-.PHONY: help doctor resume checkpoint promptset lint-prompts check-docs test trace dry-run registry memory-check experiment-check
+.PHONY: help doctor resume checkpoint promptset lint-prompts check-docs test trace dry-run lane-check registry memory-check experiment-check
 
 PROMPT ?= PROMPT_26
 
@@ -31,6 +31,9 @@ trace:
 
 dry-run:
 	@python3 scripts/ahl.py dry-run check --all
+
+lane-check:
+	@python3 scripts/ahl.py lane check simulations/lane-demo
 
 registry:
 	@python3 scripts/ahl.py registry check
