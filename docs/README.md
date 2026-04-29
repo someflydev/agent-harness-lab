@@ -140,6 +140,9 @@ exist, but richer orchestration remains future work.
   JSON output expectations.
 - `traceability.md` - closeout trace command guidance for prompt-related
   working tree summaries.
+- `memory/promotion-workflow.md` - workflow details for
+  `scripts/ahl.py memory propose`, `scripts/ahl.py memory check`, and
+  `scripts/ahl.py memory decision`.
 
 ## Architecture
 

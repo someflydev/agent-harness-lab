@@ -301,6 +301,7 @@ class AhlTest(unittest.TestCase):
             "lane-playbooks",
             "prompt-templates",
             "fixtures",
+            "memory",
         ):
             self.write(f"{dirname}/README.md", f"# {dirname}\n")
         self.write(
@@ -322,6 +323,7 @@ class AhlTest(unittest.TestCase):
                     "- [Lane playbooks](../lane-playbooks/README.md)",
                     "- [Prompt templates](../prompt-templates/README.md)",
                     "- [Fixtures](../fixtures/README.md)",
+                    "- [Memory](../memory/README.md)",
                 ]
             )
             + "\n",
@@ -719,6 +721,147 @@ class AhlTest(unittest.TestCase):
         record = self.root / "findings/draft/repeated-closeout-gap/finding-record.md"
         self.assertTrue(record.exists())
         self.assertIn("- Finding id: repeated-closeout-gap", record.read_text(encoding="utf-8"))
+
+    def write_memory_templates(self):
+        self.write(
+            "templates/memory/promotion-candidate.md",
+            "\n".join(
+                [
+                    "# Promotion Candidate",
+                    "",
+                    "- Candidate id:",
+                    "- Date proposed:",
+                    "- Proposed by:",
+                    "- Status: Proposed / In Review / Accepted / Rejected / Superseded",
+                    "",
+                    "## Candidate",
+                    "",
+                    "- Candidate fact:",
+                    "- Proposed target artifact:",
+                    "- Proposed memory plane:",
+                    "",
+                    "## Evidence",
+                    "",
+                    "- Source evidence:",
+                    "- Validation performed:",
+                    "",
+                    "## Review Notes",
+                    "",
+                    "- Review needed:",
+                    "",
+                    "## Disposition",
+                    "",
+                    "- Decision:",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            "templates/memory/promotion-decision.md",
+            "\n".join(
+                [
+                    "# Promotion Decision",
+                    "",
+                    "- Decision id:",
+                    "- Candidate id:",
+                    "- Candidate source:",
+                    "- Decision date:",
+                    "- Decision: Accepted / Rejected",
+                    "- Status: Draft / Reviewed",
+                ]
+            )
+            + "\n",
+        )
+
+    def test_memory_propose_scaffolds_candidate(self):
+        self.write_memory_templates()
+
+        code, output = self.run_cli("memory", "propose", "stable-cli-boundary", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["created"], "memory/promotion-queue/stable-cli-boundary.md")
+        candidate = self.root / data["created"]
+        self.assertTrue(candidate.exists())
+        text = candidate.read_text(encoding="utf-8")
+        self.assertIn("- Candidate id: stable-cli-boundary", text)
+        self.assertIn("- Status: Proposed", text)
+
+    def test_memory_propose_refuses_overwrite_unless_forced(self):
+        self.write_memory_templates()
+
+        code, _ = self.run_cli("memory", "propose", "overwrite-memory", "--json")
+        self.assertEqual(code, 0)
+
+        code2, output2 = self.run_cli("memory", "propose", "overwrite-memory", "--json")
+        self.assertEqual(code2, 1)
+        self.assertFalse(json.loads(output2)["ok"])
+
+        code3, output3 = self.run_cli("memory", "propose", "overwrite-memory", "--force", "--json")
+        self.assertEqual(code3, 0)
+        self.assertTrue(json.loads(output3)["ok"])
+
+    def test_memory_check_validates_queue_candidate_fields(self):
+        self.write(
+            "memory/promotion-queue/good.md",
+            "\n".join(
+                [
+                    "# Promotion Candidate",
+                    "",
+                    "- Candidate id: good",
+                    "- Date proposed: 2026-04-29",
+                    "- Proposed by: test",
+                    "- Status: Proposed",
+                    "",
+                    "## Candidate",
+                    "",
+                    "- Candidate fact: A validated repo fact.",
+                    "- Proposed target artifact: docs/memory/README.md",
+                    "- Proposed memory plane: durable repo memory",
+                    "",
+                    "## Evidence",
+                    "",
+                    "- Source evidence: tests",
+                    "",
+                    "## Review Notes",
+                    "",
+                    "- Review needed: operator approval",
+                    "",
+                    "## Disposition",
+                    "",
+                    "- Decision: Pending",
+                ]
+            )
+            + "\n",
+        )
+        self.write("memory/promotion-queue/bad.md", "# Promotion Candidate\n- Candidate id:\n")
+
+        code, output = self.run_cli("memory", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(len(data["candidates"]), 2)
+        self.assertTrue(any("bad.md" in problem and "missing" in problem for problem in data["problems"]))
+
+    def test_memory_decision_scaffolds_decision_record(self):
+        self.write_memory_templates()
+        code, _ = self.run_cli("memory", "propose", "decision-memory", "--json")
+        self.assertEqual(code, 0)
+
+        code2, output2 = self.run_cli("memory", "decision", "decision-memory", "--accepted", "--json")
+        data = json.loads(output2)
+
+        self.assertEqual(code2, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["decision"], "accepted")
+        self.assertEqual(data["created"], "memory/accepted/decision-memory-decision.md")
+        decision = self.root / data["created"]
+        self.assertTrue(decision.exists())
+        text = decision.read_text(encoding="utf-8")
+        self.assertIn("- Candidate source: memory/promotion-queue/decision-memory.md", text)
+        self.assertIn("- Decision: Accepted", text)
 
     def test_experiment_check_json_has_stable_fields(self):
         self.write("experiments/active/filled/experiment-plan.md", "# Plan\n- Experiment id: filled\n- Date opened: 2026-04-29\n- Status: Active\n- Hypothesis or question: Test question.\n- Workflow problem: Missed closeout.\n- Stop condition: One run.\n")

@@ -48,6 +48,7 @@ DOCS_SCAN_ROOTS = (
     "role-packs",
     "lane-playbooks",
     "prompt-templates",
+    "memory",
 )
 DOCS_NAV_INDEX = "docs/README.md"
 DOCS_INDEX_DIRS = (
@@ -64,6 +65,7 @@ DOCS_INDEX_DIRS = (
     "lane-playbooks",
     "prompt-templates",
     "fixtures",
+    "memory",
 )
 MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)")
 REFERENCE_LINK_RE = re.compile(r"^\s*\[[^\]\n]+\]:\s*(\S+)", re.M)
@@ -151,6 +153,26 @@ EXPERIMENT_REQUIRED_FIELDS = {
     ),
 }
 FINDING_TEMPLATE_FILES = (("findings/templates/finding-record.md", "finding-record.md"),)
+MEMORY_CANDIDATE_TEMPLATE = "templates/memory/promotion-candidate.md"
+MEMORY_DECISION_TEMPLATE = "templates/memory/promotion-decision.md"
+MEMORY_CANDIDATE_REQUIRED_FIELDS = (
+    "- Candidate id:",
+    "- Date proposed:",
+    "- Proposed by:",
+    "- Status:",
+    "- Candidate fact:",
+    "- Source evidence:",
+    "- Proposed target artifact:",
+    "- Proposed memory plane:",
+    "- Review needed:",
+)
+MEMORY_CANDIDATE_REQUIRED_HEADINGS = (
+    "# Promotion Candidate",
+    "## Candidate",
+    "## Evidence",
+    "## Review Notes",
+    "## Disposition",
+)
 
 
 def repo_root() -> Path:
@@ -1358,6 +1380,139 @@ def command_finding(args: argparse.Namespace) -> int:
     return emit(data, args.json, [f"created finding scaffold: {data['directory']}"], 0)
 
 
+def memory_candidate_path(root: Path, value: str) -> Path:
+    candidate = Path(value)
+    if candidate.suffix == ".md" or "/" in value:
+        path = root / candidate
+    else:
+        slug = validate_slug(value)
+        path = root / "memory" / "promotion-queue" / f"{slug}.md"
+    if not path_within_root(root, path):
+        raise SystemExit(f"candidate path escapes repository root: {value}")
+    return path
+
+
+def fill_memory_candidate(template: str, slug: str) -> str:
+    today = dt.date.today().isoformat()
+    replacements = {
+        "- Candidate id:": f"- Candidate id: {slug}",
+        "- Date proposed:": f"- Date proposed: {today}",
+        "- Status: Proposed / In Review / Accepted / Rejected / Superseded": "- Status: Proposed",
+    }
+    return replace_template_fields(template, replacements)
+
+
+def fill_memory_decision(template: str, slug: str, decision: str, candidate_rel: str) -> str:
+    today = dt.date.today().isoformat()
+    title = decision.capitalize()
+    replacements = {
+        "- Decision id:": f"- Decision id: {slug}-{decision}",
+        "- Candidate id:": f"- Candidate id: {slug}",
+        "- Candidate source:": f"- Candidate source: {candidate_rel}",
+        "- Decision date:": f"- Decision date: {today}",
+        "- Decision: Accepted / Rejected": f"- Decision: {title}",
+        "- Status: Draft / Reviewed": "- Status: Draft",
+    }
+    return replace_template_fields(template, replacements)
+
+
+def memory_candidate_check(root: Path, path: Path) -> dict[str, Any]:
+    rel = str(path.relative_to(root))
+    item_problems: list[str] = []
+    if not path.is_file():
+        return {"path": rel, "status": "missing", "problems": ["candidate file is missing"]}
+
+    text = path.read_text(encoding="utf-8")
+    missing_headings = [heading for heading in MEMORY_CANDIDATE_REQUIRED_HEADINGS if heading not in text]
+    missing_fields = [field for field in MEMORY_CANDIDATE_REQUIRED_FIELDS if not field_has_value(text, field)]
+    item_problems.extend(f"missing heading: {heading}" for heading in missing_headings)
+    item_problems.extend(f"missing value for {field}" for field in missing_fields)
+    status = "fail" if item_problems else "pass"
+    return {"path": rel, "status": status, "problems": item_problems}
+
+
+def memory_check_data(root: Path) -> dict[str, Any]:
+    queue = root / "memory" / "promotion-queue"
+    checks = [
+        {
+            "name": "promotion queue directory",
+            "path": "memory/promotion-queue",
+            "ok": True,
+            "required": False,
+            "present": queue.is_dir(),
+        }
+    ]
+    if not queue.is_dir():
+        return {"ok": True, "checks": checks, "problems": [], "candidates": []}
+
+    candidates: list[dict[str, Any]] = []
+    problems: list[str] = []
+    for path in sorted(queue.glob("*.md")):
+        if path.name == "README.md":
+            continue
+        result = memory_candidate_check(root, path)
+        candidates.append(result)
+        problems.extend(f"{result['path']}: {problem}" for problem in result["problems"])
+
+    checks.append({"name": "promotion candidates", "path": "memory/promotion-queue", "ok": not problems, "count": len(candidates)})
+    return {"ok": not problems, "checks": checks, "problems": problems, "candidates": candidates}
+
+
+def command_memory(args: argparse.Namespace) -> int:
+    root = repo_root()
+    if args.action == "check":
+        data = memory_check_data(root)
+        human = ["memory check: ok" if data["ok"] else "memory check: problems found"]
+        human.append(f"- candidates checked: {len(data['candidates'])}")
+        human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+    if args.action == "propose":
+        if not args.target:
+            raise SystemExit("memory propose requires a slug")
+        slug = validate_slug(args.target)
+        target = root / "memory" / "promotion-queue" / f"{slug}.md"
+        if target.exists() and not args.force:
+            data = {"ok": False, "slug": slug, "created": None, "collisions": [str(target.relative_to(root))]}
+            return emit(data, args.json, ["refusing to overwrite: " + str(target.relative_to(root))], 1)
+        template_path = root / MEMORY_CANDIDATE_TEMPLATE
+        template = template_path.read_text(encoding="utf-8") if template_path.exists() else "# Promotion Candidate\n"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(fill_memory_candidate(template, slug), encoding="utf-8")
+        data = {"ok": True, "slug": slug, "created": str(target.relative_to(root)), "forced": args.force}
+        return emit(data, args.json, [f"created memory promotion candidate: {data['created']}"], 0)
+
+    if not args.target:
+        raise SystemExit("memory decision requires a candidate slug or path")
+    if not args.accepted and not args.rejected:
+        raise SystemExit("memory decision requires --accepted or --rejected")
+    candidate = memory_candidate_path(root, args.target)
+    if not candidate.is_file():
+        data = {"ok": False, "candidate": str(candidate.relative_to(root)), "created": None, "problem": "candidate file is missing"}
+        return emit(data, args.json, [f"candidate file is missing: {data['candidate']}"], 1)
+    decision = "accepted" if args.accepted else "rejected"
+    slug = candidate.stem
+    target = root / "memory" / decision / f"{slug}-decision.md"
+    if target.exists() and not args.force:
+        data = {"ok": False, "candidate": str(candidate.relative_to(root)), "created": None, "collisions": [str(target.relative_to(root))]}
+        return emit(data, args.json, ["refusing to overwrite: " + str(target.relative_to(root))], 1)
+    template_path = root / MEMORY_DECISION_TEMPLATE
+    template = template_path.read_text(encoding="utf-8") if template_path.exists() else "# Promotion Decision\n"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        fill_memory_decision(template, slug, "accepted" if args.accepted else "rejected", str(candidate.relative_to(root))),
+        encoding="utf-8",
+    )
+    data = {
+        "ok": True,
+        "candidate": str(candidate.relative_to(root)),
+        "decision": decision,
+        "created": str(target.relative_to(root)),
+        "forced": args.force,
+    }
+    return emit(data, args.json, [f"created memory promotion decision: {data['created']}"], 0)
+
+
 def normalize_prompt_id(value: str) -> str:
     path_name = Path(value).name
     strict = STRICT_PROMPT_RE.match(path_name)
@@ -1605,6 +1760,16 @@ def build_parser() -> argparse.ArgumentParser:
     finding.add_argument("--force", action="store_true", help="Overwrite an existing finding scaffold.")
     finding.add_argument("--json", action="store_true")
     finding.set_defaults(func=command_finding)
+
+    memory = subparsers.add_parser("memory", help="Scaffold and check reviewed memory promotion artifacts.")
+    memory.add_argument("action", choices=("propose", "check", "decision"))
+    memory.add_argument("target", nargs="?", help="Slug for `memory propose`; slug or path for `memory decision`.")
+    decision_group = memory.add_mutually_exclusive_group()
+    decision_group.add_argument("--accepted", action="store_true", help="Scaffold an accepted decision record.")
+    decision_group.add_argument("--rejected", action="store_true", help="Scaffold a rejected decision record.")
+    memory.add_argument("--force", action="store_true", help="Overwrite an existing memory scaffold.")
+    memory.add_argument("--json", action="store_true")
+    memory.set_defaults(func=command_memory)
 
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")

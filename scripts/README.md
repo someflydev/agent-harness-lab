@@ -4,7 +4,7 @@
 `agent-harness-lab` work. It checks repository foundations, inspects prompt
 filenames, scaffolds run and handoff artifacts from templates, validates
 deterministic dry-run scenario manifests, and reports a compact session context
-briefing.
+briefing. It also scaffolds and checks reviewed memory promotion artifacts.
 
 It is intentionally dependency-free and uses only the Python standard library.
 Future architecture docs may describe richer orchestration candidates, but
@@ -29,6 +29,9 @@ justifies more.
   files.
 - `experiment new`, `experiment check`, and `finding new` scaffold lightweight
   lab evidence artifacts and structurally check active experiment records.
+- `memory propose`, `memory check`, and `memory decision` scaffold reviewed
+  promotion candidates, validate queue structure, and create accepted or
+  rejected decision records without promoting facts automatically.
 - `resume` prints a read-only Session Context Briefing for visible repo state.
 - `trace` summarizes prompt-related working tree changes and emits a run-record
   skeleton for closeout.
@@ -44,6 +47,8 @@ justifies more.
 
 - It does not run prompts or call model providers.
 - It does not inspect, ingest, or store raw assistant transcripts.
+- It does not approve memory promotions or make `memory/` a replacement for
+  docs, findings, runbooks, templates, scripts, or tests.
 - It does not maintain a daemon or hidden runtime state.
 - It does not replace human closeout, readiness, or promotion judgment.
 - It does not provide graph, vector, provider, plugin, or server
@@ -68,6 +73,9 @@ python3 scripts/ahl.py dry-run check --all --json
 python3 scripts/ahl.py experiment new closeout-check
 python3 scripts/ahl.py experiment check --json
 python3 scripts/ahl.py finding new repeated-closeout-gap
+python3 scripts/ahl.py memory propose stable-cli-boundary
+python3 scripts/ahl.py memory check --json
+python3 scripts/ahl.py memory decision stable-cli-boundary --accepted
 python3 scripts/ahl.py resume --json
 python3 scripts/ahl.py trace PROMPT_20 --json
 python3 scripts/ahl.py checkpoint
@@ -102,6 +110,10 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `experiment check`: `ok`, `directory`, `checks`, `problems`, `experiments`;
   each experiment includes stable `id`, `path`, `status`, and `problems`
 - `finding new`: `ok`, `slug`, `directory`, `created`, `forced`
+- `memory propose`: `ok`, `slug`, `created`, `forced`
+- `memory check`: `ok`, `checks`, `problems`, `candidates`; each candidate
+  includes stable `path`, `status`, and `problems`
+- `memory decision`: `ok`, `candidate`, `decision`, `created`, `forced`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,
