@@ -1,19 +1,29 @@
 # Repo Layout
 
-This page describes the intended top-level areas for `agent-harness-lab`. Some
-exist now; others are planned for later prompts.
+This page describes the top-level areas for `agent-harness-lab`.
 
 ## Existing Now
 
 - `.prompts/` - ordered prompt files intended to be run one at a time in fresh
   assistant sessions.
 - `docs/` - foundation documentation, guardrails, operator start guidance, repo
-  layout notes, reference influence notes, doctrine, and role taxonomy.
+  layout notes, reference influence notes, doctrine, roles, skills, routines,
+  runtime lifecycle, memory governance, contracts, quality, metadata, future
+  architecture, and capstone audits.
+- `runbooks/` - repeatable operator procedures for common workflows.
+- `templates/` - reusable contract, handoff, memory, report, run, and closeout
+  templates.
+- `scripts/` - small helper scripts for checks, scaffolding, metadata examples,
+  and local workflow support.
+- `examples/` - worked examples that show prompt-bounded sessions in practice.
 - `experiments/` - bounded trials for harness ideas that are not yet doctrine.
 - `findings/` - reviewed lessons and recurring observations that may inform
   future prompt-authoring or memory promotion.
 - `reports/` - retrospective summaries of session, promptset, routine, or phase
   evidence.
+- `schemas/` - JSON Schemas for selected metadata and report shapes.
+- `tmp/` - ignored scratch space for transient handoffs and session-local
+  material.
 - `README.md` - public identity and high-level project orientation.
 - `AGENT.md` - assistant bootstrap guidance for future sessions.
 - `.gitignore` - local reference repo, transient state, cache, and editor
@@ -23,18 +33,12 @@ Local reference clones such as `agent-context-base/`, `pi-mono/`, and
 `claw-code/` may exist in a working copy, but they are ignored and are not part
 of this repo's committed implementation.
 
-## Planned Areas
+## Possible Later Areas
 
-- `runbooks/` - repeatable operator procedures for common workflows.
-- `templates/` - reusable prompt, handoff, report, and review templates.
-- `scripts/` - small helper scripts for checks, scaffolding, and local
-  automation once the workflow is stable enough to justify them.
-- `examples/` - worked examples that show how prompt-bounded sessions should
-  look in practice.
 - `runs/` - inspectable records of significant promptset or workflow runs when
   later prompts define the format.
-- `tmp/` - ignored scratch space for transient handoffs and session-local
-  material.
+- Optional local indexes or automation hook areas only after the documented
+  workflow and helper-script contracts prove they need them.
 
 Planned areas should be created by the prompt that first gives them real
 responsibility. Avoid empty structure that implies maturity the repo does not

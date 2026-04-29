@@ -6,6 +6,9 @@ filenames, scaffolds run and handoff artifacts from templates, and reports a
 compact session context briefing.
 
 It is intentionally dependency-free and uses only the Python standard library.
+Future architecture docs may describe richer orchestration candidates, but
+this script remains a small helper layer until repeated workflow evidence
+justifies more.
 
 ## What It Does
 
@@ -29,6 +32,8 @@ It is intentionally dependency-free and uses only the Python standard library.
 - It does not inspect, ingest, or store raw assistant transcripts.
 - It does not maintain a daemon or hidden runtime state.
 - It does not replace human closeout, readiness, or promotion judgment.
+- It does not provide graph, vector, provider, plugin, or server
+  infrastructure.
 
 ## Examples
 

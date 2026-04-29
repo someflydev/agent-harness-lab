@@ -21,7 +21,8 @@ prompt asks for reference influence or when a narrow comparison is needed.
 - Read existing hot-spot files before changing them.
 - Treat user changes as intentional. Do not revert unrelated work.
 - Modify files inside this repo only. Do not edit local clones of
-  `agent-context-base`, `pi-mono`, or `claw-code`.
+  `agent-context-base`, `pi-mono`, or `claw-code`. Future architecture notes
+  are guidance only; do not treat them as implemented runtime capabilities.
 
 ## Session Types
 

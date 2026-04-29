@@ -128,7 +128,9 @@ classification without replacing prompt-specific judgment.
 
 ## Current Status
 
-This repository has public identity, assistant bootstrap guidance, early
-documentation orientation, doctrine, a role taxonomy, runbooks, templates, and
-lightweight helper scripts. It does not yet have provider integrations or a
-heavy runtime.
+This repository has public identity, assistant bootstrap guidance, navigation
+docs, guardrails, doctrine, roles, skills, routines, runtime lifecycle notes,
+memory governance, contracts, templates, runbooks, examples, quality guidance,
+metadata rules, capstone audits, future-facing architecture guidance, and
+lightweight helper scripts. It does not yet have provider integrations, graph
+or vector database dependencies, an autonomous runner, or a heavy runtime.

@@ -1,10 +1,11 @@
 # Documentation
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
-is early, so these pages focus on foundation, orientation, guardrails, initial
-doctrine, role boundaries, skills, routines, runbooks, runtime session behavior,
-memory governance, contracts, quality gates, metadata, examples, experiments,
-reports, findings, and lab method. Later prompts will add expanded scripts.
+is early, so these pages focus on foundation, orientation, guardrails, doctrine,
+role boundaries, skills, routines, runbooks, runtime session behavior, memory
+governance, contracts, quality gates, metadata, examples, experiments,
+reports, findings, lab method, capstone audits, and future-facing architecture.
+Helper scripts exist, but richer orchestration remains future work.
 
 ## Start Here
 
@@ -25,6 +26,10 @@ reports, findings, and lab method. Later prompts will add expanded scripts.
   findings, and promotion decisions.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
   severity, completion states, and failure classes.
+- `architecture/README.md` - future-facing architecture guidance and
+  automation boundaries.
+- `capstone/phase-one-audit.md` - foundation-phase audit of covered areas,
+  gaps, and next improvements.
 
 ## Doctrine
 
@@ -96,6 +101,24 @@ reports, findings, and lab method. Later prompts will add expanded scripts.
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
+
+## Architecture
+
+- `architecture/README.md` - architecture index and current posture.
+- `architecture/future-runtime-path.md` - gradual migration path from
+  documented routines to possible richer orchestration.
+- `architecture/automation-readiness-ladder.md` - criteria for graduating
+  routines from prose to runtime components.
+- `architecture/traceability-graph-and-semantic-retrieval.md` - future graph
+  and semantic retrieval guidance as derived indexes.
+- `architecture/non-goals.md` - foundation-phase non-goals and boundaries.
+
+## Capstone
+
+- `capstone/phase-one-audit.md` - audit across foundation-phase areas.
+- `capstone/navigation-audit.md` - check that operators can find important
+  docs without prompt history.
+- `capstone/open-questions.md` - unresolved design questions for later review.
 
 ## Metadata
 
