@@ -42,3 +42,20 @@ Each `validation_commands` entry should use:
 The run record is not a transcript and should not duplicate long command
 output. It should point reviewers to repo files, git commits, reports, or
 handoffs when more detail is needed.
+
+## Fixtures And Lightweight Checks
+
+Artificial examples live in `../../fixtures/`. They provide compact successful
+and blocked run records, readiness reports, a promptset index, a lane record,
+and a prompt-to-commit traceability record for local schema coverage.
+
+Use:
+
+```sh
+python3 scripts/ahl.py fixtures check
+```
+
+This command performs structural fixture checks with the Python standard
+library only. It confirms that JSON parses, expected top-level fields exist,
+fixtures map to the expected schema files, and prompt id references look like
+`PROMPT_19`. It is not a full JSON Schema validator.

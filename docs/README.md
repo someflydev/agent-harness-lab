@@ -174,6 +174,11 @@ Helper scripts exist, but richer orchestration remains future work.
   reports.
 - `../schemas/promptset-index.schema.json` - JSON Schema for
   `scripts/ahl.py promptset --json`.
+- `../schemas/lane-record.schema.json` - JSON Schema for compact lane records.
+- `../schemas/traceability-record.schema.json` - JSON Schema for compact
+  prompt-to-commit traceability records.
+- `../fixtures/README.md` - artificial JSON fixtures and lightweight fixture
+  check limits.
 
 ## Contracts
 

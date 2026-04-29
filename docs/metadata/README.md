@@ -20,6 +20,12 @@ becoming a second source of truth.
   readiness reports.
 - `../../schemas/promptset-index.schema.json` - JSON shape for
   `python3 scripts/ahl.py promptset --json`.
+- `../../schemas/lane-record.schema.json` - JSON shape for compact lane
+  records.
+- `../../schemas/traceability-record.schema.json` - JSON shape for compact
+  prompt-to-commit traceability records.
+- `../../fixtures/README.md` - artificial fixture examples and the documented
+  limits of `python3 scripts/ahl.py fixtures check`.
 
 ## Use
 
