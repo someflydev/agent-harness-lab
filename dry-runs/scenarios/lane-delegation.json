@@ -1,0 +1,38 @@
+{
+  "id": "lane-delegation",
+  "purpose": "Exercise manual lane delegation artifacts across Orchestrator, Lead, Worker, and review outputs without spawning live agents.",
+  "input_artifacts": [
+    "docs/roles/org-model.md",
+    "role-packs/README.md",
+    "lane-playbooks/README.md",
+    "templates/contracts/task-contract.md",
+    "templates/contracts/result-contract.md",
+    "templates/contracts/review-contract.md",
+    "examples/org-lane-delegation/README.md"
+  ],
+  "routine_sequence": [
+    "create orchestrator brief",
+    "assign lead task contract",
+    "assign worker task contract",
+    "record worker result",
+    "review lead output"
+  ],
+  "expected_checks": [
+    "input artifacts exist",
+    "contract templates exist",
+    "example lane artifacts exist",
+    "scenario remains manual and provider-neutral"
+  ],
+  "expected_outputs": [
+    "examples/org-lane-delegation/artifacts/orchestrator-brief.md",
+    "examples/org-lane-delegation/artifacts/lead-task-contract.md",
+    "examples/org-lane-delegation/artifacts/worker-task-contract.md",
+    "examples/org-lane-delegation/artifacts/worker-result-contract.md",
+    "examples/org-lane-delegation/artifacts/lead-review.md"
+  ],
+  "failure_modes_covered": [
+    "unclear lane ownership",
+    "missing result contract",
+    "review omitted before closeout"
+  ]
+}

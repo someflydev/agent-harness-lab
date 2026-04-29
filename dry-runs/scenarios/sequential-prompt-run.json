@@ -1,0 +1,42 @@
+{
+  "id": "sequential-prompt-run",
+  "purpose": "Exercise the normal fresh-session prompt run path from startup through audit, next-prompt preflight, no-handoff decision, and reset.",
+  "input_artifacts": [
+    "AGENT.md",
+    "runbooks/fresh-session-prompt-run.md",
+    "runbooks/completion-audit.md",
+    "runbooks/next-prompt-preflight.md",
+    "runbooks/run-closeout.md",
+    "examples/sequential-prompt-run/README.md",
+    "templates/runs/run-manifest.md",
+    "templates/reports/completion-audit.md",
+    "templates/reports/readiness-report.md"
+  ],
+  "routine_sequence": [
+    "load bootstrap context",
+    "execute bounded prompt work",
+    "record run manifest shape",
+    "audit completion evidence",
+    "preflight immediate next prompt",
+    "record no-handoff reset"
+  ],
+  "expected_checks": [
+    "input artifacts exist",
+    "expected output summary exists",
+    "scenario includes audit and readiness steps",
+    "no provider invocation is required"
+  ],
+  "expected_outputs": [
+    "dry-runs/expected/sequential-prompt-run.md",
+    "examples/sequential-prompt-run/artifacts/run-manifest.md",
+    "examples/sequential-prompt-run/artifacts/completion-audit.md",
+    "examples/sequential-prompt-run/artifacts/readiness-report.md",
+    "examples/sequential-prompt-run/artifacts/handoff-not-created.md"
+  ],
+  "failure_modes_covered": [
+    "missing startup context",
+    "missing audit evidence",
+    "missing readiness report",
+    "unjustified handoff creation"
+  ]
+}

@@ -3,10 +3,11 @@
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, doctrine,
 role boundaries, skills, routines, runbooks, runtime session behavior, memory
-governance, contracts, quality gates, metadata, examples, experiments,
-reports, findings, lab method, capstone audits, and future-facing architecture.
-Role packs and lane playbooks now provide pasteable manual hierarchy routines.
-Helper scripts exist, but richer orchestration remains future work.
+governance, contracts, quality gates, metadata, examples, deterministic
+dry-run harness checks, experiments, reports, findings, lab method, capstone
+audits, and future-facing architecture. Role packs and lane playbooks now
+provide pasteable manual hierarchy routines. Helper scripts exist, but richer
+orchestration remains future work.
 
 ## Start Here
 
@@ -35,6 +36,8 @@ Helper scripts exist, but richer orchestration remains future work.
   and prompt-authoring use.
 - `project-skills.md` - optional project-level skill packages, boundaries, and
   safe addition rules.
+- `dry-run-harness.md` - deterministic dry-run scenario purpose, limits,
+  parity tracking, and addition workflow.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
@@ -124,6 +127,8 @@ Helper scripts exist, but richer orchestration remains future work.
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
 - `promptset-linting.md` - details for `scripts/ahl.py promptset lint`.
 - `navigation-validation.md` - details for `scripts/ahl.py docs check`.
+- `dry-run-harness.md` - details for `scripts/ahl.py dry-run list` and
+  `scripts/ahl.py dry-run check`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
 - `traceability.md` - closeout trace command guidance for prompt-related
@@ -191,6 +196,15 @@ Helper scripts exist, but richer orchestration remains future work.
   check limits.
 - `../fixtures/traceability/working-tree-summary.json` - artificial
   `scripts/ahl.py trace --json` style working tree summary.
+
+## Dry Runs
+
+- `dry-run-harness.md` - dry-run scenario behavior, limits, and addition
+  workflow.
+- `../dry-runs/README.md` - dry-run directory index and command examples.
+- `../dry-runs/PARITY.md` - canonical scenario-coverage tracker.
+- `../dry-runs/scenarios/` - deterministic scenario manifests.
+- `../dry-runs/expected/` - compact expected-output summaries.
 
 ## Contracts
 

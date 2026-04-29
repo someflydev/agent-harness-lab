@@ -1,0 +1,34 @@
+{
+  "id": "repair-session",
+  "purpose": "Exercise a bounded repair session that preserves original prompt scope while documenting a justified temporary handoff.",
+  "input_artifacts": [
+    "runbooks/repair-session.md",
+    "runbooks/bridge-fix-session.md",
+    "docs/runtime/bridge-and-reset.md",
+    "templates/handoffs/handoff.md",
+    "templates/handoffs/repair-checklist.md",
+    "examples/repair-bridge/README.md"
+  ],
+  "routine_sequence": [
+    "identify blocker",
+    "confirm repair scope",
+    "apply cheap bridge decision",
+    "record handoff only when justified",
+    "reset for next fresh session"
+  ],
+  "expected_checks": [
+    "input artifacts exist",
+    "handoff template exists",
+    "repair flow names blocker and next action",
+    "no transcript fixture is required"
+  ],
+  "expected_outputs": [
+    "examples/repair-bridge/artifacts/tmp-HANDOFF.example.md",
+    "templates/handoffs/repair-checklist.md"
+  ],
+  "failure_modes_covered": [
+    "unbounded repair scope",
+    "lost blocker context",
+    "handoff created without justification"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "blocked-readiness",
+  "purpose": "Exercise the readiness path where the immediate next prompt cannot safely start because a named prerequisite is missing.",
+  "input_artifacts": [
+    "docs/runtime/adjacent-prompt-readiness.md",
+    "runbooks/next-prompt-preflight.md",
+    "fixtures/readiness-reports/blocked.json",
+    "templates/reports/readiness-report.md"
+  ],
+  "routine_sequence": [
+    "inspect active closeout state",
+    "inspect immediate next prompt prerequisites",
+    "record readiness blocker",
+    "avoid implementing future prompt work"
+  ],
+  "expected_checks": [
+    "input artifacts exist",
+    "expected blocked-readiness output exists",
+    "scenario covers blocker reporting",
+    "scenario does not require bridge implementation"
+  ],
+  "expected_outputs": [
+    "dry-runs/expected/blocked-readiness.md",
+    "fixtures/readiness-reports/blocked.json"
+  ],
+  "failure_modes_covered": [
+    "missing prerequisite artifact",
+    "over-eager future prompt implementation",
+    "prose-only readiness output"
+  ]
+}
