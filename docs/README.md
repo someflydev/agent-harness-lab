@@ -1,14 +1,15 @@
 # Documentation
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
-is early, so these pages focus on foundation, orientation, guardrails, doctrine,
-role boundaries, skills, routines, runbooks, runtime session behavior, memory
-governance, contracts, quality gates, metadata, optional domain packs, examples,
-deterministic dry-run harness checks, experiments, reports, findings, lab
-method, capstone audits, lane simulations, and future-facing architecture. Role
-packs and lane playbooks now provide pasteable manual hierarchy routines. The
-committed memory workspace supports reviewed promotion candidates and decision
-records. Helper scripts exist, but richer orchestration remains future work.
+is early, so these pages focus on foundation, orientation, assistant usage,
+guardrails, doctrine, role boundaries, skills, routines, runbooks, runtime
+session behavior, memory governance, contracts, quality gates, metadata,
+optional domain packs, examples, deterministic dry-run harness checks,
+experiments, reports, findings, lab method, capstone audits, lane simulations,
+and future-facing architecture. Role packs and lane playbooks now provide
+pasteable manual hierarchy routines. The committed memory workspace supports
+reviewed promotion candidates and decision records. Helper scripts exist, but
+richer orchestration remains future work.
 
 ## Start Here
 
@@ -33,6 +34,8 @@ records. Helper scripts exist, but richer orchestration remains future work.
   relationships, and source-of-truth boundaries.
 - `navigation-validation.md` - local markdown link checking, docs index
   coverage, checker limits, and registry relationship.
+- `assistants/README.md` - practical usage guides for Codex, Claude Code,
+  Gemini, Pi, generic chat, subscription workflows, and context loading.
 - `prompt-templates.md` - reusable prompt template library guidance and
   boundaries.
 - `promptset-linting.md` - promptset lint checks, readiness scoring, limits,
@@ -105,6 +108,19 @@ records. Helper scripts exist, but richer orchestration remains future work.
 - `skills/role-skill-map.md` - mapping between roles and common skill areas.
 - `project-skills.md` - optional `.agents/skills/` package guidance for
   assistant-loadable routine instructions.
+
+## Assistants
+
+- `assistants/README.md` - assistant usage guide index and common operating
+  model.
+- `assistants/codex.md` - Codex-style prompt execution sessions.
+- `assistants/claude-code.md` - Claude Code-style terminal assistant sessions.
+- `assistants/gemini.md` - Gemini-style coding assistant sessions.
+- `assistants/pi.md` - Pi-style project-context assistant sessions.
+- `assistants/generic-chat.md` - manual copy/paste assistant workflow.
+- `assistants/subscription-workflow.md` - subscription-friendly workflow,
+  quota control, rate-limit recovery, and runtime-mode boundaries.
+- `assistants/context-loading.md` - context-loading matrix by session type.
 
 ## Domain Packs
 

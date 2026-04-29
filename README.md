@@ -55,6 +55,14 @@ The intended loop is:
 5. Leave a bridge handoff only when it materially helps.
 6. Reset into a fresh session for the next prompt.
 
+## Assistant Usage
+
+The workflow is designed to run in subscription-level coding assistants, local
+assistant CLIs, or manual copy/paste chat sessions without making any provider
+mandatory. See `docs/assistants/README.md` for practical guides covering
+Codex, Claude Code, Gemini, Pi, generic chat workflows, subscription-friendly
+operation, and context loading.
+
 ## Reference Repos
 
 Local clones of `agent-context-base`, `pi-mono`, and `claw-code` may sit beside
@@ -139,9 +147,10 @@ classification without replacing prompt-specific judgment.
 
 ## Current Status
 
-This repository has public identity, assistant bootstrap guidance, navigation
-docs, guardrails, doctrine, roles, skills, routines, runtime lifecycle notes,
-memory governance, contracts, templates, runbooks, examples, quality guidance,
-metadata rules, capstone audits, future-facing architecture guidance, and
-lightweight helper scripts. It does not yet have provider integrations, graph
-or vector database dependencies, an autonomous runner, or a heavy runtime.
+This repository has public identity, assistant bootstrap guidance, assistant
+usage guides, navigation docs, guardrails, doctrine, roles, skills, routines,
+runtime lifecycle notes, memory governance, contracts, templates, runbooks,
+examples, quality guidance, metadata rules, capstone audits, future-facing
+architecture guidance, and lightweight helper scripts. It does not yet have
+provider integrations, graph or vector database dependencies, an autonomous
+runner, or a heavy runtime.

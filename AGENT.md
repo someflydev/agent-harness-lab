@@ -41,6 +41,11 @@ Session lifecycle, endcap, bridge, reset, adjacent-prompt readiness, and
 permission posture guidance lives in `docs/runtime/`. Use those docs when a
 prompt asks for runtime/session behavior or closeout decisions.
 
+Assistant-specific usage guidance lives in `docs/assistants/`. Use those docs
+when a prompt or operator asks how to run this repo with Codex, Claude Code,
+Gemini, Pi, generic chat, or subscription-friendly workflows. Keep that
+guidance tool-agnostic unless the current environment proves a capability.
+
 ## Project Skills
 
 Optional project-level skills live in `.agents/skills/`. They are on-demand
