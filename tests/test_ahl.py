@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -200,7 +201,8 @@ class AhlTest(unittest.TestCase):
 
     def write_minimal_fixture_set(self):
         for spec in ahl.FIXTURE_SPECS.values():
-            self.write(spec["schema"], "{}\n")
+            if spec["schema"] is not None:
+                self.write(spec["schema"], "{}\n")
 
         self.write(
             "fixtures/run-records/success.json",
@@ -289,6 +291,19 @@ class AhlTest(unittest.TestCase):
                     "source_artifact": ".prompts/PROMPT_19.txt",
                     "commit_links": [],
                     "validation_evidence": [],
+                }
+            ),
+        )
+        self.write(
+            "fixtures/traceability/working-tree-summary.json",
+            json.dumps(
+                {
+                    "prompt_id": "PROMPT_20",
+                    "prompt_file_exists": True,
+                    "branch": "main",
+                    "head": "abc1234",
+                    "changed_files": [],
+                    "docs_changed": False,
                 }
             ),
         )
@@ -406,6 +421,51 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(data["permission_posture"], "workspace-write")
         self.assertEqual(data["completion_audit_status"], "not_started")
         self.assertIn("changed_files", data)
+
+    def test_trace_returns_degraded_result_outside_git_repo(self):
+        self.write(".prompts/PROMPT_20.txt", "# Prompt\n")
+
+        code, output = self.run_cli("trace", "PROMPT_20", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["prompt_id"], "PROMPT_20")
+        self.assertTrue(data["prompt_file_exists"])
+        self.assertTrue(data["git"]["degraded"])
+        self.assertFalse(data["git"]["inside_work_tree"])
+        self.assertIn("changed_files", data)
+        self.assertIn("run_record_skeleton", data)
+        self.assertIn("assistant_tool", data["suggested_run_record_missing_fields"])
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_trace_summarizes_temporary_git_repo_changes(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_20.txt", "# Prompt\n")
+        self.write("docs/traceability.md", "# Traceability\n")
+        self.write("tests/test_trace.py", "# Tests\n")
+        self.write("templates/reports/traceability-summary.md", "# Template\n")
+
+        code, output = self.run_cli("trace", "20", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["prompt_id"], "PROMPT_20")
+        self.assertTrue(data["git"]["inside_work_tree"])
+        self.assertTrue(data["docs_changed"])
+        self.assertTrue(data["tests_changed"])
+        self.assertTrue(data["templates_changed"])
+        self.assertIn("?? docs/traceability.md", data["changed_files"])
+
+    def test_trace_reports_missing_prompt_argument_clearly(self):
+        out = io.StringIO()
+        err = io.StringIO()
+        with mock.patch("pathlib.Path.cwd", return_value=self.root):
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                with self.assertRaises(SystemExit) as raised:
+                    ahl.main(["trace"])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("prompt", err.getvalue())
 
 
 if __name__ == "__main__":

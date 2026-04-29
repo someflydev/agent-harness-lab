@@ -1,0 +1,70 @@
+{
+  "prompt_id": "PROMPT_20",
+  "prompt_file": ".prompts/PROMPT_20.txt",
+  "prompt_file_exists": true,
+  "branch": "main",
+  "head": "abc1234",
+  "git": {
+    "available": true,
+    "inside_work_tree": true,
+    "degraded": false,
+    "problems": []
+  },
+  "changed_files": [
+    " M scripts/ahl.py",
+    "?? docs/traceability.md"
+  ],
+  "changed_paths": [
+    "scripts/ahl.py",
+    "docs/traceability.md"
+  ],
+  "changed_directories": [
+    "docs",
+    "scripts"
+  ],
+  "docs_changed": true,
+  "tests_changed": false,
+  "templates_changed": false,
+  "handoff_exists": false,
+  "suggested_run_record_missing_fields": [
+    "assistant_tool",
+    "model",
+    "reasoning_or_thinking_setting",
+    "permission_posture",
+    "invocation_command",
+    "started_at",
+    "ended_at",
+    "validation_commands",
+    "completion_audit_status",
+    "next_prompt_ready",
+    "readiness_blockers",
+    "associated_commit_hashes"
+  ],
+  "run_record_skeleton": {
+    "prompt_id": "PROMPT_20",
+    "prompt_batch_id": "promptset",
+    "run_id": "PROMPT_20-YYYYMMDD-HHMMSS",
+    "assistant_tool": null,
+    "permission_posture": null,
+    "started_at": null,
+    "ended_at": null,
+    "changed_files": [
+      " M scripts/ahl.py",
+      "?? docs/traceability.md"
+    ],
+    "changed_directories": [
+      "docs",
+      "scripts"
+    ],
+    "docs_changed": true,
+    "tests_changed": false,
+    "validation_commands": [],
+    "completion_audit_status": null,
+    "next_prompt_ready": null,
+    "readiness_blockers": [],
+    "handoff_created": false,
+    "follow_up_fix_required": null,
+    "reusable_pattern_observations": [],
+    "associated_commit_hashes": []
+  }
+}

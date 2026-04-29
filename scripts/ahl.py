@@ -61,6 +61,10 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": "schemas/traceability-record.schema.json",
         "required": ("traceability_id", "prompt_id", "source_artifact", "commit_links", "validation_evidence"),
     },
+    "fixtures/traceability/working-tree-summary.json": {
+        "schema": None,
+        "required": ("prompt_id", "prompt_file_exists", "branch", "head", "changed_files", "docs_changed"),
+    },
 }
 
 
@@ -115,6 +119,166 @@ def git_changed_files() -> list[str]:
     except (OSError, subprocess.CalledProcessError):
         return []
     return [line for line in result.stdout.splitlines() if line.strip()]
+
+
+def run_git(root: Path, args: list[str]) -> tuple[subprocess.CompletedProcess[str] | None, str | None]:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=root,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except OSError as exc:
+        return None, f"git unavailable: {exc}"
+    return result, None
+
+
+def changed_paths_from_status(lines: list[str]) -> list[str]:
+    paths: list[str] = []
+    for line in lines:
+        path = line[3:] if len(line) > 3 else line.strip()
+        if " -> " in path:
+            paths.extend(part.strip() for part in path.split(" -> ") if part.strip())
+        elif path.strip():
+            paths.append(path.strip())
+    return paths
+
+
+def changed_directories(paths: list[str]) -> list[str]:
+    directories: set[str] = set()
+    for path in paths:
+        if "/" in path:
+            directories.add(path.split("/", 1)[0])
+        elif path:
+            directories.add(".")
+    return sorted(directories)
+
+
+def trace_data(root: Path, prompt_id: str) -> dict[str, Any]:
+    prompt_path = root / ".prompts" / f"{prompt_id}.txt"
+    git_problems: list[str] = []
+    branch: str | None = None
+    head: str | None = None
+    status_lines: list[str] = []
+    inside_work_tree = False
+
+    rev_parse, problem = run_git(root, ["rev-parse", "--is-inside-work-tree"])
+    if problem:
+        git_problems.append(problem)
+    elif rev_parse is None or rev_parse.returncode != 0 or rev_parse.stdout.strip() != "true":
+        git_problems.append("not inside a git working tree")
+    else:
+        inside_work_tree = True
+        branch_result, branch_problem = run_git(root, ["branch", "--show-current"])
+        if branch_problem:
+            git_problems.append(branch_problem)
+        elif branch_result is not None and branch_result.returncode == 0:
+            branch = branch_result.stdout.strip() or None
+        else:
+            git_problems.append("could not read current git branch")
+
+        head_result, head_problem = run_git(root, ["rev-parse", "--short", "HEAD"])
+        if head_problem:
+            git_problems.append(head_problem)
+        elif head_result is not None and head_result.returncode == 0:
+            head = head_result.stdout.strip() or None
+        else:
+            git_problems.append("could not read current HEAD commit")
+
+        status_result, status_problem = run_git(root, ["status", "--short", "--untracked-files=all"])
+        if status_problem:
+            git_problems.append(status_problem)
+        elif status_result is not None and status_result.returncode == 0:
+            status_lines = [line for line in status_result.stdout.splitlines() if line.strip()]
+        else:
+            git_problems.append("could not read git status")
+
+    paths = changed_paths_from_status(status_lines)
+    docs_changed = any(path == "docs" or path.startswith("docs/") for path in paths)
+    tests_changed = any(path == "tests" or path.startswith("tests/") for path in paths)
+    templates_changed = any(path == "templates" or path.startswith("templates/") for path in paths)
+    suggested_missing = [
+        "assistant_tool",
+        "model",
+        "reasoning_or_thinking_setting",
+        "permission_posture",
+        "invocation_command",
+        "started_at",
+        "ended_at",
+        "validation_commands",
+        "completion_audit_status",
+        "next_prompt_ready",
+        "readiness_blockers",
+        "associated_commit_hashes",
+    ]
+
+    return {
+        "prompt_id": prompt_id,
+        "prompt_file": str(prompt_path.relative_to(root)),
+        "prompt_file_exists": prompt_path.is_file(),
+        "branch": branch,
+        "head": head,
+        "git": {
+            "available": not any(item.startswith("git unavailable:") for item in git_problems),
+            "inside_work_tree": inside_work_tree,
+            "degraded": bool(git_problems),
+            "problems": git_problems,
+        },
+        "changed_files": status_lines,
+        "changed_paths": paths,
+        "changed_directories": changed_directories(paths),
+        "docs_changed": docs_changed,
+        "tests_changed": tests_changed,
+        "templates_changed": templates_changed,
+        "handoff_exists": (root / "tmp" / "HANDOFF.md").is_file(),
+        "suggested_run_record_missing_fields": suggested_missing,
+        "run_record_skeleton": {
+            "prompt_id": prompt_id,
+            "prompt_batch_id": "promptset",
+            "run_id": f"{prompt_id}-YYYYMMDD-HHMMSS",
+            "assistant_tool": None,
+            "permission_posture": None,
+            "started_at": None,
+            "ended_at": None,
+            "changed_files": status_lines,
+            "changed_directories": changed_directories(paths),
+            "docs_changed": docs_changed,
+            "tests_changed": tests_changed,
+            "validation_commands": [],
+            "completion_audit_status": None,
+            "next_prompt_ready": None,
+            "readiness_blockers": [],
+            "handoff_created": (root / "tmp" / "HANDOFF.md").is_file(),
+            "follow_up_fix_required": None,
+            "reusable_pattern_observations": [],
+            "associated_commit_hashes": [],
+        },
+    }
+
+
+def command_trace(args: argparse.Namespace) -> int:
+    root = repo_root()
+    prompt_id = normalize_prompt_id(args.prompt)
+    data = trace_data(root, prompt_id)
+    human = [
+        f"trace: {prompt_id}",
+        f"- Prompt file: {'present' if data['prompt_file_exists'] else 'missing'} ({data['prompt_file']})",
+        f"- Branch: {data['branch'] or 'unknown'}",
+        f"- HEAD: {data['head'] or 'unknown'}",
+        f"- Changed files: {len(data['changed_files'])}",
+        f"- Docs changed: {data['docs_changed']}",
+        f"- Tests changed: {data['tests_changed']}",
+        f"- Templates changed: {data['templates_changed']}",
+        f"- Handoff exists: {data['handoff_exists']}",
+    ]
+    if data["git"]["degraded"]:
+        human.append("- Git state: degraded (" + "; ".join(data["git"]["problems"]) + ")")
+    if not data["prompt_file_exists"]:
+        human.append("- Warning: matching prompt file is missing")
+    return emit(data, args.json, human, 0)
 
 
 def emit(data: dict[str, Any], as_json: bool, human_lines: list[str], code: int = 0) -> int:
@@ -453,17 +617,18 @@ def fixture_check_data(root: Path) -> dict[str, Any]:
     for rel, spec in FIXTURE_SPECS.items():
         path = root / rel
         schema_rel = spec["schema"]
-        schema_path = root / schema_rel
         exists = path.is_file()
         add_check(f"{rel} exists", rel, exists, schema=schema_rel)
         if not exists:
             problems.append(f"missing fixture: {rel}")
             continue
 
-        schema_exists = schema_path.is_file()
-        add_check(f"{rel} schema exists", schema_rel, schema_exists)
-        if not schema_exists:
-            problems.append(f"{rel}: expected schema file is missing: {schema_rel}")
+        if schema_rel is not None:
+            schema_path = root / schema_rel
+            schema_exists = schema_path.is_file()
+            add_check(f"{rel} schema exists", schema_rel, schema_exists)
+            if not schema_exists:
+                problems.append(f"{rel}: expected schema file is missing: {schema_rel}")
 
         data, problem = load_json_file(path)
         if problem:
@@ -728,6 +893,11 @@ def build_parser() -> argparse.ArgumentParser:
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")
     resume.set_defaults(func=command_resume)
+
+    trace = subparsers.add_parser("trace", help="Summarize prompt-related working tree traceability.")
+    trace.add_argument("prompt", help="Prompt id, number, or prompt filename.")
+    trace.add_argument("--json", action="store_true")
+    trace.set_defaults(func=command_trace)
 
     checkpoint = subparsers.add_parser("checkpoint", help="Report and scaffold local context files.")
     checkpoint.add_argument("--json", action="store_true")
