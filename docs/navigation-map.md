@@ -39,7 +39,8 @@ Metadata guidance lives in `docs/metadata/`. Machine-checkable schemas live in
 schemas.
 
 Helper scripts live in `scripts/`, primarily `scripts/ahl.py`. Script usage is
-documented in `scripts/README.md` and `docs/scripts.md`.
+documented in `scripts/README.md` and `docs/scripts.md`. Documentation link
+checking is described in [navigation validation](navigation-validation.md).
 
 ## Registries
 
@@ -57,6 +58,10 @@ Use `python3 scripts/ahl.py registry check` to validate JSON parsing, required
 fields, referenced paths, and prompt registry ordering. Use
 `python3 scripts/ahl.py registry list --json` when another local tool needs a
 compact list of registry files.
+
+Use `python3 scripts/ahl.py docs check` to catch missing local markdown link
+targets, missing docs indexes, stale top-level navigation, and registry path
+drift before closing a prompt that touches navigation surfaces.
 
 ## Source Of Truth
 

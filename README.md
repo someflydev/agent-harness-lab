@@ -108,16 +108,17 @@ to review.
 
 The `scripts/ahl.py` CLI provides small standard-library helpers for local
 checks and scaffolding. Use it to inspect promptset numbering, run a foundation
-doctor check, run a lightweight quality validation gate, print a read-only
-session briefing, and create run or handoff artifacts from templates. It
-supports the manual workflow; it does not run assistants, call providers, or
-decide completion.
+doctor check, run a lightweight quality validation gate, check documentation
+navigation, print a read-only session briefing, and create run or handoff
+artifacts from templates. It supports the manual workflow; it does not run
+assistants, call providers, or decide completion.
 
 Common local checks:
 
 ```sh
 python3 scripts/ahl.py promptset
 python3 scripts/ahl.py doctor
+python3 scripts/ahl.py docs check
 python3 scripts/ahl.py validate
 python3 -m unittest tests/test_ahl.py
 ```

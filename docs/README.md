@@ -27,6 +27,8 @@ Helper scripts exist, but richer orchestration remains future work.
   routines, runbooks, inputs, outputs, status, and safety notes.
 - `navigation-map.md` - start points, durable artifact areas, registry
   relationships, and source-of-truth boundaries.
+- `navigation-validation.md` - local markdown link checking, docs index
+  coverage, checker limits, and registry relationship.
 - `prompt-templates.md` - reusable prompt template library guidance and
   boundaries.
 - `promptset-linting.md` - promptset lint checks, readiness scoring, limits,
@@ -121,6 +123,7 @@ Helper scripts exist, but richer orchestration remains future work.
 
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
 - `promptset-linting.md` - details for `scripts/ahl.py promptset lint`.
+- `navigation-validation.md` - details for `scripts/ahl.py docs check`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
 - `traceability.md` - closeout trace command guidance for prompt-related

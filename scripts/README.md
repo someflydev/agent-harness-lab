@@ -19,6 +19,8 @@ justifies more.
   references, and prompt registry alignment with transparent per-prompt scores.
 - `validate` checks expected quality foundations and promptset numbering in
   one lightweight gate.
+- `docs check` checks local markdown navigation, required index coverage, and
+  registry path consistency without fetching external URLs.
 - `registry list` and `registry check` list and validate curated registry JSON
   indexes.
 - `resume` prints a read-only Session Context Briefing for visible repo state.
@@ -50,6 +52,8 @@ python3 scripts/ahl.py promptset
 python3 scripts/ahl.py promptset lint
 python3 scripts/ahl.py promptset lint --json
 python3 scripts/ahl.py validate
+python3 scripts/ahl.py docs check
+python3 scripts/ahl.py docs check --json
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
 python3 scripts/ahl.py resume --json
@@ -73,6 +77,9 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `promptset lint`: `ok`, `prompt_dir`, `summary`, `problems`, `numbering`,
   `registry`, `prompts`
 - `validate`: `ok`, `checks`, `problems`, `promptset`
+- `docs check`: `ok`, `scan_roots`, `anchors_validated`, `checks`,
+  `problems`, `scanned_files`, `links`, `missing_links`, `navigation`,
+  `registry`
 - `registry list`: `ok`, `registries`
 - `registry check`: `ok`, `checks`, `problems`, `registries`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
