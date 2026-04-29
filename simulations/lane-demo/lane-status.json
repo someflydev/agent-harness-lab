@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schemas/lane-status.schema.json",
+  "lane_id": "lane-demo",
+  "simulation": "template-docs-refresh",
+  "state": "done",
+  "roles": {
+    "orchestrator": "Defined intent, scope, and escalation behavior.",
+    "lead": "Decomposed the lane into one bounded Worker task.",
+    "worker-01": "Produced a structured result for the fictional task.",
+    "reviewer": "Checked the Worker result and found no blockers.",
+    "auditor": "Closed the lane and recorded validation expectations."
+  },
+  "artifacts": [
+    "simulations/lane-demo/README.md",
+    "simulations/lane-demo/orchestrator-brief.md",
+    "simulations/lane-demo/lead-plan.md",
+    "simulations/lane-demo/worker-01-task.md",
+    "simulations/lane-demo/worker-01-result.md",
+    "simulations/lane-demo/reviewer-report.md",
+    "simulations/lane-demo/auditor-closeout.md",
+    "simulations/lane-demo/lane-status.json"
+  ],
+  "current_step": "closed",
+  "stop_escalation": {
+    "needed": false,
+    "triggers": [
+      "missing required lane artifact",
+      "invalid lane-status.json",
+      "request for real implementation work",
+      "blocking reviewer finding"
+    ],
+    "decision_needed": "none"
+  },
+  "validation": {
+    "commands": [
+      "python3 scripts/ahl.py lane check simulations/lane-demo",
+      "python3 scripts/ahl.py lane status simulations/lane-demo --json"
+    ],
+    "provider_calls": false,
+    "parallel_processes": false
+  }
+}
+

@@ -5,10 +5,10 @@ is early, so these pages focus on foundation, orientation, guardrails, doctrine,
 role boundaries, skills, routines, runbooks, runtime session behavior, memory
 governance, contracts, quality gates, metadata, examples, deterministic
 dry-run harness checks, experiments, reports, findings, lab method, capstone
-audits, and future-facing architecture. Role packs and lane playbooks now
-provide pasteable manual hierarchy routines. The committed memory workspace
-supports reviewed promotion candidates and decision records. Helper scripts
-exist, but richer orchestration remains future work.
+audits, lane simulations, and future-facing architecture. Role packs and lane
+playbooks now provide pasteable manual hierarchy routines. The committed
+memory workspace supports reviewed promotion candidates and decision records.
+Helper scripts exist, but richer orchestration remains future work.
 
 ## Start Here
 
@@ -41,6 +41,8 @@ exist, but richer orchestration remains future work.
   safe addition rules.
 - `dry-run-harness.md` - deterministic dry-run scenario purpose, limits,
   parity tracking, and addition workflow.
+- `lane-simulation.md` - manual lane simulation purpose, role mapping,
+  validation commands, and automation boundary.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
 - `experiment-workflow.md` - helper-command workflow for starting, logging,
@@ -140,6 +142,8 @@ exist, but richer orchestration remains future work.
 - `navigation-validation.md` - details for `scripts/ahl.py docs check`.
 - `dry-run-harness.md` - details for `scripts/ahl.py dry-run list` and
   `scripts/ahl.py dry-run check`.
+- `lane-simulation.md` - details for `scripts/ahl.py lane check` and
+  `scripts/ahl.py lane status`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
 - `traceability.md` - closeout trace command guidance for prompt-related
@@ -208,6 +212,8 @@ exist, but richer orchestration remains future work.
 - `../schemas/promptset-index.schema.json` - JSON Schema for
   `scripts/ahl.py promptset --json`.
 - `../schemas/lane-record.schema.json` - JSON Schema for compact lane records.
+- `../schemas/lane-status.schema.json` - JSON Schema for manual lane
+  simulation status files.
 - `../schemas/traceability-record.schema.json` - JSON Schema for compact
   prompt-to-commit traceability records.
 - `../fixtures/README.md` - artificial JSON fixtures and lightweight fixture
@@ -223,6 +229,13 @@ exist, but richer orchestration remains future work.
 - `../dry-runs/PARITY.md` - canonical scenario-coverage tracker.
 - `../dry-runs/scenarios/` - deterministic scenario manifests.
 - `../dry-runs/expected/` - compact expected-output summaries.
+
+## Simulations
+
+- `lane-simulation.md` - lane simulation guidance and local command behavior.
+- `../simulations/README.md` - simulation workspace index.
+- `../simulations/lane-demo/README.md` - concrete manual lane demo using
+  Orchestrator, Lead, Worker, Reviewer, and Auditor artifacts.
 
 ## Contracts
 
