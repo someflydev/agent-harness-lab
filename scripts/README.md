@@ -15,6 +15,8 @@ justifies more.
 - `doctor` checks expected repo foundations and ignore rules.
 - `promptset` reports prompt filenames, numbers, duplicate numbers, gaps, and
   strict two-digit naming.
+- `promptset lint` checks prompt structure readiness, immediate next-prompt
+  references, and prompt registry alignment with transparent per-prompt scores.
 - `validate` checks expected quality foundations and promptset numbering in
   one lightweight gate.
 - `registry list` and `registry check` list and validate curated registry JSON
@@ -45,6 +47,8 @@ justifies more.
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py doctor --json
 python3 scripts/ahl.py promptset
+python3 scripts/ahl.py promptset lint
+python3 scripts/ahl.py promptset lint --json
 python3 scripts/ahl.py validate
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
@@ -66,6 +70,8 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `doctor`: `ok`, `checks`, `problems`
 - `promptset`: `ok`, `prompts`, `filenames`, `numbers`, `duplicates`, `gaps`,
   `strict_two_digit`, `malformed`
+- `promptset lint`: `ok`, `prompt_dir`, `summary`, `problems`, `numbering`,
+  `registry`, `prompts`
 - `validate`: `ok`, `checks`, `problems`, `promptset`
 - `registry list`: `ok`, `registries`
 - `registry check`: `ok`, `checks`, `problems`, `registries`

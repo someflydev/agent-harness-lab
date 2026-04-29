@@ -26,6 +26,10 @@ without relying on prior conversation.
 - Endcap instructions omit next-prompt readiness or handoff discipline.
 - Constraints conflict with required deliverables.
 
-Use `python3 scripts/ahl.py promptset` for filename numbering checks and
-`python3 scripts/ahl.py validate` for structural readiness checks. Neither
-command proves prompt prose quality by itself.
+Use `python3 scripts/ahl.py promptset` for filename numbering checks,
+`python3 scripts/ahl.py promptset lint` for shallow promptset structure and
+readiness scoring, and `python3 scripts/ahl.py validate` for broader quality
+foundations. None of these commands proves prompt prose quality by itself.
+
+See `../promptset-linting.md` for the lint checks, scoring formula, and known
+limits.

@@ -29,6 +29,8 @@ Helper scripts exist, but richer orchestration remains future work.
   relationships, and source-of-truth boundaries.
 - `prompt-templates.md` - reusable prompt template library guidance and
   boundaries.
+- `promptset-linting.md` - promptset lint checks, readiness scoring, limits,
+  and prompt-authoring use.
 - `project-skills.md` - optional project-level skill packages, boundaries, and
   safe addition rules.
 - `lab-method.md` - experimental method for bounded trials, evidence,
@@ -118,6 +120,7 @@ Helper scripts exist, but richer orchestration remains future work.
 ## Scripts
 
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
+- `promptset-linting.md` - details for `scripts/ahl.py promptset lint`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
 - `traceability.md` - closeout trace command guidance for prompt-related
@@ -199,6 +202,7 @@ Helper scripts exist, but richer orchestration remains future work.
 - `quality/README.md` - quality docs index and expected local checks.
 - `quality/validation-gates.md` - checks and evidence by prompt type.
 - `quality/promptset-quality.md` - execution-ready prompt criteria.
+- `promptset-linting.md` - linter behavior and readiness score interpretation.
 - `quality/audit-protocol.md` - implementation-to-prompt audit procedure.
 - `quality/review-severity.md` - severity levels and finding disposition.
 - `quality/definition-of-done.md` - `done`, `incomplete`, and `blocked`
