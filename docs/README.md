@@ -19,6 +19,8 @@ Helper scripts exist, but richer orchestration remains future work.
   repos without treating them as parent projects.
 - `scripts.md` - lightweight helper script behavior, examples, JSON fields,
   and automation boundaries.
+- `traceability.md` - prompt-to-change trace command behavior, closeout use,
+  and derived-metadata boundaries.
 - `operator-control-surfaces.md` - operator-visible control surfaces, current
   status, and automation boundaries.
 - `commands-and-routines.md` - registry of helper commands, docs-only
@@ -118,6 +120,8 @@ Helper scripts exist, but richer orchestration remains future work.
 - `scripts.md` - operator-facing guide for `scripts/ahl.py`.
 - `../scripts/README.md` - script directory README with command examples and
   JSON output expectations.
+- `traceability.md` - closeout trace command guidance for prompt-related
+  working tree summaries.
 
 ## Architecture
 
@@ -179,6 +183,8 @@ Helper scripts exist, but richer orchestration remains future work.
   prompt-to-commit traceability records.
 - `../fixtures/README.md` - artificial JSON fixtures and lightweight fixture
   check limits.
+- `../fixtures/traceability/working-tree-summary.json` - artificial
+  `scripts/ahl.py trace --json` style working tree summary.
 
 ## Contracts
 

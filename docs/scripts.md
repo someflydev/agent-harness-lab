@@ -14,6 +14,7 @@ python3 scripts/ahl.py validate
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
 python3 scripts/ahl.py resume
+python3 scripts/ahl.py trace PROMPT_20 --json
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09
 python3 scripts/ahl.py new-handoff
@@ -36,6 +37,9 @@ Each command supports `--json` where machine-readable output is practical.
 - `registry list` reports registry files and item counts.
 - `resume` prints a read-only Session Context Briefing from git state,
   runtime-note files, and local `tmp/*.md` counts.
+- `trace` summarizes prompt-related working tree changes, git branch and HEAD
+  when available, docs/tests/templates flags, handoff presence, and a
+  run-record skeleton for closeout.
 - `checkpoint` reports and scaffolds local `context/TASK.md`,
   `context/SESSION.md`, and `context/MEMORY.md`.
 - `scaffold-run` creates a timestamped run manifest from the run template.
@@ -58,6 +62,10 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `registry list`: `ok`, `registries`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
+- `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,
+  `git`, `changed_files`, `changed_paths`, `changed_directories`,
+  `docs_changed`, `tests_changed`, `templates_changed`, `handoff_exists`,
+  `suggested_run_record_missing_fields`, `run_record_skeleton`
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`
 - `scaffold-run`: `ok`, `created`, `run_id`, `prompt_id`
 - `new-handoff`: `ok`, `created`
