@@ -628,6 +628,123 @@ class AhlTest(unittest.TestCase):
         self.assertIn("sequential-prompt-run", data["parity"]["missing_backing_json"])
         self.assertEqual(data["results"][0]["status"], "missing")
 
+    def write_experiment_templates(self):
+        self.write(
+            "experiments/templates/experiment-plan.md",
+            "\n".join(
+                [
+                    "# Experiment Plan",
+                    "",
+                    "- Experiment id:",
+                    "- Date opened:",
+                    "- Status: Planned / Active",
+                    "",
+                    "- Hypothesis or question:",
+                    "- Workflow problem:",
+                    "- Stop condition:",
+                ]
+            )
+            + "\n",
+        )
+        self.write(
+            "experiments/templates/experiment-log.md",
+            "\n".join(
+                [
+                    "# Experiment Log",
+                    "",
+                    "- Experiment id:",
+                    "- Log date:",
+                    "- What happened:",
+                    "- Validation result:",
+                    "- Current read:",
+                ]
+            )
+            + "\n",
+        )
+        self.write("experiments/templates/experiment-closeout.md", "# Experiment Closeout\n- Experiment id:\n")
+
+    def write_finding_template(self):
+        self.write(
+            "findings/templates/finding-record.md",
+            "\n".join(
+                [
+                    "# Finding Record",
+                    "",
+                    "- Finding id:",
+                    "- Date:",
+                    "- Status: Draft / Reviewed / Superseded / Rejected",
+                ]
+            )
+            + "\n",
+        )
+
+    def test_experiment_new_scaffolds_template_files(self):
+        self.write_experiment_templates()
+
+        code, output = self.run_cli("experiment", "new", "closeout-check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["directory"], "experiments/active/closeout-check")
+        self.assertFalse(data["catalog_updated"])
+        self.assertTrue((self.root / "experiments/active/closeout-check/experiment-plan.md").exists())
+        plan_text = (self.root / "experiments/active/closeout-check/experiment-plan.md").read_text(encoding="utf-8")
+        self.assertIn("- Experiment id: closeout-check", plan_text)
+        self.assertIn("- Status: Active", plan_text)
+
+    def test_experiment_new_refuses_overwrite_unless_forced(self):
+        self.write_experiment_templates()
+
+        code, _ = self.run_cli("experiment", "new", "overwrite-check", "--json")
+        self.assertEqual(code, 0)
+
+        code2, output2 = self.run_cli("experiment", "new", "overwrite-check", "--json")
+        self.assertEqual(code2, 1)
+        self.assertFalse(json.loads(output2)["ok"])
+
+        code3, output3 = self.run_cli("experiment", "new", "overwrite-check", "--force", "--json")
+        self.assertEqual(code3, 0)
+        self.assertTrue(json.loads(output3)["ok"])
+
+    def test_finding_new_scaffolds_record(self):
+        self.write_finding_template()
+
+        code, output = self.run_cli("finding", "new", "repeated-closeout-gap", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["directory"], "findings/draft/repeated-closeout-gap")
+        record = self.root / "findings/draft/repeated-closeout-gap/finding-record.md"
+        self.assertTrue(record.exists())
+        self.assertIn("- Finding id: repeated-closeout-gap", record.read_text(encoding="utf-8"))
+
+    def test_experiment_check_json_has_stable_fields(self):
+        self.write("experiments/active/filled/experiment-plan.md", "# Plan\n- Experiment id: filled\n- Date opened: 2026-04-29\n- Status: Active\n- Hypothesis or question: Test question.\n- Workflow problem: Missed closeout.\n- Stop condition: One run.\n")
+        self.write("experiments/active/filled/experiment-log.md", "# Log\n- Experiment id: filled\n- Log date: 2026-04-29\n- What happened: Recorded.\n- Validation result: Pass.\n- Current read: Supports\n")
+
+        code, output = self.run_cli("experiment", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "directory", "checks", "problems", "experiments"):
+            self.assertIn(key, data)
+        for key in ("id", "path", "status", "problems"):
+            self.assertIn(key, data["experiments"][0])
+        self.assertEqual(data["experiments"][0]["status"], "pass")
+
+    def test_experiment_check_detects_missing_required_fields_or_files(self):
+        self.write("experiments/active/broken/experiment-plan.md", "# Plan\n- Experiment id:\n")
+
+        code, output = self.run_cli("experiment", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing required file: experiment-log.md" in problem for problem in data["problems"]))
+        self.assertTrue(any("missing value for - Experiment id:" in problem for problem in data["problems"]))
+
     def test_doctor_fails_structurally_for_minimal_fixture(self):
         fixture = ROOT / "tests" / "fixtures" / "minimal_repo"
         shutil.copytree(fixture, self.root, dirs_exist_ok=True)

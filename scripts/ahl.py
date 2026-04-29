@@ -126,6 +126,31 @@ DRY_RUN_LIST_FIELDS = (
     "expected_outputs",
     "failure_modes_covered",
 )
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+EXPERIMENT_TEMPLATE_FILES = (
+    ("experiments/templates/experiment-plan.md", "experiment-plan.md"),
+    ("experiments/templates/experiment-log.md", "experiment-log.md"),
+    ("experiments/templates/experiment-closeout.md", "experiment-closeout.md"),
+)
+EXPERIMENT_REQUIRED_FILES = ("experiment-plan.md", "experiment-log.md")
+EXPERIMENT_REQUIRED_FIELDS = {
+    "experiment-plan.md": (
+        "- Experiment id:",
+        "- Date opened:",
+        "- Status:",
+        "- Hypothesis or question:",
+        "- Workflow problem:",
+        "- Stop condition:",
+    ),
+    "experiment-log.md": (
+        "- Experiment id:",
+        "- Log date:",
+        "- What happened:",
+        "- Validation result:",
+        "- Current read:",
+    ),
+}
+FINDING_TEMPLATE_FILES = (("findings/templates/finding-record.md", "finding-record.md"),)
 
 
 def repo_root() -> Path:
@@ -1153,6 +1178,186 @@ def command_dry_run(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def validate_slug(value: str) -> str:
+    if not SLUG_RE.fullmatch(value):
+        raise SystemExit("slug must use lowercase letters, numbers, and hyphens")
+    return value
+
+
+def path_within_root(root: Path, path: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def relative_out_dir(root: Path, value: str) -> Path:
+    path = root / value
+    if not path_within_root(root, path):
+        raise SystemExit(f"output directory escapes repository root: {value}")
+    return path
+
+
+def replace_template_fields(text: str, replacements: dict[str, str]) -> str:
+    lines = [replacements.get(line, line) for line in text.splitlines()]
+    return "\n".join(lines) + "\n"
+
+
+def scaffold_from_templates(
+    root: Path,
+    target_dir: Path,
+    templates: tuple[tuple[str, str], ...],
+    replacements: dict[str, str],
+    force: bool,
+) -> tuple[list[str], list[str]]:
+    collisions: list[str] = []
+    created: list[str] = []
+    for _template_rel, target_name in templates:
+        target = target_dir / target_name
+        if target.exists() and not force:
+            collisions.append(str(target.relative_to(root)))
+    if collisions:
+        return [], collisions
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    for template_rel, target_name in templates:
+        template_path = root / template_rel
+        content = template_path.read_text(encoding="utf-8") if template_path.exists() else f"# {Path(target_name).stem.title()}\n"
+        target = target_dir / target_name
+        target.write_text(replace_template_fields(content, replacements), encoding="utf-8")
+        created.append(str(target.relative_to(root)))
+    return created, []
+
+
+def command_experiment(args: argparse.Namespace) -> int:
+    root = repo_root()
+    if args.action == "check":
+        data = experiment_check_data(root, args.dir)
+        human = ["experiment check: ok" if data["ok"] else "experiment check: problems found"]
+        human.append(f"- experiments checked: {len(data['experiments'])}")
+        human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+    if not args.slug:
+        raise SystemExit("experiment new requires a slug")
+    slug = validate_slug(args.slug)
+    target_base = relative_out_dir(root, args.out_dir)
+    target_dir = target_base / slug
+    today = dt.date.today().isoformat()
+    replacements = {
+        "- Experiment id:": f"- Experiment id: {slug}",
+        "- Date opened:": f"- Date opened: {today}",
+        "- Status: Planned / Active": "- Status: Active",
+        "- Log date:": f"- Log date: {today}",
+        "- Status: Closed / Abandoned / Superseded": "- Status: Closed / Abandoned / Superseded",
+    }
+    created, collisions = scaffold_from_templates(
+        root,
+        target_dir,
+        EXPERIMENT_TEMPLATE_FILES,
+        replacements,
+        args.force,
+    )
+    if collisions:
+        data = {"ok": False, "slug": slug, "created": [], "collisions": collisions}
+        return emit(data, args.json, ["refusing to overwrite: " + ", ".join(collisions)], 1)
+
+    data = {
+        "ok": True,
+        "slug": slug,
+        "directory": str(target_dir.relative_to(root)),
+        "created": created,
+        "forced": args.force,
+        "catalog_updated": False,
+    }
+    human = [f"created experiment scaffold: {data['directory']}"]
+    human.extend(f"- {path}" for path in created)
+    return emit(data, args.json, human, 0)
+
+
+def field_has_value(text: str, field: str) -> bool:
+    for line in text.splitlines():
+        if line.startswith(field):
+            return bool(line[len(field) :].strip())
+    return False
+
+
+def experiment_check_data(root: Path, directory: str) -> dict[str, Any]:
+    base = relative_out_dir(root, directory)
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+    experiments: list[dict[str, Any]] = []
+
+    checks.append(
+        {
+            "name": "experiment directory",
+            "path": directory,
+            "ok": True,
+            "required": False,
+            "present": base.is_dir(),
+        }
+    )
+    if not base.is_dir():
+        return {"ok": True, "directory": directory, "checks": checks, "problems": [], "experiments": []}
+
+    experiment_dirs = sorted(path for path in base.iterdir() if path.is_dir())
+    checks.append({"name": "experiment entries", "path": directory, "ok": True, "count": len(experiment_dirs)})
+
+    for experiment_dir in experiment_dirs:
+        rel_dir = str(experiment_dir.relative_to(root))
+        item_problems: list[str] = []
+        for filename in EXPERIMENT_REQUIRED_FILES:
+            path = experiment_dir / filename
+            if not path.is_file():
+                item_problems.append(f"missing required file: {filename}")
+                continue
+            text = path.read_text(encoding="utf-8")
+            missing_fields = [
+                field
+                for field in EXPERIMENT_REQUIRED_FIELDS.get(filename, ())
+                if not field_has_value(text, field)
+            ]
+            item_problems.extend(f"{filename}: missing value for {field}" for field in missing_fields)
+        status = "fail" if item_problems else "pass"
+        experiments.append({"id": experiment_dir.name, "path": rel_dir, "status": status, "problems": item_problems})
+        problems.extend(f"{rel_dir}: {problem}" for problem in item_problems)
+
+    return {
+        "ok": not problems,
+        "directory": directory,
+        "checks": checks,
+        "problems": problems,
+        "experiments": experiments,
+    }
+
+
+def command_finding(args: argparse.Namespace) -> int:
+    root = repo_root()
+    slug = validate_slug(args.slug)
+    target_base = relative_out_dir(root, args.out_dir)
+    target_dir = target_base / slug
+    today = dt.date.today().isoformat()
+    replacements = {
+        "- Finding id:": f"- Finding id: {slug}",
+        "- Date:": f"- Date: {today}",
+        "- Status: Draft / Reviewed / Superseded / Rejected": "- Status: Draft",
+    }
+    created, collisions = scaffold_from_templates(root, target_dir, FINDING_TEMPLATE_FILES, replacements, args.force)
+    if collisions:
+        data = {"ok": False, "slug": slug, "created": [], "collisions": collisions}
+        return emit(data, args.json, ["refusing to overwrite: " + ", ".join(collisions)], 1)
+
+    data = {
+        "ok": True,
+        "slug": slug,
+        "directory": str(target_dir.relative_to(root)),
+        "created": created,
+        "forced": args.force,
+    }
+    return emit(data, args.json, [f"created finding scaffold: {data['directory']}"], 0)
+
+
 def normalize_prompt_id(value: str) -> str:
     path_name = Path(value).name
     strict = STRICT_PROMPT_RE.match(path_name)
@@ -1383,6 +1588,23 @@ def build_parser() -> argparse.ArgumentParser:
     dry_run.add_argument("--all", action="store_true", help="Check every scenario and PARITY.md backing file.")
     dry_run.add_argument("--json", action="store_true")
     dry_run.set_defaults(func=command_dry_run)
+
+    experiment = subparsers.add_parser("experiment", help="Scaffold and check lightweight experiment artifacts.")
+    experiment.add_argument("action", choices=("new", "check"))
+    experiment.add_argument("slug", nargs="?", help="Experiment slug for `experiment new`.")
+    experiment.add_argument("--dir", default="experiments/active", help="Directory checked by `experiment check`.")
+    experiment.add_argument("--out-dir", default="experiments/active", help="Base directory for `experiment new`.")
+    experiment.add_argument("--force", action="store_true", help="Overwrite an existing experiment scaffold.")
+    experiment.add_argument("--json", action="store_true")
+    experiment.set_defaults(func=command_experiment)
+
+    finding = subparsers.add_parser("finding", help="Scaffold reviewed finding artifacts.")
+    finding.add_argument("action", choices=("new",))
+    finding.add_argument("slug", help="Finding slug.")
+    finding.add_argument("--out-dir", default="findings/draft", help="Base directory for new finding records.")
+    finding.add_argument("--force", action="store_true", help="Overwrite an existing finding scaffold.")
+    finding.add_argument("--json", action="store_true")
+    finding.set_defaults(func=command_finding)
 
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")
