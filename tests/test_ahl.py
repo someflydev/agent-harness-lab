@@ -64,6 +64,15 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(data["gaps"], [])
         self.assertTrue(data["strict_two_digit"])
 
+    def test_help_json_lists_makefile_targets(self):
+        code, output = self.run_cli("help", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertIn("doctor", data["makefile_targets"])
+        self.assertTrue(any(item["name"] == "check-docs" for item in data["commands"]))
+
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
         self.write(".prompts/PROMPT_03.txt")

@@ -173,6 +173,86 @@ MEMORY_CANDIDATE_REQUIRED_HEADINGS = (
     "## Review Notes",
     "## Disposition",
 )
+COMMAND_HELP: tuple[dict[str, str], ...] = (
+    {
+        "name": "help",
+        "command": "python3 scripts/ahl.py help",
+        "summary": "List common operator console commands.",
+        "safety": "read-only",
+    },
+    {
+        "name": "doctor",
+        "command": "python3 scripts/ahl.py doctor",
+        "summary": "Check expected repo foundations.",
+        "safety": "read-only",
+    },
+    {
+        "name": "resume",
+        "command": "python3 scripts/ahl.py resume",
+        "summary": "Print a grounded session context briefing.",
+        "safety": "read-only",
+    },
+    {
+        "name": "checkpoint",
+        "command": "python3 scripts/ahl.py checkpoint",
+        "summary": "Scaffold missing context notes.",
+        "safety": "writes context/*.md when missing",
+    },
+    {
+        "name": "promptset",
+        "command": "python3 scripts/ahl.py promptset",
+        "summary": "Inspect prompt numbering.",
+        "safety": "read-only",
+    },
+    {
+        "name": "lint-prompts",
+        "command": "python3 scripts/ahl.py promptset lint",
+        "summary": "Check prompt structure and registry alignment.",
+        "safety": "read-only",
+    },
+    {
+        "name": "check-docs",
+        "command": "python3 scripts/ahl.py docs check",
+        "summary": "Check local docs links, navigation, and registry paths.",
+        "safety": "read-only",
+    },
+    {
+        "name": "test",
+        "command": "python3 -m unittest tests/test_ahl.py",
+        "summary": "Run helper CLI unit tests.",
+        "safety": "read-only",
+    },
+    {
+        "name": "trace",
+        "command": "python3 scripts/ahl.py trace PROMPT_26",
+        "summary": "Summarize prompt-related working tree traceability.",
+        "safety": "read-only",
+    },
+    {
+        "name": "dry-run",
+        "command": "python3 scripts/ahl.py dry-run check --all",
+        "summary": "Validate deterministic dry-run scenarios.",
+        "safety": "read-only",
+    },
+    {
+        "name": "registry",
+        "command": "python3 scripts/ahl.py registry check",
+        "summary": "Validate curated registry indexes.",
+        "safety": "read-only",
+    },
+    {
+        "name": "memory-check",
+        "command": "python3 scripts/ahl.py memory check",
+        "summary": "Check reviewed memory promotion candidates.",
+        "safety": "read-only",
+    },
+    {
+        "name": "experiment-check",
+        "command": "python3 scripts/ahl.py experiment check",
+        "summary": "Check active experiment records.",
+        "safety": "read-only",
+    },
+)
 
 
 def repo_root() -> Path:
@@ -1705,9 +1785,27 @@ def command_metadata_example(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0)
 
 
+def command_help(args: argparse.Namespace) -> int:
+    data = {
+        "ok": True,
+        "commands": list(COMMAND_HELP),
+        "makefile_targets": [item["name"] for item in COMMAND_HELP],
+    }
+    human = ["operator console targets:"]
+    human.extend(
+        f"- {item['name']}: {item['command']} ({item['safety']})"
+        for item in COMMAND_HELP
+    )
+    return emit(data, args.json, human, 0)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ahl", description="Small helper tooling for agent-harness-lab.")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    help_command = subparsers.add_parser("help", help="List common operator console commands.")
+    help_command.add_argument("--json", action="store_true")
+    help_command.set_defaults(func=command_help)
 
     doctor = subparsers.add_parser("doctor", help="Check expected repository foundations.")
     doctor.add_argument("--json", action="store_true")
