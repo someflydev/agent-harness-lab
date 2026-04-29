@@ -20,6 +20,16 @@ CONTEXT_FILES = ("TASK.md", "SESSION.md", "MEMORY.md")
 REFERENCE_DIRS = ("agent-context-base", "pi-mono", "claw-code")
 REQUIRED_TOP_LEVEL_DIRS = ("docs", "runbooks", "templates", "scripts", "tests", ".prompts")
 REQUIRED_DOC_DIRS = ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "skills")
+REQUIRED_REGISTRY_FILES = (
+    "artifacts.json",
+    "prompts.json",
+    "roles.json",
+    "routines.json",
+    "templates.json",
+    "examples.json",
+    "scripts.json",
+)
+REQUIRED_REGISTRY_FIELDS = ("id", "name", "type", "path", "purpose", "status", "related_docs", "safe_use_notes")
 
 
 def repo_root() -> Path:
@@ -238,6 +248,140 @@ def command_validate(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def registry_files(root: Path) -> list[Path]:
+    registry_dir = root / "registry"
+    if not registry_dir.is_dir():
+        return []
+    return sorted(registry_dir.glob("*.json"))
+
+
+def load_registry(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return None, f"{path.name}: invalid JSON at line {exc.lineno}: {exc.msg}"
+    if not isinstance(data, dict):
+        return None, f"{path.name}: top-level value must be an object"
+    items = data.get("items")
+    if not isinstance(items, list):
+        return None, f"{path.name}: missing items list"
+    return data, None
+
+
+def registry_check_data(root: Path) -> dict[str, Any]:
+    registry_dir = root / "registry"
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+
+    def add_check(name: str, path: str, ok: bool, **extra: Any) -> None:
+        check = {"name": name, "path": path, "ok": ok}
+        check.update(extra)
+        checks.append(check)
+
+    add_check("registry directory", "registry", registry_dir.is_dir())
+    if not registry_dir.is_dir():
+        problems.append("missing registry directory: registry")
+        return {"ok": False, "checks": checks, "problems": problems, "registries": []}
+
+    seen_files = {path.name for path in registry_files(root)}
+    for filename in REQUIRED_REGISTRY_FILES:
+        exists = filename in seen_files
+        add_check(f"registry/{filename}", f"registry/{filename}", exists)
+        if not exists:
+            problems.append(f"missing registry file: registry/{filename}")
+
+    registries: list[dict[str, Any]] = []
+    for path in registry_files(root):
+        rel = str(path.relative_to(root))
+        data, problem = load_registry(path)
+        if problem:
+            add_check(f"{rel} parses", rel, False)
+            problems.append(problem)
+            continue
+        assert data is not None
+        items = data["items"]
+        item_count = len(items)
+        add_check(f"{rel} parses", rel, True, item_count=item_count)
+        registries.append({"path": rel, "item_count": item_count})
+
+        ids: set[str] = set()
+        for index, item in enumerate(items):
+            item_ref = f"{rel} item {index + 1}"
+            if not isinstance(item, dict):
+                problems.append(f"{item_ref}: item must be an object")
+                continue
+            missing = [field for field in REQUIRED_REGISTRY_FIELDS if field not in item]
+            if missing:
+                problems.append(f"{item_ref}: missing fields: {', '.join(missing)}")
+            item_id = item.get("id")
+            if isinstance(item_id, str):
+                if item_id in ids:
+                    problems.append(f"{item_ref}: duplicate id {item_id}")
+                ids.add(item_id)
+            else:
+                problems.append(f"{item_ref}: id must be a string")
+            path_value = item.get("path")
+            if not isinstance(path_value, str) or not path_value:
+                problems.append(f"{item_ref}: path must be a non-empty string")
+            elif not (root / path_value).exists():
+                problems.append(f"{item_ref}: referenced path does not exist: {path_value}")
+
+    prompts_path = registry_dir / "prompts.json"
+    if prompts_path.exists():
+        data, problem = load_registry(prompts_path)
+        if problem:
+            problems.append(problem)
+        else:
+            assert data is not None
+            registered_paths = [item.get("path") for item in data["items"] if isinstance(item, dict)]
+            actual_paths = [str(path.relative_to(root)) for path in sorted((root / ".prompts").glob("PROMPT_*.txt"))]
+            prompts_ok = registered_paths == actual_paths
+            add_check("prompt registry ordering", "registry/prompts.json", prompts_ok)
+            if not prompts_ok:
+                problems.append("registry/prompts.json ordering does not match .prompts/PROMPT_*.txt")
+
+    return {"ok": not problems, "checks": checks, "problems": problems, "registries": registries}
+
+
+def registry_list_data(root: Path) -> dict[str, Any]:
+    registries: list[dict[str, Any]] = []
+    for path in registry_files(root):
+        data, problem = load_registry(path)
+        if problem:
+            registries.append({"path": str(path.relative_to(root)), "ok": False, "problem": problem})
+            continue
+        assert data is not None
+        registries.append(
+            {
+                "path": str(path.relative_to(root)),
+                "ok": True,
+                "item_count": len(data["items"]),
+                "description": data.get("description", ""),
+            }
+        )
+    return {"ok": all(item["ok"] for item in registries), "registries": registries}
+
+
+def command_registry(args: argparse.Namespace) -> int:
+    if args.action == "list":
+        data = registry_list_data(repo_root())
+        human = ["registry files:"]
+        if not data["registries"]:
+            human.append("- none")
+        else:
+            for item in data["registries"]:
+                if item["ok"]:
+                    human.append(f"- {item['path']}: {item['item_count']} items")
+                else:
+                    human.append(f"- {item['path']}: invalid")
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+    data = registry_check_data(repo_root())
+    human = ["registry: ok" if data["ok"] else "registry: problems found"]
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def normalize_prompt_id(value: str) -> str:
     path_name = Path(value).name
     strict = STRICT_PROMPT_RE.match(path_name)
@@ -445,6 +589,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate = subparsers.add_parser("validate", help="Check promptset and expected quality foundations.")
     validate.add_argument("--json", action="store_true")
     validate.set_defaults(func=command_validate)
+
+    registry = subparsers.add_parser("registry", help="List or validate curated registry indexes.")
+    registry.add_argument("action", choices=("list", "check"))
+    registry.add_argument("--json", action="store_true")
+    registry.set_defaults(func=command_registry)
 
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")

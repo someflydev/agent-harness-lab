@@ -17,6 +17,8 @@ justifies more.
   strict two-digit naming.
 - `validate` checks expected quality foundations and promptset numbering in
   one lightweight gate.
+- `registry list` and `registry check` list and validate curated registry JSON
+  indexes.
 - `resume` prints a read-only Session Context Briefing for visible repo state.
 - `checkpoint` scaffolds local `context/*.md` files from examples or minimal
   built-ins.
@@ -42,6 +44,8 @@ python3 scripts/ahl.py doctor
 python3 scripts/ahl.py doctor --json
 python3 scripts/ahl.py promptset
 python3 scripts/ahl.py validate
+python3 scripts/ahl.py registry check
+python3 scripts/ahl.py registry list --json
 python3 scripts/ahl.py resume --json
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09 --assistant codex --permission-posture workspace-write
@@ -60,6 +64,8 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `promptset`: `ok`, `prompts`, `filenames`, `numbers`, `duplicates`, `gaps`,
   `strict_two_digit`, `malformed`
 - `validate`: `ok`, `checks`, `problems`, `promptset`
+- `registry list`: `ok`, `registries`
+- `registry check`: `ok`, `checks`, `problems`, `registries`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`

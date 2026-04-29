@@ -100,6 +100,104 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["ok"])
         self.assertTrue(any("docs/quality" in problem for problem in data["problems"]))
 
+    def write_registry(self, filename, items):
+        self.write(
+            f"registry/{filename}",
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "description": "test registry",
+                    "source_of_truth_note": "test files are authoritative",
+                    "items": items,
+                },
+                indent=2,
+            ),
+        )
+
+    def registry_item(self, item_id, path, **overrides):
+        item = {
+            "id": item_id,
+            "name": item_id.title(),
+            "type": "test",
+            "path": path,
+            "purpose": "Test registry item.",
+            "owner_role": "operator",
+            "status": "active",
+            "inputs": [],
+            "outputs": [],
+            "related_docs": [],
+            "safe_use_notes": "Test only.",
+        }
+        item.update(overrides)
+        return item
+
+    def add_minimal_registries(self):
+        self.write(".prompts/PROMPT_01.txt")
+        self.write(".prompts/PROMPT_02.txt")
+        self.write("docs/README.md", "# Docs\n")
+        self.write("docs/roles/orchestrator.md", "# Orchestrator\n")
+        self.write("runbooks/fresh-session-prompt-run.md", "# Runbook\n")
+        self.write("templates/session-closeout.md", "# Closeout\n")
+        self.write("examples/README.md", "# Examples\n")
+        self.write("scripts/ahl.py", "# script\n")
+        self.write_registry("artifacts.json", [self.registry_item("artifact-docs", "docs/README.md")])
+        self.write_registry(
+            "prompts.json",
+            [
+                self.registry_item("PROMPT_01", ".prompts/PROMPT_01.txt", type="prompt"),
+                self.registry_item("PROMPT_02", ".prompts/PROMPT_02.txt", type="prompt"),
+            ],
+        )
+        self.write_registry("roles.json", [self.registry_item("role-orchestrator", "docs/roles/orchestrator.md")])
+        self.write_registry(
+            "routines.json",
+            [self.registry_item("routine-prompt-execution", "runbooks/fresh-session-prompt-run.md")],
+        )
+        self.write_registry("templates.json", [self.registry_item("template-closeout", "templates/session-closeout.md")])
+        self.write_registry("examples.json", [self.registry_item("example-index", "examples/README.md")])
+        self.write_registry("scripts.json", [self.registry_item("script-ahl", "scripts/ahl.py")])
+
+    def test_registry_check_accepts_valid_curated_indexes(self):
+        self.add_minimal_registries()
+
+        code, output = self.run_cli("registry", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(len(data["registries"]), 7)
+
+    def test_registry_check_detects_missing_field_and_path(self):
+        self.add_minimal_registries()
+        bad_item = self.registry_item("bad", "missing.md")
+        bad_item.pop("purpose")
+        self.write_registry("roles.json", [bad_item])
+
+        code, output = self.run_cli("registry", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing fields: purpose" in problem for problem in data["problems"]))
+        self.assertTrue(any("referenced path does not exist: missing.md" in problem for problem in data["problems"]))
+
+    def test_registry_check_detects_prompt_order_mismatch(self):
+        self.add_minimal_registries()
+        self.write_registry(
+            "prompts.json",
+            [
+                self.registry_item("PROMPT_02", ".prompts/PROMPT_02.txt", type="prompt"),
+                self.registry_item("PROMPT_01", ".prompts/PROMPT_01.txt", type="prompt"),
+            ],
+        )
+
+        code, output = self.run_cli("registry", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("ordering does not match" in problem for problem in data["problems"]))
+
     def test_doctor_fails_structurally_for_minimal_fixture(self):
         fixture = ROOT / "tests" / "fixtures" / "minimal_repo"
         shutil.copytree(fixture, self.root, dirs_exist_ok=True)

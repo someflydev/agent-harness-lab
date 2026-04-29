@@ -11,6 +11,8 @@ agent work.
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py promptset
 python3 scripts/ahl.py validate
+python3 scripts/ahl.py registry check
+python3 scripts/ahl.py registry list --json
 python3 scripts/ahl.py resume
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09
@@ -29,6 +31,9 @@ Each command supports `--json` where machine-readable output is practical.
   prompt prose.
 - `validate` combines prompt numbering with expected quality foundations,
   including docs, runbooks, templates, helper scripts, and helper tests.
+- `registry check` validates curated registry JSON parsing, required fields,
+  referenced paths, and prompt registry ordering.
+- `registry list` reports registry files and item counts.
 - `resume` prints a read-only Session Context Briefing from git state,
   runtime-note files, and local `tmp/*.md` counts.
 - `checkpoint` reports and scaffolds local `context/TASK.md`,
@@ -49,6 +54,8 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `promptset`: `ok`, `prompts`, `filenames`, `numbers`, `duplicates`, `gaps`,
   `strict_two_digit`, `malformed`
 - `validate`: `ok`, `checks`, `problems`, `promptset`
+- `registry check`: `ok`, `checks`, `problems`, `registries`
+- `registry list`: `ok`, `registries`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`
