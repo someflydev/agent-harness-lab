@@ -17,6 +17,10 @@ actually happened.
 - `traceability/prompt-to-commit.json` - artificial prompt-to-commit links.
 - `traceability/working-tree-summary.json` - artificial
   `scripts/ahl.py trace --json` style working tree summary.
+- `docs-links/valid/README.md` - markdown link fixture with resolvable local
+  and ignored external links.
+- `docs-links/broken/README.md` - markdown link fixture with an intentionally
+  missing local target for docs-check tests.
 
 ## Validation Limits
 
@@ -33,3 +37,7 @@ ids look like `PROMPT_01`. The working-tree trace summary fixture is checked
 structurally because it documents helper output rather than a durable schema.
 This is not a full JSON Schema validator and does not enforce every rule in
 `schemas/*.schema.json`.
+
+The docs-link fixtures are intentionally outside the repo-wide docs scan roots
+so the broken case can remain checked in without causing normal navigation
+validation to fail.

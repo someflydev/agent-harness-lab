@@ -286,6 +286,113 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["ok"])
         self.assertTrue(any("ordering does not match" in problem for problem in data["problems"]))
 
+    def write_docs_index(self):
+        for dirname in (
+            "runbooks",
+            "templates",
+            "scripts",
+            "registry",
+            "examples",
+            "experiments",
+            "findings",
+            "reports",
+            "role-packs",
+            "lane-playbooks",
+            "prompt-templates",
+            "fixtures",
+        ):
+            self.write(f"{dirname}/README.md", f"# {dirname}\n")
+        self.write(
+            "docs/README.md",
+            "\n".join(
+                [
+                    "# Docs",
+                    "",
+                    "- [Runbooks](../runbooks/README.md)",
+                    "- [Templates](../templates/README.md)",
+                    "- [Scripts](../scripts/README.md)",
+                    "- [Registry](../registry/README.md)",
+                    "- [Examples](../examples/README.md)",
+                    "- [Experiments](../experiments/README.md)",
+                    "- [Findings](../findings/README.md)",
+                    "- [Reports](../reports/README.md)",
+                    "- [Role packs](../role-packs/README.md)",
+                    "- [Lane playbooks](../lane-playbooks/README.md)",
+                    "- [Prompt templates](../prompt-templates/README.md)",
+                    "- [Fixtures](../fixtures/README.md)",
+                ]
+            )
+            + "\n",
+        )
+
+    def test_docs_check_accepts_valid_local_markdown_link(self):
+        self.write_docs_index()
+        self.write("docs/topic.md", "[Next](next.md)\n")
+        self.write("docs/next.md", "# Next\n")
+
+        code, output = self.run_cli("docs", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["missing_links"], [])
+        self.assertTrue(any(link["target"] == "next.md" for link in data["links"]))
+
+    def test_docs_check_detects_broken_local_markdown_link(self):
+        self.write_docs_index()
+        self.write("docs/topic.md", "[Missing](missing.md)\n")
+
+        code, output = self.run_cli("docs", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any(link["target"] == "missing.md" for link in data["missing_links"]))
+
+    def test_docs_check_ignores_external_links(self):
+        self.write_docs_index()
+        self.write("docs/topic.md", "[External](https://example.com/missing.md)\n")
+
+        code, output = self.run_cli("docs", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["missing_links"], [])
+        self.assertFalse(any(link["target"].startswith("https://") for link in data["links"]))
+
+    def test_docs_check_json_has_stable_fields(self):
+        self.write_docs_index()
+
+        code, output = self.run_cli("docs", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in (
+            "ok",
+            "scan_roots",
+            "anchors_validated",
+            "checks",
+            "problems",
+            "scanned_files",
+            "links",
+            "missing_links",
+            "navigation",
+            "registry",
+        ):
+            self.assertIn(key, data)
+        self.assertFalse(data["anchors_validated"])
+
+    def test_docs_check_reports_missing_index_page(self):
+        self.write("docs/topic.md", "# Topic\n")
+
+        code, output = self.run_cli("docs", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing docs index page" in problem for problem in data["problems"]))
+
     def write_minimal_fixture_set(self):
         for spec in ahl.FIXTURE_SPECS.values():
             if spec["schema"] is not None:

@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 
 PROMPT_RE = re.compile(r"^PROMPT_(\d+)\.txt$")
@@ -31,6 +32,39 @@ REQUIRED_REGISTRY_FILES = (
     "scripts.json",
 )
 REQUIRED_REGISTRY_FIELDS = ("id", "name", "type", "path", "purpose", "status", "related_docs", "safe_use_notes")
+DOCS_SCAN_ROOTS = (
+    "README.md",
+    "AGENT.md",
+    "docs",
+    "runbooks",
+    "templates",
+    "scripts",
+    "registry",
+    "examples",
+    "experiments",
+    "findings",
+    "reports",
+    "role-packs",
+    "lane-playbooks",
+    "prompt-templates",
+)
+DOCS_NAV_INDEX = "docs/README.md"
+DOCS_INDEX_DIRS = (
+    "runbooks",
+    "templates",
+    "scripts",
+    "registry",
+    "examples",
+    "experiments",
+    "findings",
+    "reports",
+    "role-packs",
+    "lane-playbooks",
+    "prompt-templates",
+    "fixtures",
+)
+MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)")
+REFERENCE_LINK_RE = re.compile(r"^\s*\[[^\]\n]+\]:\s*(\S+)", re.M)
 PROMPT_ID_RE = re.compile(r"^PROMPT_\d{2}$")
 PROMPT_ID_FIELDS = {"prompt_id", "active_prompt", "next_prompt"}
 PROMPT_LINT_SECTIONS = (
@@ -702,6 +736,155 @@ def command_registry(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def markdown_files_for_docs_check(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for rel in DOCS_SCAN_ROOTS:
+        path = root / rel
+        if path.is_file() and path.suffix.lower() == ".md":
+            files.append(path)
+        elif path.is_dir():
+            files.extend(sorted(path.glob("**/*.md")))
+    return sorted(set(files))
+
+
+def markdown_link_targets(text: str) -> list[str]:
+    targets = [match.group(1).strip() for match in MARKDOWN_LINK_RE.finditer(text)]
+    targets.extend(match.group(1).strip() for match in REFERENCE_LINK_RE.finditer(text))
+    return targets
+
+
+def clean_markdown_target(target: str) -> str:
+    if not target:
+        return ""
+    if target.startswith("<") and ">" in target:
+        target = target[1 : target.find(">")]
+    else:
+        target = target.split()[0]
+    return unquote(target.strip())
+
+
+def is_external_or_anchor_target(target: str) -> bool:
+    if not target or target.startswith("#"):
+        return True
+    parsed = urlsplit(target)
+    return bool(parsed.scheme or parsed.netloc)
+
+
+def resolve_markdown_target(source: Path, target: str) -> Path:
+    target = target.split("#", 1)[0]
+    return (source.parent / target).resolve()
+
+
+def index_text_links_dir(index_text: str, dirname: str) -> bool:
+    return (
+        f"`../{dirname}/" in index_text
+        or f"`{dirname}/" in index_text
+        or f"](../{dirname}/" in index_text
+        or f"]({dirname}/" in index_text
+    )
+
+
+def docs_check_data(root: Path) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+    links: list[dict[str, Any]] = []
+    missing_links: list[dict[str, Any]] = []
+    resolved_root = root.resolve()
+
+    markdown_files = markdown_files_for_docs_check(root)
+    checks.append({"name": "markdown scan roots", "path": ".", "ok": bool(markdown_files), "count": len(markdown_files)})
+    if not markdown_files:
+        problems.append("no markdown files found in documentation scan roots")
+
+    docs_readme = root / DOCS_NAV_INDEX
+    docs_readme_exists = docs_readme.is_file()
+    checks.append({"name": "docs index exists", "path": DOCS_NAV_INDEX, "ok": docs_readme_exists})
+    if not docs_readme_exists:
+        problems.append(f"missing docs index page: {DOCS_NAV_INDEX}")
+
+    for source in markdown_files:
+        rel_source = str(source.relative_to(root))
+        try:
+            text = source.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            problems.append(f"{rel_source}: not valid UTF-8")
+            continue
+        for raw_target in markdown_link_targets(text):
+            target = clean_markdown_target(raw_target)
+            if is_external_or_anchor_target(target):
+                continue
+            target_path = resolve_markdown_target(source, target)
+            target_without_anchor = target.split("#", 1)[0]
+            exists = bool(target_without_anchor) and target_path.exists()
+            rel_target = (
+                str(target_path.relative_to(resolved_root))
+                if target_path.is_relative_to(resolved_root)
+                else str(target_path)
+            )
+            item = {"source": rel_source, "target": target, "resolved": rel_target, "ok": exists}
+            links.append(item)
+            if not exists:
+                missing_links.append(item)
+                problems.append(f"{rel_source}: missing local link target {target}")
+
+    nav_problems: list[str] = []
+    navigation = {"index": DOCS_NAV_INDEX, "linked_dirs": [], "missing_dirs": []}
+    if docs_readme_exists:
+        index_text = docs_readme.read_text(encoding="utf-8")
+        for dirname in DOCS_INDEX_DIRS:
+            if index_text_links_dir(index_text, dirname):
+                navigation["linked_dirs"].append(dirname)
+            else:
+                navigation["missing_dirs"].append(dirname)
+                nav_problems.append(f"{DOCS_NAV_INDEX}: missing navigation link for {dirname}/")
+    problems.extend(nav_problems)
+    checks.append(
+        {
+            "name": "major documentation directories linked",
+            "path": DOCS_NAV_INDEX,
+            "ok": not nav_problems and docs_readme_exists,
+            "missing_dirs": navigation["missing_dirs"],
+        }
+    )
+
+    registry = {"present": bool(registry_files(root)), "ok": True, "problems": []}
+    if registry["present"]:
+        registry_data = registry_check_data(root)
+        registry = {
+            "present": True,
+            "ok": registry_data["ok"],
+            "problems": registry_data["problems"],
+            "registries": registry_data["registries"],
+        }
+        problems.extend(f"registry consistency: {problem}" for problem in registry_data["problems"])
+    checks.append({"name": "registry paths consistent", "path": "registry", "ok": registry["ok"], "required": False})
+
+    return {
+        "ok": not problems,
+        "scan_roots": list(DOCS_SCAN_ROOTS),
+        "anchors_validated": False,
+        "checks": checks,
+        "problems": problems,
+        "scanned_files": [str(path.relative_to(root)) for path in markdown_files],
+        "links": links,
+        "missing_links": missing_links,
+        "navigation": navigation,
+        "registry": registry,
+    }
+
+
+def command_docs(args: argparse.Namespace) -> int:
+    data = docs_check_data(repo_root())
+    human = ["docs check: ok" if data["ok"] else "docs check: problems found"]
+    human.append(f"- scanned markdown files: {len(data['scanned_files'])}")
+    human.append(f"- checked local links: {len(data['links'])}")
+    human.append(f"- missing local links: {len(data['missing_links'])}")
+    if data["navigation"]["missing_dirs"]:
+        human.append("- missing navigation dirs: " + ", ".join(data["navigation"]["missing_dirs"]))
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def load_json_file(path: Path) -> tuple[Any | None, str | None]:
     try:
         return json.loads(path.read_text(encoding="utf-8")), None
@@ -1009,6 +1192,11 @@ def build_parser() -> argparse.ArgumentParser:
     registry.add_argument("action", choices=("list", "check"))
     registry.add_argument("--json", action="store_true")
     registry.set_defaults(func=command_registry)
+
+    docs = subparsers.add_parser("docs", help="Check markdown navigation and local links.")
+    docs.add_argument("action", choices=("check",))
+    docs.add_argument("--json", action="store_true")
+    docs.set_defaults(func=command_docs)
 
     fixtures = subparsers.add_parser("fixtures", help="Validate artificial JSON fixtures structurally.")
     fixtures.add_argument("action", choices=("check",))
