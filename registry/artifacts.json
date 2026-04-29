@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "description": "Curated index of durable artifact families in agent-harness-lab.",
+  "source_of_truth_note": "Repo files and git history are authoritative; this registry is a navigation aid.",
+  "items": [
+    {
+      "id": "artifact-docs",
+      "name": "Documentation",
+      "type": "artifact_family",
+      "path": "docs/README.md",
+      "purpose": "Orient operators and fresh sessions to doctrine, roles, routines, runtime behavior, metadata, quality, and navigation docs.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["prompt requirements", "validated repo decisions"],
+      "outputs": ["durable guidance", "navigation references"],
+      "related_docs": ["docs/navigation-map.md", "docs/repo-layout.md"],
+      "safe_use_notes": "Use docs as reviewed guidance; verify implementation claims against actual files."
+    },
+    {
+      "id": "artifact-prompts",
+      "name": "Promptset",
+      "type": "artifact_family",
+      "path": ".prompts",
+      "purpose": "Provide bounded prompt-execution work packages for fresh assistant sessions.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["prompt authoring decisions"],
+      "outputs": ["PROMPT_XX execution instructions"],
+      "related_docs": ["docs/quality/promptset-quality.md", "docs/runtime/prompt-authoring-vs-execution.md"],
+      "safe_use_notes": "Run one prompt per fresh session unless the operator explicitly says otherwise."
+    },
+    {
+      "id": "artifact-runbooks",
+      "name": "Runbooks",
+      "type": "artifact_family",
+      "path": "runbooks/README.md",
+      "purpose": "Capture repeatable operator procedures for prompt execution, audits, preflight, repair, promotion, closeout, and commit packaging.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["operator routines", "quality guidance"],
+      "outputs": ["manual procedures", "closeout guidance"],
+      "related_docs": ["docs/commands-and-routines.md", "docs/routines/catalog.md"],
+      "safe_use_notes": "Runbooks guide human-assisted execution; they do not grant autonomous authority."
+    },
+    {
+      "id": "artifact-templates",
+      "name": "Templates",
+      "type": "artifact_family",
+      "path": "templates",
+      "purpose": "Provide reusable markdown skeletons for contracts, reports, handoffs, memory records, and run manifests.",
+      "owner_role": "lead",
+      "status": "active",
+      "inputs": ["contract conventions", "report requirements"],
+      "outputs": ["scaffolded markdown artifacts"],
+      "related_docs": ["docs/contracts/README.md", "docs/memory/README.md"],
+      "safe_use_notes": "Generated artifacts must be reviewed and filled with evidence before being treated as durable records."
+    },
+    {
+      "id": "artifact-helper-scripts",
+      "name": "Helper Scripts",
+      "type": "artifact_family",
+      "path": "scripts/ahl.py",
+      "purpose": "Run dependency-free local checks and scaffold small workflow artifacts.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["repo files", "CLI arguments"],
+      "outputs": ["human summaries", "JSON summaries", "optional scaffolds"],
+      "related_docs": ["scripts/README.md", "docs/scripts.md"],
+      "safe_use_notes": "Scripts support the manual workflow and must not call providers or ingest raw transcripts."
+    },
+    {
+      "id": "artifact-evidence",
+      "name": "Examples, Experiments, Reports, And Findings",
+      "type": "artifact_family",
+      "path": "examples/README.md",
+      "purpose": "Show concrete workflow scenarios and house evidence-oriented trial, report, and finding structures.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["bounded trials", "reviewed observations"],
+      "outputs": ["examples", "reports", "findings", "promotion candidates"],
+      "related_docs": ["docs/lab-method.md", "reports/README.md", "findings/README.md", "experiments/README.md"],
+      "safe_use_notes": "Examples are illustrative; promote patterns only through reviewed durable artifacts."
+    },
+    {
+      "id": "artifact-metadata-schemas",
+      "name": "Metadata And Schemas",
+      "type": "artifact_family",
+      "path": "docs/metadata/README.md",
+      "purpose": "Define lightweight metadata records and schema-backed structures for run traceability and readiness outputs.",
+      "owner_role": "lead",
+      "status": "active",
+      "inputs": ["repo state", "validation evidence"],
+      "outputs": ["run records", "readiness reports", "promptset indexes"],
+      "related_docs": ["schemas/run-record.schema.json", "schemas/readiness-report.schema.json", "schemas/promptset-index.schema.json"],
+      "safe_use_notes": "Metadata is derived from repo files and git history; do not treat it as independent truth."
+    }
+  ]
+}

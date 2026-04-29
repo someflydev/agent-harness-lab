@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "description": "Curated index of command-backed and docs-only routines.",
+  "source_of_truth_note": "Runbooks, routine docs, and scripts are authoritative; this registry is a navigation aid.",
+  "items": [
+    {
+      "id": "routine-prompt-execution",
+      "name": "Prompt Execution",
+      "type": "routine",
+      "path": "runbooks/fresh-session-prompt-run.md",
+      "purpose": "Run one active prompt in a fresh session from startup through scoped implementation.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["operator request", "AGENT.md", "active prompt", "git status"],
+      "outputs": ["prompt deliverables", "validation notes"],
+      "related_docs": ["docs/runtime/session-lifecycle.md", "docs/runtime/prompt-authoring-vs-execution.md"],
+      "safe_use_notes": "Run exactly one prompt unless the operator explicitly expands scope."
+    },
+    {
+      "id": "routine-completion-audit",
+      "name": "Completion Audit",
+      "type": "routine",
+      "path": "runbooks/completion-audit.md",
+      "purpose": "Compare required prompt deliverables and validation evidence against actual repo changes.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["active prompt", "changed files", "validation results"],
+      "outputs": ["pass", "warning", "blocker"],
+      "related_docs": ["docs/quality/audit-protocol.md", "docs/quality/definition-of-done.md"],
+      "safe_use_notes": "Do not claim completion for unchecked deliverables."
+    },
+    {
+      "id": "routine-next-prompt-preflight",
+      "name": "Next-Prompt Preflight",
+      "type": "routine",
+      "path": "runbooks/next-prompt-preflight.md",
+      "purpose": "Inspect the immediate next prompt for obvious readiness blockers or warnings.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["next prompt", "current repo state", "docs navigation"],
+      "outputs": ["ready", "risky", "blocked"],
+      "related_docs": ["docs/runtime/adjacent-prompt-readiness.md", "templates/reports/readiness-report.md"],
+      "safe_use_notes": "Do not implement the future prompt during preflight."
+    },
+    {
+      "id": "routine-bridge-decision",
+      "name": "Bridge Decision And Handoff",
+      "type": "routine",
+      "path": "runbooks/bridge-fix-session.md",
+      "purpose": "Decide whether a cheap bridge fix or temporary handoff is materially needed.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["completion audit", "preflight result", "residual risks"],
+      "outputs": ["no-handoff decision", "tmp/HANDOFF.md when justified"],
+      "related_docs": ["docs/runtime/bridge-and-reset.md", "templates/handoffs/handoff.md"],
+      "safe_use_notes": "Create `tmp/HANDOFF.md` only for real blockers or non-trivial warnings."
+    },
+    {
+      "id": "routine-run-closeout",
+      "name": "Run Closeout",
+      "type": "routine",
+      "path": "runbooks/run-closeout.md",
+      "purpose": "Leave the repo ready for review or a fresh next session after validation and preflight.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["git status", "validation results", "readiness result"],
+      "outputs": ["final summary", "optional handoff"],
+      "related_docs": ["docs/runtime/execute-audit-preflight-bridge-reset.md"],
+      "safe_use_notes": "Final answers can carry routine completion notes; avoid unnecessary handoff files."
+    },
+    {
+      "id": "routine-promotion-review",
+      "name": "Promotion Review",
+      "type": "routine",
+      "path": "runbooks/promotion-review.md",
+      "purpose": "Decide whether temporary observations become durable memory or findings.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["candidate fact", "evidence", "target artifact boundary"],
+      "outputs": ["promote", "defer", "reject"],
+      "related_docs": ["docs/memory/promotion-model.md", "findings/README.md"],
+      "safe_use_notes": "Unreviewed transcript content is not durable memory."
+    },
+    {
+      "id": "routine-helper-registry-check",
+      "name": "Registry Check",
+      "type": "helper_script_command",
+      "path": "scripts/ahl.py",
+      "purpose": "Validate curated registry JSON files and prompt ordering.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["registry/*.json", ".prompts/PROMPT_*.txt"],
+      "outputs": ["human summary", "JSON summary"],
+      "related_docs": ["registry/README.md", "scripts/README.md"],
+      "safe_use_notes": "Read-only check; registries remain navigation aids."
+    }
+  ]
+}

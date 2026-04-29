@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "description": "Curated index of example scenarios and evidence-oriented areas.",
+  "source_of_truth_note": "Example files are authoritative; this registry is a scenario map.",
+  "items": [
+    {
+      "id": "example-sequential-prompt-run",
+      "name": "Sequential Prompt Run",
+      "type": "example_scenario",
+      "path": "examples/sequential-prompt-run/README.md",
+      "purpose": "Illustrate a normal prompt execution with manifest, audit, readiness report, no-handoff decision, and reset.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["active prompt", "validation evidence"],
+      "outputs": ["example run artifacts"],
+      "related_docs": ["runbooks/fresh-session-prompt-run.md", "runbooks/run-closeout.md"],
+      "safe_use_notes": "Use as an example of shape, not as live run evidence."
+    },
+    {
+      "id": "example-org-lane-delegation",
+      "name": "Org-Lane Delegation",
+      "type": "example_scenario",
+      "path": "examples/org-lane-delegation/README.md",
+      "purpose": "Show a compact Orchestrator to Lead to Worker contract flow.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["lane brief", "task contracts"],
+      "outputs": ["delegation example artifacts"],
+      "related_docs": ["docs/roles/org-model.md", "docs/contracts/contract-composition.md"],
+      "safe_use_notes": "Example delegation does not imply autonomous sub-agent execution."
+    },
+    {
+      "id": "example-memory-promotion",
+      "name": "Memory Promotion",
+      "type": "example_scenario",
+      "path": "examples/memory-promotion/README.md",
+      "purpose": "Demonstrate reviewed promotion from temporary observation into durable memory.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["candidate observation", "evidence"],
+      "outputs": ["promotion record example"],
+      "related_docs": ["docs/memory/promotion-model.md", "templates/memory/promotion-record.md"],
+      "safe_use_notes": "Promotion requires review; examples are not accepted memory."
+    },
+    {
+      "id": "example-repair-bridge",
+      "name": "Repair Bridge",
+      "type": "example_scenario",
+      "path": "examples/repair-bridge/README.md",
+      "purpose": "Show a justified transient handoff for an incomplete or blocked prompt.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["blocker", "validation already run", "next-session need"],
+      "outputs": ["handoff example"],
+      "related_docs": ["runbooks/bridge-fix-session.md", "docs/runtime/bridge-and-reset.md"],
+      "safe_use_notes": "Create real handoffs only when the bridge decision justifies them."
+    },
+    {
+      "id": "evidence-experiments",
+      "name": "Experiments",
+      "type": "evidence_area",
+      "path": "experiments/README.md",
+      "purpose": "Plan, log, and close bounded workflow trials.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["hypothesis", "trial plan", "observations"],
+      "outputs": ["experiment plans", "logs", "closeouts"],
+      "related_docs": ["docs/lab-method.md", "experiments/catalog.md"],
+      "safe_use_notes": "Experiment outcomes need review before becoming durable guidance."
+    },
+    {
+      "id": "evidence-reports",
+      "name": "Reports",
+      "type": "evidence_area",
+      "path": "reports/README.md",
+      "purpose": "House session, promptset audit, and routine evaluation report structures.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["session evidence", "audit evidence", "routine evidence"],
+      "outputs": ["reports"],
+      "related_docs": ["reports/templates/session-report.md", "reports/templates/promptset-audit-report.md"],
+      "safe_use_notes": "Reports summarize evidence; they do not override source files."
+    },
+    {
+      "id": "evidence-findings",
+      "name": "Findings",
+      "type": "evidence_area",
+      "path": "findings/README.md",
+      "purpose": "Capture reviewed findings and pattern observations.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["evidence", "severity", "promotion decision"],
+      "outputs": ["finding records", "pattern observations"],
+      "related_docs": ["findings/templates/finding-record.md", "docs/quality/review-severity.md"],
+      "safe_use_notes": "Findings require evidence and should not be raw impressions."
+    }
+  ]
+}

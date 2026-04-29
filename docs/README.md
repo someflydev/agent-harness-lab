@@ -22,6 +22,8 @@ Helper scripts exist, but richer orchestration remains future work.
   status, and automation boundaries.
 - `commands-and-routines.md` - registry of helper commands, docs-only
   routines, runbooks, inputs, outputs, status, and safety notes.
+- `navigation-map.md` - start points, durable artifact areas, registry
+  relationships, and source-of-truth boundaries.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
@@ -119,6 +121,19 @@ Helper scripts exist, but richer orchestration remains future work.
 - `capstone/navigation-audit.md` - check that operators can find important
   docs without prompt history.
 - `capstone/open-questions.md` - unresolved design questions for later review.
+
+## Registries
+
+- `../registry/README.md` - registry purpose, update rules, and validation
+  commands.
+- `../registry/artifacts.json` - curated index of durable artifact families.
+- `../registry/prompts.json` - ordered index of every prompt file.
+- `../registry/roles.json` - curated index of role documents.
+- `../registry/routines.json` - curated index of routines and command-backed
+  checks.
+- `../registry/templates.json` - curated index of reusable template groups.
+- `../registry/examples.json` - curated index of examples and evidence areas.
+- `../registry/scripts.json` - curated index of helper scripts and commands.
 
 ## Metadata
 

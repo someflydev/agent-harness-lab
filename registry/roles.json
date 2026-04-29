@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "description": "Curated index of durable role documents.",
+  "source_of_truth_note": "Role docs are authoritative; this registry supports orientation.",
+  "items": [
+    {
+      "id": "role-orchestrator",
+      "name": "Orchestrator",
+      "type": "role",
+      "path": "docs/roles/orchestrator.md",
+      "purpose": "Frame prompt-bounded work, protect scope, coordinate lanes, and decide when escalation or bridge handoff is needed.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["operator intent", "active prompt", "repo state"],
+      "outputs": ["scope decisions", "handoff decisions", "closeout framing"],
+      "related_docs": ["docs/roles/org-model.md", "docs/roles/boundary-matrix.md"],
+      "safe_use_notes": "The Orchestrator frames work but does not replace operator approval."
+    },
+    {
+      "id": "role-lead",
+      "name": "Lead",
+      "type": "role",
+      "path": "docs/roles/lead.md",
+      "purpose": "Own a lane of work, decompose tasks, review outputs, and integrate bounded results.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["lane brief", "task contracts", "worker results"],
+      "outputs": ["lane plan", "review notes", "integrated artifacts"],
+      "related_docs": ["docs/roles/org-model.md", "docs/contracts/contract-composition.md"],
+      "safe_use_notes": "Lead authority is scoped to the assigned lane."
+    },
+    {
+      "id": "role-worker",
+      "name": "Worker",
+      "type": "role",
+      "path": "docs/roles/worker.md",
+      "purpose": "Execute a narrow task with explicit inputs, outputs, validation, and stop conditions.",
+      "owner_role": "lead",
+      "status": "active",
+      "inputs": ["task contract", "relevant files", "validation commands"],
+      "outputs": ["bounded changes", "result contract", "validation evidence"],
+      "related_docs": ["templates/contracts/task-contract.md", "templates/contracts/result-contract.md"],
+      "safe_use_notes": "Workers should not expand scope or overwrite unrelated changes."
+    },
+    {
+      "id": "role-supporting-roles",
+      "name": "Supporting Roles",
+      "type": "role_family",
+      "path": "docs/roles/supporting-roles.md",
+      "purpose": "Name support functions for orchestration, cognitive work, repo intelligence, and process review.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["specialized review need", "repo evidence"],
+      "outputs": ["focused analysis", "findings", "review support"],
+      "related_docs": ["docs/roles/escalation-paths.md", "docs/quality/review-severity.md"],
+      "safe_use_notes": "Supporting roles are labels for responsibilities, not separate hidden agents."
+    },
+    {
+      "id": "role-boundary-matrix",
+      "name": "Role Boundary Matrix",
+      "type": "role_boundary",
+      "path": "docs/roles/boundary-matrix.md",
+      "purpose": "Clarify authority boundaries across the operator, Orchestrator, Leads, Workers, and support roles.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["role taxonomy"],
+      "outputs": ["authority boundary reference"],
+      "related_docs": ["docs/roles/escalation-paths.md"],
+      "safe_use_notes": "Use this to prevent authority drift during execution."
+    }
+  ]
+}

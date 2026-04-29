@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "description": "Curated index of reusable markdown templates.",
+  "source_of_truth_note": "Template files are authoritative; this registry helps fresh sessions find them.",
+  "items": [
+    {
+      "id": "template-contracts",
+      "name": "Contract Templates",
+      "type": "template_group",
+      "path": "templates/contracts",
+      "purpose": "Provide task, result, review, and escalation contract skeletons.",
+      "owner_role": "lead",
+      "status": "active",
+      "inputs": ["task scope", "role boundaries", "expected outputs"],
+      "outputs": ["contract markdown"],
+      "related_docs": ["docs/contracts/README.md", "docs/contracts/contract-types.md"],
+      "safe_use_notes": "Contracts should be filled with concrete scope and evidence before use."
+    },
+    {
+      "id": "template-handoffs",
+      "name": "Handoff Templates",
+      "type": "template_group",
+      "path": "templates/handoffs",
+      "purpose": "Scaffold temporary bridge handoffs and repair checklists.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["bridge decision", "remaining blocker", "validation already run"],
+      "outputs": ["handoff markdown", "repair checklist"],
+      "related_docs": ["docs/memory/handoff-lifecycle.md", "runbooks/bridge-fix-session.md"],
+      "safe_use_notes": "Use only when a handoff materially helps the next session."
+    },
+    {
+      "id": "template-memory",
+      "name": "Memory Templates",
+      "type": "template_group",
+      "path": "templates/memory",
+      "purpose": "Scaffold memory update, handoff summary, and promotion records.",
+      "owner_role": "process-reviewer",
+      "status": "active",
+      "inputs": ["reviewed evidence", "candidate memory"],
+      "outputs": ["memory record markdown"],
+      "related_docs": ["docs/memory/README.md", "docs/memory/promotion-model.md"],
+      "safe_use_notes": "Memory templates require explicit review before promotion."
+    },
+    {
+      "id": "template-reports",
+      "name": "Report Templates",
+      "type": "template_group",
+      "path": "templates/reports",
+      "purpose": "Scaffold completion audit and readiness reports.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["prompt requirements", "validation results", "readiness checks"],
+      "outputs": ["audit report", "readiness report"],
+      "related_docs": ["docs/quality/audit-protocol.md", "runbooks/next-prompt-preflight.md"],
+      "safe_use_notes": "Reports should cite concrete files and commands."
+    },
+    {
+      "id": "template-runs",
+      "name": "Run Manifest Template",
+      "type": "template",
+      "path": "templates/runs/run-manifest.md",
+      "purpose": "Capture prompt id, run id, assistant, permission posture, and validation notes for a run.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["prompt id", "assistant", "permission posture"],
+      "outputs": ["runs/<run-id>/run-manifest.md"],
+      "related_docs": ["docs/metadata/run-record.md", "scripts/README.md"],
+      "safe_use_notes": "Generated manifests are scaffolds until filled with actual run evidence."
+    },
+    {
+      "id": "template-session-closeout",
+      "name": "Session Closeout Template",
+      "type": "template",
+      "path": "templates/session-closeout.md",
+      "purpose": "Provide a compact closeout record shape for session summaries.",
+      "owner_role": "orchestrator",
+      "status": "active",
+      "inputs": ["changed files", "validation results", "residual risks"],
+      "outputs": ["closeout markdown"],
+      "related_docs": ["runbooks/run-closeout.md"],
+      "safe_use_notes": "Do not use closeout notes to mask incomplete validation."
+    }
+  ]
+}
