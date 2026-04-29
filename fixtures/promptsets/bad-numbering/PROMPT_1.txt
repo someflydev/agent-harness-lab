@@ -1,0 +1,21 @@
+# PROMPT_01 - Bad Numbering Fixture
+
+## Startup Instructions
+
+Inspect repo state before editing.
+
+## Required Deliverables
+
+- Update a fixture artifact.
+
+## Constraints
+
+- Use only local files.
+
+## Validation
+
+Run the promptset lint fixture check.
+
+## Endcap
+
+Audit deliverables before closeout.

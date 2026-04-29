@@ -1,0 +1,17 @@
+# PROMPT_01 - Missing Endcap Fixture
+
+## Startup Instructions
+
+Inspect repo state before editing.
+
+## Required Deliverables
+
+- Update a fixture artifact.
+
+## Constraints
+
+- Use only local files.
+
+## Validation
+
+Run the promptset lint fixture check.

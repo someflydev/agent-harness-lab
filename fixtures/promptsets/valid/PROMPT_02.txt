@@ -1,0 +1,21 @@
+# PROMPT_02 - Valid Fixture Two
+
+## Startup Instructions
+
+Inspect repo state before editing.
+
+## Required Deliverables
+
+- Update the second fixture artifact.
+
+## Constraints
+
+- Use only local files.
+
+## Validation
+
+Run the promptset lint fixture check.
+
+## Endcap
+
+Audit deliverables before closeout.

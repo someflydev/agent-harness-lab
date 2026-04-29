@@ -76,6 +76,93 @@ class AhlTest(unittest.TestCase):
         self.assertIn(2, data["gaps"])
         self.assertIn("PROMPT_4.txt", data["malformed"])
 
+    def prompt_text(self, prompt_id, next_id=None, include_endcap=True):
+        lines = [
+            f"# {prompt_id} - Fixture Prompt",
+            "",
+            "## Startup Instructions",
+            "",
+            "Inspect repo state before editing.",
+            "",
+            "## Required Deliverables",
+            "",
+            "- Update a fixture file.",
+            "",
+            "## Constraints",
+            "",
+            "- Use only local files.",
+            "",
+            "## Validation",
+            "",
+            "Run fixture validation.",
+            "",
+        ]
+        if include_endcap:
+            lines.extend(
+                [
+                    "## Endcap",
+                    "",
+                    "Audit deliverables before ending.",
+                ]
+            )
+            if next_id:
+                lines.append(f"Inspect `.prompts/{next_id}.txt` before closeout.")
+        return "\n".join(lines) + "\n"
+
+    def test_promptset_lint_accepts_valid_promptset(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+
+        code, output = self.run_cli("promptset", "lint", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["summary"]["prompt_count"], 2)
+        self.assertEqual(data["summary"]["problem_count"], 0)
+
+    def test_promptset_lint_detects_missing_endcap(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", include_endcap=False))
+
+        code, output = self.run_cli("promptset", "lint", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing endcap" in problem for problem in data["problems"]))
+
+    def test_promptset_lint_detects_bad_filename(self):
+        self.write(".prompts/PROMPT_1.txt", self.prompt_text("PROMPT_01"))
+
+        code, output = self.run_cli("promptset", "lint", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertIn("PROMPT_1.txt", data["numbering"]["malformed"])
+        self.assertTrue(any("malformed prompt filename" in problem for problem in data["problems"]))
+
+    def test_promptset_lint_json_has_stable_fields(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01"))
+
+        code, output = self.run_cli("promptset", "lint", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "prompt_dir", "summary", "problems", "numbering", "registry", "prompts"):
+            self.assertIn(key, data)
+        for key in ("filename", "checks", "missing", "readiness_score", "readiness_present", "readiness_total"):
+            self.assertIn(key, data["prompts"][0])
+
+    def test_promptset_lint_detects_missing_next_prompt_reference(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+
+        code, output = self.run_cli("promptset", "lint", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertTrue(any("missing next prompt reference" in problem for problem in data["problems"]))
+
     def test_validate_reports_quality_foundations_and_promptset(self):
         self.add_foundations()
         self.write(".prompts/PROMPT_01.txt")
