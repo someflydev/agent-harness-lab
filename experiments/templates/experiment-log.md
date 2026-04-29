@@ -32,4 +32,4 @@
 - Confidence:
 - Follow-up needed:
 - Promotion notes:
-
+- One-off notes kept local:

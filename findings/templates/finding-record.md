@@ -32,4 +32,4 @@
 - Promotion recommendation: None / Memory / Doctrine / Runbook / Template
 - Target artifact:
 - Review or operator approval needed:
-
+- Reason this should or should not feed a future prompt-authoring session:

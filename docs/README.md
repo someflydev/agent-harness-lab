@@ -40,6 +40,8 @@ orchestration remains future work.
   parity tracking, and addition workflow.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
+- `experiment-workflow.md` - helper-command workflow for starting, logging,
+  closing, checking, and promoting experiment evidence.
 - `quality/README.md` - validation gates, audit protocol, promptset quality,
   severity, completion states, and failure classes.
 - `architecture/README.md` - future-facing architecture guidance and
@@ -244,6 +246,8 @@ orchestration remains future work.
 
 - `lab-method.md` - method for turning concrete workflow problems into bounded
   trials, reports, findings, and promotion candidates.
+- `experiment-workflow.md` - operational workflow for experiment scaffolding,
+  observation logging, closeout, finding creation, and prompt-authoring input.
 - `../experiments/README.md` - experiment purpose, boundaries, lifecycle, and
   promotion path.
 - `../experiments/catalog.md` - compact catalog for planned, active, closed,

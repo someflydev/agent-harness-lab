@@ -36,4 +36,4 @@
 - Possible result values:
 - Promotion candidate if successful:
 - Review needed before promotion:
-
+- Catalog row added or updated:

@@ -27,6 +27,8 @@ justifies more.
 - `dry-run list` and `dry-run check` list deterministic scenario manifests,
   validate their referenced artifacts, and check `dry-runs/PARITY.md` backing
   files.
+- `experiment new`, `experiment check`, and `finding new` scaffold lightweight
+  lab evidence artifacts and structurally check active experiment records.
 - `resume` prints a read-only Session Context Briefing for visible repo state.
 - `trace` summarizes prompt-related working tree changes and emits a run-record
   skeleton for closeout.
@@ -63,6 +65,9 @@ python3 scripts/ahl.py registry list --json
 python3 scripts/ahl.py dry-run list
 python3 scripts/ahl.py dry-run check sequential-prompt-run
 python3 scripts/ahl.py dry-run check --all --json
+python3 scripts/ahl.py experiment new closeout-check
+python3 scripts/ahl.py experiment check --json
+python3 scripts/ahl.py finding new repeated-closeout-gap
 python3 scripts/ahl.py resume --json
 python3 scripts/ahl.py trace PROMPT_20 --json
 python3 scripts/ahl.py checkpoint
@@ -92,6 +97,11 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
 - `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
   `problems`; each result includes stable `id`, `status`, and `problems`
+- `experiment new`: `ok`, `slug`, `directory`, `created`, `forced`,
+  `catalog_updated`
+- `experiment check`: `ok`, `directory`, `checks`, `problems`, `experiments`;
+  each experiment includes stable `id`, `path`, `status`, and `problems`
+- `finding new`: `ok`, `slug`, `directory`, `created`, `forced`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,
@@ -116,4 +126,4 @@ remain stable.
 This script supports the manual operator workflow described by the runbooks. It
 surfaces repo state and creates inspectable markdown artifacts, but the human
 operator still chooses the prompt, validates results, decides whether a handoff
-is justified, and controls commits.
+is justified, controls commits, and reviews any finding or promotion candidate.
