@@ -3,8 +3,8 @@
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, guardrails, initial
 doctrine, role boundaries, skills, routines, runbooks, runtime session behavior,
-memory governance, contracts, examples, experiments, reports, findings, and
-lab method. Later prompts will add expanded scripts.
+memory governance, contracts, quality gates, examples, experiments, reports,
+findings, and lab method. Later prompts will add expanded scripts.
 
 ## Start Here
 
@@ -19,6 +19,8 @@ lab method. Later prompts will add expanded scripts.
   and automation boundaries.
 - `lab-method.md` - experimental method for bounded trials, evidence,
   findings, and promotion decisions.
+- `quality/README.md` - validation gates, audit protocol, promptset quality,
+  severity, completion states, and failure classes.
 
 ## Doctrine
 
@@ -98,6 +100,17 @@ lab method. Later prompts will add expanded scripts.
   run, audit, readiness, handoff, and closeout contract reference.
 - `contracts/contract-composition.md` - practical composition flow through the
   Orchestrator -> Leads -> Workers hierarchy and closeout loop.
+
+## Quality
+
+- `quality/README.md` - quality docs index and expected local checks.
+- `quality/validation-gates.md` - checks and evidence by prompt type.
+- `quality/promptset-quality.md` - execution-ready prompt criteria.
+- `quality/audit-protocol.md` - implementation-to-prompt audit procedure.
+- `quality/review-severity.md` - severity levels and finding disposition.
+- `quality/definition-of-done.md` - `done`, `incomplete`, and `blocked`
+  meanings.
+- `quality/failure-classification.md` - common failure classes for audits.
 
 ## Examples
 

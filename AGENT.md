@@ -70,6 +70,17 @@ Before claiming completion:
   relevant.
 - State any checks you could not run.
 
+Use `docs/quality/` for validation gates, promptset quality, audit protocol,
+severity, completion states, and failure classification. Cheap local checks
+include:
+
+```sh
+python3 scripts/ahl.py promptset
+python3 scripts/ahl.py doctor
+python3 scripts/ahl.py validate
+python3 -m unittest tests/test_ahl.py
+```
+
 ## Commit Hygiene
 
 Do not commit unless the operator asks. When commits are requested, prefer
