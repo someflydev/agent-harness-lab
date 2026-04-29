@@ -42,8 +42,13 @@ class AhlTest(unittest.TestCase):
         self.write(".gitignore", "tmp/\nagent-context-base/\npi-mono/\nclaw-code/\n")
         (self.root / ".prompts").mkdir()
         (self.root / "docs").mkdir()
+        for dirname in ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "skills"):
+            (self.root / "docs" / dirname).mkdir()
         (self.root / "runbooks").mkdir()
         (self.root / "templates").mkdir()
+        (self.root / "scripts").mkdir()
+        (self.root / "tests").mkdir()
+        self.write("tests/test_ahl.py", "# tests\n")
 
     def test_promptset_numbering_success(self):
         self.write(".prompts/PROMPT_01.txt")
@@ -69,6 +74,31 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn(2, data["gaps"])
         self.assertIn("PROMPT_4.txt", data["malformed"])
+
+    def test_validate_reports_quality_foundations_and_promptset(self):
+        self.add_foundations()
+        self.write(".prompts/PROMPT_01.txt")
+        self.write(".prompts/PROMPT_02.txt")
+
+        code, output = self.run_cli("validate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertIn("checks", data)
+        self.assertTrue(data["promptset"]["strict_two_digit"])
+
+    def test_validate_fails_when_required_quality_foundation_is_missing(self):
+        self.add_foundations()
+        self.write(".prompts/PROMPT_01.txt")
+        shutil.rmtree(self.root / "docs" / "quality")
+
+        code, output = self.run_cli("validate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("docs/quality" in problem for problem in data["problems"]))
 
     def test_doctor_fails_structurally_for_minimal_fixture(self):
         fixture = ROOT / "tests" / "fixtures" / "minimal_repo"

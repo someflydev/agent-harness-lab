@@ -10,6 +10,7 @@ agent work.
 ```sh
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py promptset
+python3 scripts/ahl.py validate
 python3 scripts/ahl.py resume
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09
@@ -25,6 +26,8 @@ Each command supports `--json` where machine-readable output is practical.
   entries.
 - `promptset` reports prompt filenames and numbering health without parsing
   prompt prose.
+- `validate` combines prompt numbering with expected quality foundations,
+  including docs, runbooks, templates, helper scripts, and helper tests.
 - `resume` prints a read-only Session Context Briefing from git state,
   runtime-note files, and local `tmp/*.md` counts.
 - `checkpoint` reports and scaffolds local `context/TASK.md`,
@@ -42,6 +45,7 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `doctor`: `ok`, `checks`, `problems`
 - `promptset`: `ok`, `prompts`, `filenames`, `numbers`, `duplicates`, `gaps`,
   `strict_two_digit`, `malformed`
+- `validate`: `ok`, `checks`, `problems`, `promptset`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`

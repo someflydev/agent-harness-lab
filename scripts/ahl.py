@@ -18,6 +18,8 @@ STRICT_PROMPT_RE = re.compile(r"^PROMPT_(\d{2})\.txt$")
 NEXT_MARKER_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Next|Next step|## Next)\b", re.I)
 CONTEXT_FILES = ("TASK.md", "SESSION.md", "MEMORY.md")
 REFERENCE_DIRS = ("agent-context-base", "pi-mono", "claw-code")
+REQUIRED_TOP_LEVEL_DIRS = ("docs", "runbooks", "templates", "scripts", "tests", ".prompts")
+REQUIRED_DOC_DIRS = ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "skills")
 
 
 def repo_root() -> Path:
@@ -188,6 +190,54 @@ def command_promptset(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def validate_data(root: Path) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+
+    def add_check(name: str, path: str, ok: bool) -> None:
+        checks.append({"name": name, "path": path, "ok": ok})
+        if not ok:
+            problems.append(f"missing or invalid {name}: {path}")
+
+    for filename in ("AGENT.md", "README.md"):
+        add_check(filename, filename, (root / filename).is_file())
+
+    for dirname in REQUIRED_TOP_LEVEL_DIRS:
+        add_check(f"{dirname} directory", dirname, (root / dirname).is_dir())
+
+    for dirname in REQUIRED_DOC_DIRS:
+        path = f"docs/{dirname}"
+        add_check(f"{path} directory", path, (root / path).is_dir())
+
+    tests_present = (root / "tests" / "test_ahl.py").is_file()
+    add_check("helper script tests", "tests/test_ahl.py", tests_present)
+
+    promptset = promptset_data(root)
+    promptset_ok = bool(promptset["ok"])
+    checks.append(
+        {
+            "name": "prompt files strictly numbered",
+            "path": ".prompts",
+            "ok": promptset_ok,
+            "count": len(promptset["prompts"]),
+            "gaps": promptset["gaps"],
+            "duplicates": promptset["duplicates"],
+            "malformed": promptset["malformed"],
+        }
+    )
+    if not promptset_ok:
+        problems.append("prompt files are not strictly numbered")
+
+    return {"ok": not problems, "checks": checks, "problems": problems, "promptset": promptset}
+
+
+def command_validate(args: argparse.Namespace) -> int:
+    data = validate_data(repo_root())
+    human = ["validate: ok" if data["ok"] else "validate: problems found"]
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def normalize_prompt_id(value: str) -> str:
     path_name = Path(value).name
     strict = STRICT_PROMPT_RE.match(path_name)
@@ -352,6 +402,10 @@ def build_parser() -> argparse.ArgumentParser:
     promptset = subparsers.add_parser("promptset", help="Inspect prompt filenames and numbering.")
     promptset.add_argument("--json", action="store_true")
     promptset.set_defaults(func=command_promptset)
+
+    validate = subparsers.add_parser("validate", help="Check promptset and expected quality foundations.")
+    validate.add_argument("--json", action="store_true")
+    validate.set_defaults(func=command_validate)
 
     resume = subparsers.add_parser("resume", help="Print a grounded session context briefing.")
     resume.add_argument("--json", action="store_true")

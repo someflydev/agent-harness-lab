@@ -12,6 +12,8 @@ It is intentionally dependency-free and uses only the Python standard library.
 - `doctor` checks expected repo foundations and ignore rules.
 - `promptset` reports prompt filenames, numbers, duplicate numbers, gaps, and
   strict two-digit naming.
+- `validate` checks expected quality foundations and promptset numbering in
+  one lightweight gate.
 - `resume` prints a read-only Session Context Briefing for visible repo state.
 - `checkpoint` scaffolds local `context/*.md` files from examples or minimal
   built-ins.
@@ -33,6 +35,7 @@ It is intentionally dependency-free and uses only the Python standard library.
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py doctor --json
 python3 scripts/ahl.py promptset
+python3 scripts/ahl.py validate
 python3 scripts/ahl.py resume --json
 python3 scripts/ahl.py checkpoint
 python3 scripts/ahl.py scaffold-run PROMPT_09 --assistant codex --permission-posture workspace-write
@@ -49,6 +52,7 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `doctor`: `ok`, `checks`, `problems`
 - `promptset`: `ok`, `prompts`, `filenames`, `numbers`, `duplicates`, `gaps`,
   `strict_two_digit`, `malformed`
+- `validate`: `ok`, `checks`, `problems`, `promptset`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `checkpoint`: `ok`, `existing`, `scaffolded`, `stale`
