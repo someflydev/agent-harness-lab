@@ -16,6 +16,7 @@ from typing import Any
 PROMPT_RE = re.compile(r"^PROMPT_(\d+)\.txt$")
 STRICT_PROMPT_RE = re.compile(r"^PROMPT_(\d{2})\.txt$")
 NEXT_MARKER_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Next|Next step|## Next)\b", re.I)
+PROMPT_HEADING_RE = re.compile(r"^\s*#\s+PROMPT_\d{2}\b", re.M)
 CONTEXT_FILES = ("TASK.md", "SESSION.md", "MEMORY.md")
 REFERENCE_DIRS = ("agent-context-base", "pi-mono", "claw-code")
 REQUIRED_TOP_LEVEL_DIRS = ("docs", "runbooks", "templates", "scripts", "tests", ".prompts")
@@ -32,6 +33,13 @@ REQUIRED_REGISTRY_FILES = (
 REQUIRED_REGISTRY_FIELDS = ("id", "name", "type", "path", "purpose", "status", "related_docs", "safe_use_notes")
 PROMPT_ID_RE = re.compile(r"^PROMPT_\d{2}$")
 PROMPT_ID_FIELDS = {"prompt_id", "active_prompt", "next_prompt"}
+PROMPT_LINT_SECTIONS = (
+    ("startup_instructions", "startup instructions", ("startup instructions", "startup")),
+    ("required_deliverables", "required deliverables", ("required deliverables", "deliverables")),
+    ("constraints", "constraints", ("constraints",)),
+    ("validation", "validation", ("validation",)),
+    ("endcap", "endcap", ("endcap",)),
+)
 FIXTURE_SPECS: dict[str, dict[str, Any]] = {
     "fixtures/run-records/success.json": {
         "schema": "schemas/run-record.schema.json",
@@ -343,7 +351,10 @@ def command_doctor(args: argparse.Namespace) -> int:
 
 
 def promptset_data(root: Path) -> dict[str, Any]:
-    prompt_dir = root / ".prompts"
+    return promptset_numbering_data(root, root / ".prompts")
+
+
+def promptset_numbering_data(root: Path, prompt_dir: Path) -> dict[str, Any]:
     files = sorted(prompt_dir.glob("PROMPT_*.txt")) if prompt_dir.is_dir() else []
     prompts: list[dict[str, Any]] = []
     numbers: list[int] = []
@@ -371,7 +382,7 @@ def promptset_data(root: Path) -> dict[str, Any]:
 
     return {
         "ok": bool(prompt_dir.is_dir()) and not duplicates and not gaps and not malformed,
-        "prompt_dir": ".prompts",
+        "prompt_dir": str(prompt_dir.relative_to(root)) if prompt_dir.is_relative_to(root) else str(prompt_dir),
         "prompts": prompts,
         "filenames": [item["filename"] for item in prompts],
         "numbers": numbers,
@@ -382,7 +393,120 @@ def promptset_data(root: Path) -> dict[str, Any]:
     }
 
 
+def has_prompt_section(text: str, terms: tuple[str, ...]) -> bool:
+    lowered = text.lower()
+    return any(term in lowered for term in terms)
+
+
+def immediate_next_reference(text: str, next_number: int) -> bool:
+    strict_id = f"PROMPT_{next_number:02d}"
+    plain = f"prompt {next_number:02d}"
+    return strict_id in text or plain.lower() in text.lower()
+
+
+def lint_registry_data(root: Path, prompt_dir: Path) -> dict[str, Any]:
+    registry_path = root / "registry" / "prompts.json"
+    if not registry_path.exists():
+        return {"present": False, "ok": True, "path": "registry/prompts.json", "problems": []}
+
+    data, problem = load_registry(registry_path)
+    if problem:
+        return {"present": True, "ok": False, "path": "registry/prompts.json", "problems": [problem]}
+
+    assert data is not None
+    registered_paths = [item.get("path") for item in data["items"] if isinstance(item, dict)]
+    actual_paths = [str(path.relative_to(root)) for path in sorted(prompt_dir.glob("PROMPT_*.txt"))]
+    ok = registered_paths == actual_paths
+    problems = [] if ok else ["registry/prompts.json does not match prompt files"]
+    return {
+        "present": True,
+        "ok": ok,
+        "path": "registry/prompts.json",
+        "registered_paths": registered_paths,
+        "actual_paths": actual_paths,
+        "problems": problems,
+    }
+
+
+def promptset_lint_data(root: Path, prompt_dir: Path | None = None) -> dict[str, Any]:
+    prompt_dir = prompt_dir or (root / ".prompts")
+    numbering = promptset_numbering_data(root, prompt_dir)
+    problems: list[str] = []
+    problems.extend(f"malformed prompt filename: {name}" for name in numbering["malformed"])
+    problems.extend(f"duplicate prompt number: {number:02d}" for number in numbering["duplicates"])
+    problems.extend(f"missing prompt number: {number:02d}" for number in numbering["gaps"])
+    if not prompt_dir.is_dir():
+        problems.append(f"missing prompt directory: {numbering['prompt_dir']}")
+
+    unique_numbers = sorted(set(numbering["numbers"]))
+    final_number = unique_numbers[-1] if unique_numbers else None
+    prompt_reports: list[dict[str, Any]] = []
+    for item in numbering["prompts"]:
+        filename = item["filename"]
+        number = item["number"]
+        path = prompt_dir / filename
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        checks: dict[str, bool] = {"heading": bool(PROMPT_HEADING_RE.search(text))}
+        for key, _label, terms in PROMPT_LINT_SECTIONS:
+            checks[key] = has_prompt_section(text, terms)
+        if number is not None and final_number is not None and number < final_number:
+            checks["next_prompt_reference"] = immediate_next_reference(text, number + 1)
+        else:
+            checks["next_prompt_reference"] = True
+
+        missing = [key for key, ok in checks.items() if not ok]
+        total = len(checks)
+        present = total - len(missing)
+        score = round(present / total, 3) if total else 1.0
+        for key in missing:
+            problems.append(f"{filename}: missing {key.replace('_', ' ')}")
+        prompt_reports.append(
+            {
+                "filename": filename,
+                "number": number,
+                "strict": item["strict"],
+                "checks": checks,
+                "missing": missing,
+                "readiness_score": score,
+                "readiness_present": present,
+                "readiness_total": total,
+            }
+        )
+
+    registry = lint_registry_data(root, prompt_dir)
+    problems.extend(registry["problems"])
+    ok = not problems
+    return {
+        "ok": ok,
+        "prompt_dir": numbering["prompt_dir"],
+        "summary": {
+            "prompt_count": len(prompt_reports),
+            "problem_count": len(problems),
+            "average_readiness_score": round(
+                sum(item["readiness_score"] for item in prompt_reports) / len(prompt_reports), 3
+            )
+            if prompt_reports
+            else 0.0,
+        },
+        "problems": problems,
+        "numbering": numbering,
+        "registry": registry,
+        "prompts": prompt_reports,
+    }
+
+
 def command_promptset(args: argparse.Namespace) -> int:
+    if args.action == "lint":
+        data = promptset_lint_data(repo_root())
+        human = [f"promptset lint: {data['summary']['prompt_count']} prompts"]
+        human.append(f"readiness average: {data['summary']['average_readiness_score']:.3f}")
+        if data["ok"]:
+            human.append("lint: ok")
+        else:
+            human.append("lint: problems found")
+            human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
     data = promptset_data(repo_root())
     human = [f"promptset: {len(data['prompts'])} prompts"]
     if data["gaps"]:
@@ -872,7 +996,8 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--json", action="store_true")
     doctor.set_defaults(func=command_doctor)
 
-    promptset = subparsers.add_parser("promptset", help="Inspect prompt filenames and numbering.")
+    promptset = subparsers.add_parser("promptset", help="Inspect prompt filenames, numbering, and readiness.")
+    promptset.add_argument("action", nargs="?", choices=("lint",), help="Run promptset prose-structure linting.")
     promptset.add_argument("--json", action="store_true")
     promptset.set_defaults(func=command_promptset)
 
