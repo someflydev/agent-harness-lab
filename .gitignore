@@ -15,6 +15,29 @@ context/MEMORY.md
 .cache/
 *.log
 
+# Raw transcripts, exports, and local conversation dumps
+transcripts/
+conversation-dumps/
+chat-transcripts/
+assistant-transcripts/
+chatgpt-export/
+claude-export/
+transcripts.md
+transcript.md
+conversation-dump.md
+conversation-dump.json
+chat-export.md
+chat-export.json
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+
 # Python and test caches
 __pycache__/
 .pytest_cache/
