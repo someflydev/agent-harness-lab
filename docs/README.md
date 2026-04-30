@@ -2,8 +2,8 @@
 
 This directory is the navigation surface for `agent-harness-lab` docs. The repo
 is early, so these pages focus on foundation, orientation, assistant usage,
-guardrails, doctrine, role boundaries, skills, routines, runbooks, runtime
-session behavior, memory governance, contracts, quality gates, metadata,
+guardrails, safety, doctrine, role boundaries, skills, routines, runbooks,
+runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
 and future-facing architecture. Role packs and lane playbooks now provide
@@ -34,6 +34,8 @@ richer orchestration remains future work.
   relationships, and source-of-truth boundaries.
 - `navigation-validation.md` - local markdown link checking, docs index
   coverage, checker limits, and registry relationship.
+- `safety/README.md` - safety, permission posture, destructive action, data
+  hygiene, secret, transcript, reference repo, and approval guidance.
 - `assistants/README.md` - practical usage guides for Codex, Claude Code,
   Gemini, Pi, generic chat, subscription workflows, and context loading.
 - `prompt-templates.md` - reusable prompt template library guidance and
@@ -121,6 +123,22 @@ richer orchestration remains future work.
 - `assistants/subscription-workflow.md` - subscription-friendly workflow,
   quota control, rate-limit recovery, and runtime-mode boundaries.
 - `assistants/context-loading.md` - context-loading matrix by session type.
+
+## Safety
+
+- `safety/README.md` - safety docs index and local doctor-check entry point.
+- `safety/permission-postures.md` - `read-only`, `workspace-write`, and
+  `manual-required` posture guidance.
+- `safety/destructive-actions.md` - approval and inspection rules before
+  destructive operations.
+- `safety/data-hygiene.md` - handling for `tmp/`, handoffs, reports, memory
+  candidates, and transient runtime files.
+- `safety/secrets-and-transcripts.md` - boundaries for secrets, credentials,
+  raw transcripts, and sanitized durable summaries.
+- `safety/reference-repo-boundaries.md` - reference repo influence and
+  non-target boundaries.
+- `safety/operator-approval.md` - actions that require explicit operator
+  approval.
 
 ## Domain Packs
 

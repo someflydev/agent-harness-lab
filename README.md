@@ -148,9 +148,9 @@ classification without replacing prompt-specific judgment.
 ## Current Status
 
 This repository has public identity, assistant bootstrap guidance, assistant
-usage guides, navigation docs, guardrails, doctrine, roles, skills, routines,
-runtime lifecycle notes, memory governance, contracts, templates, runbooks,
-examples, quality guidance, metadata rules, capstone audits, future-facing
-architecture guidance, and lightweight helper scripts. It does not yet have
-provider integrations, graph or vector database dependencies, an autonomous
-runner, or a heavy runtime.
+usage guides, navigation docs, guardrails, safety and permission guidance,
+doctrine, roles, skills, routines, runtime lifecycle notes, memory governance,
+contracts, templates, runbooks, examples, quality guidance, metadata rules,
+capstone audits, future-facing architecture guidance, and lightweight helper
+scripts. It does not yet have provider integrations, graph or vector database
+dependencies, an autonomous runner, or a heavy runtime.
