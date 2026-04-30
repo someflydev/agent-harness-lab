@@ -16,7 +16,9 @@ justifies more.
 ## What It Does
 
 - `help` lists common operator console commands and supports `--json`.
-- `doctor` checks expected repo foundations and ignore rules.
+- `doctor` checks expected repo foundations, ignore rules, and conservative
+  safety hygiene signals such as stale handoffs, transcript dump paths, and
+  secret-looking file names.
 - `promptset` reports prompt filenames, numbers, duplicate numbers, gaps, and
   strict two-digit naming.
 - `promptset lint` checks prompt structure readiness, immediate next-prompt
@@ -50,6 +52,8 @@ justifies more.
 
 - It does not run prompts or call model providers.
 - It does not inspect, ingest, or store raw assistant transcripts.
+- It does not scan file contents for secrets or replace human review before
+  committing.
 - It does not approve memory promotions or make `memory/` a replacement for
   docs, findings, runbooks, templates, scripts, or tests.
 - It does not maintain a daemon or hidden runtime state.

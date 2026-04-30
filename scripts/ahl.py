@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import fnmatch
 import json
+import os
 import re
 import subprocess
 import sys
@@ -20,8 +22,66 @@ NEXT_MARKER_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Next|Next step|## Next)\b", re.
 PROMPT_HEADING_RE = re.compile(r"^\s*#\s+PROMPT_\d{2}\b", re.M)
 CONTEXT_FILES = ("TASK.md", "SESSION.md", "MEMORY.md")
 REFERENCE_DIRS = ("agent-context-base", "pi-mono", "claw-code")
+TRANSCRIPT_DUMP_PATHS = (
+    "transcripts",
+    "conversation-dumps",
+    "chat-transcripts",
+    "assistant-transcripts",
+    "chatgpt-export",
+    "claude-export",
+)
+TRANSCRIPT_DUMP_FILES = (
+    "transcripts.md",
+    "transcript.md",
+    "conversation-dump.md",
+    "conversation-dump.json",
+    "chat-export.md",
+    "chat-export.json",
+)
+SECRET_NAME_PATTERNS = (
+    ".env",
+    ".env.*",
+    "secret",
+    "secrets",
+    "secret.*",
+    "secrets.*",
+    "credential",
+    "credentials",
+    "credential.*",
+    "credentials.*",
+    "*.pem",
+    "*.key",
+    "id_rsa",
+    "id_ed25519",
+)
+REQUIRED_IGNORE_PATTERNS = (
+    "tmp/",
+    ".runtime/",
+    ".session/",
+    "agent-context-base/",
+    "pi-mono/",
+    "claw-code/",
+    "transcripts/",
+    "conversation-dumps/",
+    "chat-transcripts/",
+    "assistant-transcripts/",
+    "chatgpt-export/",
+    "claude-export/",
+    "transcripts.md",
+    "transcript.md",
+    "conversation-dump.md",
+    "conversation-dump.json",
+    "chat-export.md",
+    "chat-export.json",
+    ".env",
+    ".env.*",
+    "*.pem",
+    "*.key",
+    "id_rsa",
+    "id_ed25519",
+)
 REQUIRED_TOP_LEVEL_DIRS = ("docs", "runbooks", "templates", "scripts", "tests", ".prompts")
-REQUIRED_DOC_DIRS = ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "skills")
+REQUIRED_DOC_DIRS = ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "safety", "skills")
 REQUIRED_REGISTRY_FILES = (
     "artifacts.json",
     "prompts.json",
@@ -318,6 +378,149 @@ def read_gitignore(root: Path) -> set[str]:
     return ignored
 
 
+def read_gitignore_patterns(root: Path) -> list[str]:
+    path = root / ".gitignore"
+    if not path.exists():
+        return []
+    patterns: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            patterns.append(stripped)
+    return patterns
+
+
+def is_ignored_by_patterns(relative_path: str, patterns: list[str]) -> bool:
+    ignored = False
+    normalized = relative_path.replace("\\", "/").lstrip("/")
+    basename = normalized.rsplit("/", 1)[-1]
+    for raw_pattern in patterns:
+        negated = raw_pattern.startswith("!")
+        pattern = raw_pattern[1:] if negated else raw_pattern
+        pattern = pattern.strip().lstrip("/")
+        if not pattern:
+            continue
+        directory_pattern = pattern.endswith("/")
+        comparable = pattern.rstrip("/")
+        matched = False
+        if directory_pattern:
+            matched = normalized == comparable or normalized.startswith(f"{comparable}/")
+        elif "/" in comparable:
+            matched = fnmatch.fnmatch(normalized, comparable)
+        else:
+            matched = fnmatch.fnmatch(basename, comparable) or fnmatch.fnmatch(normalized, comparable)
+        if matched:
+            ignored = not negated
+    return ignored
+
+
+def required_ignore_present(pattern: str, patterns: list[str]) -> bool:
+    normalized_required = pattern.rstrip("/")
+    return any(item.rstrip("/") == normalized_required for item in patterns if not item.startswith("!"))
+
+
+def git_status_paths(root: Path) -> list[dict[str, str]]:
+    result, problem = run_git(root, ["status", "--short", "--untracked-files=all"])
+    if problem or result is None or result.returncode != 0:
+        return []
+    entries: list[dict[str, str]] = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        status = line[:2]
+        path = line[3:] if len(line) > 3 else line.strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1].strip()
+        entries.append({"status": status, "path": path})
+    return entries
+
+
+def path_has_secret_name(relative_path: str) -> bool:
+    parts = [part for part in relative_path.replace("\\", "/").split("/") if part]
+    safe_examples = {".env.example", "env.example", "example.env"}
+    return any(
+        fnmatch.fnmatch(part.lower(), pattern)
+        for part in parts
+        if part.lower() not in safe_examples
+        for pattern in SECRET_NAME_PATTERNS
+    )
+
+
+def unignored_files(root: Path, patterns: list[str]) -> list[Path]:
+    files: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        directory = Path(dirpath)
+        relative_dir = directory.relative_to(root).as_posix() if directory != root else ""
+        kept_dirs: list[str] = []
+        for dirname in dirnames:
+            relative = f"{relative_dir}/{dirname}".lstrip("/")
+            if dirname == ".git" or is_ignored_by_patterns(f"{relative}/", patterns):
+                continue
+            kept_dirs.append(dirname)
+        dirnames[:] = kept_dirs
+        for filename in filenames:
+            relative = f"{relative_dir}/{filename}".lstrip("/")
+            if not is_ignored_by_patterns(relative, patterns):
+                files.append(directory / filename)
+    return files
+
+
+def safety_hygiene_checks(root: Path, ignored: set[str], patterns: list[str]) -> tuple[list[dict[str, Any]], list[str]]:
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+
+    handoff = root / "tmp" / "HANDOFF.md"
+    handoff_ok = not handoff.exists()
+    checks.append(
+        {
+            "name": "tmp/HANDOFF.md absent unless actively needed",
+            "path": "tmp/HANDOFF.md",
+            "required": False,
+            "present": handoff.exists(),
+            "ok": handoff_ok,
+        }
+    )
+    if not handoff_ok:
+        problems.append("tmp/HANDOFF.md is present; confirm it is current or remove it after use")
+
+    for required in REQUIRED_IGNORE_PATTERNS:
+        ok = required_ignore_present(required, patterns) or required.rstrip("/") in ignored
+        checks.append({"name": f"{required} ignored", "path": ".gitignore", "required": True, "ok": ok})
+        if not ok:
+            problems.append(f"missing .gitignore entry for {required}")
+
+    for path_text in TRANSCRIPT_DUMP_PATHS:
+        path = root / path_text
+        present = path.exists()
+        ok = not present
+        checks.append({"name": f"{path_text} transcript dump absent", "path": path_text, "required": False, "present": present, "ok": ok})
+        if present:
+            problems.append(f"{path_text}/ exists; do not store raw transcript dumps in the repo")
+
+    for path_text in TRANSCRIPT_DUMP_FILES:
+        path = root / path_text
+        present = path.exists()
+        ok = not present
+        checks.append({"name": f"{path_text} transcript dump file absent", "path": path_text, "required": False, "present": present, "ok": ok})
+        if present:
+            problems.append(f"{path_text} exists; do not store raw transcript dumps in the repo")
+
+    status_entries = git_status_paths(root)
+    for entry in status_entries:
+        path = entry["path"]
+        if path_has_secret_name(path) and entry["status"][0] != " ":
+            problems.append(f"secret-looking path is staged, modified, or untracked: {path}")
+            checks.append({"name": "secret-looking staged path", "path": path, "required": False, "ok": False})
+
+    for path in unignored_files(root, patterns):
+        relative = path.relative_to(root).as_posix()
+        if path_has_secret_name(relative):
+            checks.append({"name": "secret-looking file ignored", "path": relative, "required": False, "ok": False})
+            problems.append(f"secret-looking file is not ignored by .gitignore: {relative}")
+
+    return checks, problems
+
+
 def line_count(path: Path) -> int:
     try:
         return len(path.read_text(encoding="utf-8").splitlines())
@@ -526,6 +729,7 @@ def emit(data: dict[str, Any], as_json: bool, human_lines: list[str], code: int 
 def command_doctor(args: argparse.Namespace) -> int:
     root = repo_root()
     ignored = read_gitignore(root)
+    patterns = read_gitignore_patterns(root)
     checks: list[dict[str, Any]] = []
     problems: list[str] = []
 
@@ -568,6 +772,10 @@ def command_doctor(args: argparse.Namespace) -> int:
         )
         if present and not ignored_ok:
             problems.append(f"{dirname}/ exists but is not ignored by .gitignore")
+
+    safety_checks, safety_problems = safety_hygiene_checks(root, ignored, patterns)
+    checks.extend(safety_checks)
+    problems.extend(safety_problems)
 
     ok = not problems
     data = {"ok": ok, "checks": checks, "problems": problems}

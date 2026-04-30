@@ -27,7 +27,8 @@ Each command supports `--json` where machine-readable output is practical.
 
 - `doctor` checks expected foundations such as `README.md`, `AGENT.md`,
   `.prompts/`, `docs/`, `runbooks/`, `templates/`, and relevant `.gitignore`
-  entries.
+  entries. It also performs conservative safety hygiene checks for stale
+  handoffs, transcript dump paths, and secret-looking file names.
 - `promptset` reports prompt filenames and numbering health without parsing
   prompt prose.
 - `validate` combines prompt numbering with expected quality foundations,

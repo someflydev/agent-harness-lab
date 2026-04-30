@@ -66,6 +66,10 @@ standard Endcap routine below is enough.
 `new-handoff`. Treat it as helper tooling for the human-assisted workflow, not
 as an autonomous runner or provider integration.
 
+The `doctor` command includes conservative safety hygiene checks for stale
+handoffs, missing ignore rules, transcript dump paths, and secret-looking file
+names. It does not scan file contents and is not a security scanner.
+
 The repo also has a small Makefile console for common helper actions. Use
 `make help` for the stable target list, and use direct `python3 scripts/ahl.py`
 calls when you need JSON output, extra arguments, or scaffold commands outside

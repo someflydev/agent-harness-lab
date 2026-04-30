@@ -40,10 +40,42 @@ class AhlTest(unittest.TestCase):
     def add_foundations(self):
         self.write("README.md", "# Test\n")
         self.write("AGENT.md", "# Agent\n")
-        self.write(".gitignore", "tmp/\nagent-context-base/\npi-mono/\nclaw-code/\n")
+        self.write(
+            ".gitignore",
+            "\n".join(
+                [
+                    "tmp/",
+                    ".runtime/",
+                    ".session/",
+                    "agent-context-base/",
+                    "pi-mono/",
+                    "claw-code/",
+                    "transcripts/",
+                    "conversation-dumps/",
+                    "chat-transcripts/",
+                    "assistant-transcripts/",
+                    "chatgpt-export/",
+                    "claude-export/",
+                    "transcripts.md",
+                    "transcript.md",
+                    "conversation-dump.md",
+                    "conversation-dump.json",
+                    "chat-export.md",
+                    "chat-export.json",
+                    ".env",
+                    ".env.*",
+                    "!.env.example",
+                    "*.pem",
+                    "*.key",
+                    "id_rsa",
+                    "id_ed25519",
+                ]
+            )
+            + "\n",
+        )
         (self.root / ".prompts").mkdir()
         (self.root / "docs").mkdir()
-        for dirname in ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "skills"):
+        for dirname in ("contracts", "doctrine", "memory", "quality", "roles", "routines", "runtime", "safety", "skills"):
             (self.root / "docs" / dirname).mkdir()
         (self.root / "runbooks").mkdir()
         (self.root / "templates").mkdir()
@@ -1037,6 +1069,55 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["ok"])
         self.assertIn("checks", data)
         self.assertTrue(any("README.md" in problem for problem in data["problems"]))
+
+    def test_doctor_accepts_safety_hygiene_fixture(self):
+        self.add_foundations()
+
+        code, output = self.run_cli("doctor", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertTrue(any(check["name"] == "tmp/HANDOFF.md absent unless actively needed" for check in data["checks"]))
+
+    def test_doctor_detects_stale_handoff_and_transcript_dump(self):
+        self.add_foundations()
+        self.write("tmp/HANDOFF.md", "# Handoff\n")
+        self.write("transcripts/session.md", "# Raw chat\n")
+        self.write("chat-export.json", "{}\n")
+
+        code, output = self.run_cli("doctor", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("tmp/HANDOFF.md is present" in problem for problem in data["problems"]))
+        self.assertTrue(any("transcripts/" in problem for problem in data["problems"]))
+        self.assertTrue(any("chat-export.json" in problem for problem in data["problems"]))
+
+    def test_doctor_detects_missing_safety_ignore_entries(self):
+        self.add_foundations()
+        self.write(".gitignore", "tmp/\nagent-context-base/\npi-mono/\nclaw-code/\n")
+
+        code, output = self.run_cli("doctor", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing .gitignore entry for .env" in problem for problem in data["problems"]))
+        self.assertTrue(any("missing .gitignore entry for transcripts/" in problem for problem in data["problems"]))
+
+    def test_doctor_detects_unignored_secret_looking_file_by_name_only(self):
+        self.add_foundations()
+        self.write(".gitignore", "tmp/\n.runtime/\n.session/\nagent-context-base/\npi-mono/\nclaw-code/\ntranscripts/\nconversation-dumps/\nchat-transcripts/\nassistant-transcripts/\nchatgpt-export/\nclaude-export/\n")
+        self.write(".env", "not inspected\n")
+
+        code, output = self.run_cli("doctor", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("secret-looking file is not ignored" in problem for problem in data["problems"]))
 
     def test_scaffold_run_creates_artifact_without_overwriting(self):
         self.write("templates/runs/run-manifest.md", "# Run Manifest\n- Prompt id:\n- Run id:\n")
