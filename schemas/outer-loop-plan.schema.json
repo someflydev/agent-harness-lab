@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Outer Loop Batch Plan",
+  "type": "object",
+  "required": [
+    "plan_id",
+    "created_at",
+    "requested_range",
+    "prompts",
+    "driver",
+    "permission_posture",
+    "required_ahl_checks",
+    "stop_conditions",
+    "commit_policy",
+    "transcript_capture_policy",
+    "run_artifact_dir"
+  ],
+  "properties": {
+    "plan_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "requested_range": { "type": "object" },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["prompt_id", "path", "validation_commands"],
+        "properties": {
+          "prompt_id": { "type": "string", "pattern": "^PROMPT_[0-9]{2}$" },
+          "path": { "type": "string" },
+          "validation_commands": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "driver": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "display_name": { "type": ["string", "null"] },
+        "driver_kind": { "type": ["string", "null"] }
+      }
+    },
+    "model": { "type": ["string", "null"] },
+    "reasoning": { "type": ["string", "null"] },
+    "permission_posture": { "type": "string" },
+    "required_ahl_checks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "stop_conditions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "commit_policy": {
+      "type": "string",
+      "enum": ["none", "plan-only", "explicit"]
+    },
+    "transcript_capture_policy": { "type": "object" },
+    "run_artifact_dir": { "type": "string" }
+  }
+}

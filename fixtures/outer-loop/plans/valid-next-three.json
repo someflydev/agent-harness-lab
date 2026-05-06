@@ -1,0 +1,58 @@
+{
+  "commit_policy": "none",
+  "created_at": "2026-05-06T00:00:00Z",
+  "driver": {
+    "display_name": "Manual Session",
+    "driver_kind": "manual",
+    "id": "manual"
+  },
+  "model": null,
+  "permission_posture": "workspace-write",
+  "plan_id": "fixture-valid-next-three",
+  "prompts": [
+    {
+      "path": ".prompts/PROMPT_33.txt",
+      "prompt_id": "PROMPT_33",
+      "validation_commands": [
+        "python3 -m unittest tests/test_ahl.py"
+      ]
+    },
+    {
+      "path": ".prompts/PROMPT_34.txt",
+      "prompt_id": "PROMPT_34",
+      "validation_commands": [
+        "python3 -m unittest tests/test_ahl.py"
+      ]
+    },
+    {
+      "path": ".prompts/PROMPT_35.txt",
+      "prompt_id": "PROMPT_35",
+      "validation_commands": [
+        "python3 -m unittest tests/test_ahl.py"
+      ]
+    }
+  ],
+  "reasoning": null,
+  "requested_range": {
+    "count": 3,
+    "from": "PROMPT_33",
+    "mode": "explicit"
+  },
+  "required_ahl_checks": [
+    "python3 scripts/ahl.py promptset lint",
+    "python3 scripts/ahl.py doctor"
+  ],
+  "run_artifact_dir": "runs/outer-loop/fixture-valid-next-three",
+  "schema": "schemas/outer-loop-plan.schema.json",
+  "stop_conditions": [
+    "missing_prompt_file",
+    "missing_driver_record",
+    "missing_validation_commands",
+    "missing_stop_conditions"
+  ],
+  "transcript_capture_policy": {
+    "capture": false,
+    "mode": "off-by-default",
+    "notes": "Do not store raw transcripts unless a later explicit policy authorizes it."
+  }
+}

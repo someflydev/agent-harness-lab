@@ -7,7 +7,10 @@ safety boundary layer.
 
 1. Driver contracts and capability probes. Implemented as conservative registry
    records, docs, fixtures, and read-only `scripts/ahl.py driver` checks.
-2. Batch planning and dry-runs.
+2. Batch planning and dry-runs. Implemented as deterministic plan artifacts,
+   JSON schemas, fixtures, docs, and `scripts/ahl.py outer plan` /
+   `scripts/ahl.py outer dry-run` checks. This layer still performs no live
+   assistant invocation.
 3. Validation, audit, and readiness gate integration.
 4. Live sequential runner.
 5. Commit planning and explicit commit execution.

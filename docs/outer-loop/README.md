@@ -1,9 +1,9 @@
 # Outer Loop
 
 The outer loop is a phase-two design area for a local sequential wrapper around
-the existing fresh-session prompt workflow. It is requirements and boundary
-documentation only until later prompts implement and validate concrete runner
-code.
+the existing fresh-session prompt workflow. It now includes deterministic
+planning and dry-run checks, while live assistant invocation remains future
+work.
 
 The goal is bounded orchestration of already-authenticated assistant tools, one
 prompt at a time. The runner should make decisions visible through files,
@@ -24,6 +24,10 @@ operator approval points.
   live-run boundary.
 - `capability-probes.md` - safe PATH and help-only probe behavior before live
   assistant invocation exists.
+- `batch-planning.md` - inspectable prompt batch plan artifacts and range
+  resolution rules.
+- `dry-run-runner.md` - structural dry-run checks for batch plans before any
+  future live execution.
 - `non-goals.md` - explicit exclusions for the outer-loop design.
 - `roadmap.md` - phase-two implementation sequence after this requirements
   layer.
@@ -31,6 +35,6 @@ operator approval points.
 ## Current Status
 
 The current layer includes requirements, safety boundaries, conservative driver
-contracts, and safe capability probes. It does not add live assistant
-invocation, provider credentials, a daemon, a TUI, an MCP server, a scheduler,
-or dependency-backed runtime code.
+contracts, safe capability probes, plan artifacts, and dry-run plan validation.
+It does not add live assistant invocation, provider credentials, a daemon, a
+TUI, an MCP server, a scheduler, or dependency-backed runtime code.

@@ -244,6 +244,10 @@ richer orchestration remains future work.
   conservative initial drivers, and live-run boundary.
 - `outer-loop/capability-probes.md` - safe executable and help-only probe
   behavior for driver planning.
+- `outer-loop/batch-planning.md` - deterministic prompt batch plan artifacts,
+  explicit range handling, driver settings, and commit policy boundaries.
+- `outer-loop/dry-run-runner.md` - plan dry-run validation, limits, and review
+  guidance before any future live execution path.
 - `outer-loop/non-goals.md` - explicit exclusions from the outer-loop design.
 - `outer-loop/roadmap.md` - rest of phase-two sequence toward an outer-loop
   capstone.

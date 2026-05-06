@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Outer Loop Dry-Run Report",
+  "type": "object",
+  "required": ["ok", "plan_id", "steps", "problems"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "plan_id": { "type": ["string", "null"] },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["prompt_id", "path", "status", "validation_commands", "problems"],
+        "properties": {
+          "prompt_id": { "type": ["string", "null"] },
+          "path": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["pass", "fail"] },
+          "validation_commands": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "problems": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "problems": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
