@@ -4,7 +4,9 @@
 `agent-harness-lab` work. It checks repository foundations, inspects prompt
 filenames, scaffolds run and handoff artifacts from templates, validates
 deterministic dry-run scenario manifests, and reports a compact session context
-briefing. It also scaffolds and checks reviewed memory promotion artifacts.
+briefing. It also scaffolds and checks reviewed memory promotion artifacts and
+can run a dry-run-default sequential outer-loop plan through an explicitly
+selected assistant driver.
 The repo Makefile provides a small operator console for the most common
 commands; this script remains the underlying command source.
 
@@ -37,6 +39,10 @@ justifies more.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
   validation commands, AHL checks, and stop conditions without invoking
   assistants.
+- `outer run` builds bounded prompt payloads from a plan, writes a run ledger,
+  defaults to dry-run, and invokes supported assistant CLIs only when
+  `--execute` is passed. The `manual` driver records the expected operator
+  action without invoking a model.
 - `outer gate` collects post-prompt gate evidence from git status, prompt and
   next-prompt files, recorded validation commands, allowlisted AHL checks,
   completion-audit artifact presence, handoff state, and commit-plan policy.
@@ -63,7 +69,8 @@ justifies more.
 
 ## What It Does Not Do
 
-- It does not run prompts or call model providers.
+- It does not run prompts or call model providers unless `outer run --execute`
+  is explicitly selected for a supported local driver.
 - It does not inspect, ingest, or store raw assistant transcripts.
 - It does not scan file contents for secrets or replace human review before
   committing.
@@ -100,6 +107,8 @@ python3 scripts/ahl.py driver probe codex --help-only --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
 python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json --json
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dry-run --json
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --execute --max-prompts 1 --json
 python3 scripts/ahl.py outer gate PROMPT_36 --json
 python3 scripts/ahl.py outer gate PROMPT_36 --plan runs/outer-loop/<plan-id>/plan.json --json
 python3 scripts/ahl.py dry-run list
@@ -177,6 +186,10 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `validation_commands`, `validation_outcomes`, `ahl_checks`,
   `completion_audit`, `next_prompt_readiness`, `handoff`, `commit_plan`,
   `decision`, `warnings`, and `problems`
+- `outer run`: `ok`, `status`, `run_id`, `plan_id`, `mode`, `execute`,
+  `dry_run`, `driver`, `steps`, `problems`, and `artifact` when a ledger is
+  written; each step includes stable `prompt_id`, `status`,
+  `payload_artifact`, `driver`, and `gate`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
 - `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
   `problems`; each result includes stable `id`, `status`, and `problems`

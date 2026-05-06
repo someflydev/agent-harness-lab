@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import fnmatch
+import hashlib
 import json
 import os
 import re
@@ -194,6 +195,10 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": "schemas/outer-loop-gate-report.schema.json",
         "required": ("ok", "status", "prompt_id", "changed_files", "validation_commands", "validation_outcomes", "ahl_checks", "completion_audit", "next_prompt_readiness", "handoff", "commit_plan", "decision"),
     },
+    "fixtures/outer-loop/runs/live-runner-example.json": {
+        "schema": "schemas/outer-loop-run-ledger.schema.json",
+        "required": ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems"),
+    },
     "fixtures/assistant-drivers/codex.json": {
         "schema": "schemas/assistant-driver.schema.json",
         "required": ("id", "display_name", "driver_kind", "executable_name", "probe_expectation", "live_run_status"),
@@ -324,6 +329,7 @@ ASSISTANT_DRIVER_PROMPT_INPUT_METHODS = ("argument", "stdin", "prompt_file", "to
 OUTER_PLAN_SCHEMA = "schemas/outer-loop-plan.schema.json"
 OUTER_DRY_RUN_REPORT_SCHEMA = "schemas/outer-loop-dry-run-report.schema.json"
 OUTER_GATE_REPORT_SCHEMA = "schemas/outer-loop-gate-report.schema.json"
+OUTER_RUN_LEDGER_SCHEMA = "schemas/outer-loop-run-ledger.schema.json"
 OUTER_DEFAULT_PERMISSION_POSTURE = "workspace-write"
 OUTER_DEFAULT_COMMIT_POLICY = "none"
 OUTER_DEFAULT_TRANSCRIPT_POLICY = {
@@ -338,13 +344,16 @@ OUTER_REQUIRED_AHL_CHECKS = (
 OUTER_STOP_CONDITIONS = (
     "missing_prompt_file",
     "missing_driver_record",
+    "driver-failed",
     "missing_validation_commands",
     "missing_stop_conditions",
     "failed_prompt_validation",
     "failed_ahl_check",
     "unsafe_git_state",
+    "unexpected_plan_mutation",
     "operator_approval_required",
 )
+OUTER_RUN_STOP_GATE_STATUSES = ("blocked", "failed-validation", "driver-failed", "unsafe-git-state")
 OUTER_GATE_STATUSES = (
     "pass",
     "pass-with-warnings",
@@ -460,6 +469,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "command": "python3 scripts/ahl.py outer gate PROMPT_36 --json",
         "summary": "Collect post-prompt validation, audit, and readiness gate evidence.",
         "safety": "read-only; records prompt validation commands without executing arbitrary shell",
+    },
+    {
+        "name": "outer-run",
+        "command": "python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dry-run",
+        "summary": "Build prompt payloads and, with explicit consent, run sequential assistant CLI steps.",
+        "safety": "dry-run by default; live assistant invocation requires --execute",
     },
     {
         "name": "memory-check",
@@ -1661,6 +1676,29 @@ def load_outer_plan(root: Path, plan_value: str) -> tuple[dict[str, Any] | None,
     return data, None
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def repo_relative_path(root: Path, path: Path) -> str:
+    return str(path.resolve().relative_to(root.resolve()))
+
+
+def outer_plan_path(root: Path, plan_value: str) -> tuple[Path | None, str | None]:
+    path = (root / plan_value).resolve()
+    try:
+        path.relative_to(root.resolve())
+    except ValueError:
+        return None, f"plan path escapes repository root: {plan_value}"
+    if not path.is_file():
+        return None, f"missing plan artifact: {plan_value}"
+    return path, None
+
+
 def outer_dry_run_report(root: Path, plan_value: str) -> dict[str, Any]:
     plan, problem = load_outer_plan(root, plan_value)
     if problem:
@@ -1715,6 +1753,314 @@ def outer_dry_run_report(root: Path, plan_value: str) -> dict[str, Any]:
         problems.extend(f"{prompt_id or 'unknown'}: {step_problem}" for step_problem in item_problems)
 
     return {"ok": not problems, "plan_id": plan.get("plan_id"), "steps": steps, "problems": problems}
+
+
+def validate_outer_run_plan(root: Path, plan: dict[str, Any]) -> list[str]:
+    problems: list[str] = []
+    driver_map, driver_problems = load_assistant_driver_map(root)
+    problems.extend(driver_problems)
+    driver_id = plan.get("driver", {}).get("id") if isinstance(plan.get("driver"), dict) else None
+    if not isinstance(driver_id, str) or driver_id not in driver_map:
+        problems.append(f"missing driver record: {driver_id}")
+
+    if plan.get("parallel") is True or plan.get("execution_mode") == "parallel":
+        problems.append("parallel execution is not supported by outer run")
+
+    prompt_items = plan.get("prompts")
+    if not isinstance(prompt_items, list) or not prompt_items:
+        problems.append("plan has no prompts")
+        return problems
+
+    previous_number: int | None = None
+    for index, item in enumerate(prompt_items):
+        if not isinstance(item, dict):
+            problems.append(f"plan prompt {index + 1}: must be an object")
+            continue
+        prompt_id = item.get("prompt_id")
+        path_value = item.get("path")
+        if not isinstance(prompt_id, str) or not PROMPT_ID_RE.fullmatch(prompt_id):
+            problems.append(f"plan prompt {index + 1}: invalid prompt id: {prompt_id}")
+        else:
+            number = prompt_id_to_number(prompt_id)
+            if previous_number is not None and number != previous_number + 1:
+                problems.append("plan prompts must be strictly sequential")
+            previous_number = number
+        if not isinstance(path_value, str) or not path_value:
+            problems.append(f"{prompt_id or 'unknown'}: missing prompt path")
+        else:
+            ok, path_problem = relative_path_exists(root, path_value)
+            if not ok and path_problem:
+                problems.append(f"{prompt_id or 'unknown'}: {path_problem}")
+        validation_commands = item.get("validation_commands")
+        if not isinstance(validation_commands, list) or not validation_commands:
+            problems.append(f"{prompt_id or 'unknown'}: missing validation commands")
+
+    return problems
+
+
+def build_outer_prompt_payload(plan: dict[str, Any], prompt_item: dict[str, Any]) -> str:
+    prompt_id = prompt_item.get("prompt_id", "UNKNOWN")
+    prompt_path = prompt_item.get("path", "")
+    validation_commands = prompt_item.get("validation_commands")
+    if not isinstance(validation_commands, list):
+        validation_commands = []
+    validation_block = "\n".join(f"- `{command}`" for command in validation_commands) or "- Use the prompt's own validation section."
+    return (
+        "# Fresh Prompt Execution Payload\n\n"
+        f"Run exactly one prompt file: `{prompt_id}` at `{prompt_path}`.\n\n"
+        "## First Read\n\n"
+        "Read these local files before editing:\n\n"
+        "- `AGENT.md`\n"
+        "- `README.md`\n"
+        "- `docs/guardrails.md`\n"
+        f"- `{prompt_path}`\n"
+        "- Any docs explicitly named by the active prompt\n\n"
+        "Do not paste the whole repository into context. Read only the files needed for this prompt and any hot spots before editing them.\n\n"
+        "## Execution Rules\n\n"
+        "- Execute only the named prompt file.\n"
+        "- Preserve unrelated modified or untracked files.\n"
+        "- Do not commit, stage, push, tag, publish, or delete history unless the outer runner or authorized operator explicitly asks.\n"
+        "- Do not store raw transcripts, conversation dumps, credentials, or provider secrets.\n"
+        "- Keep changes scoped to the prompt's required deliverables and constraints.\n\n"
+        "## Validation\n\n"
+        "Run required or cheap relevant validation before claiming completion. Expected commands from the plan:\n\n"
+        f"{validation_block}\n\n"
+        "## Endcap\n\n"
+        "- Audit every required deliverable against the prompt.\n"
+        "- Inspect the immediate next prompt for readiness.\n"
+        "- Create `tmp/HANDOFF.md` only if a real blocker or non-trivial warning remains.\n"
+        "- Summarize changed files, validation evidence, residual risks, and next-prompt readiness.\n"
+    )
+
+
+def driver_supports_setting(driver: dict[str, Any], field: str) -> bool:
+    value = driver.get(field)
+    if isinstance(value, dict):
+        status = str(value.get("status", "")).lower()
+        return status in {"supported", "manual", "verified"}
+    text = str(value or "").lower()
+    if "unknown" in text or "requires verification" in text:
+        return False
+    return any(word in text for word in ("supported", "manual", "verified"))
+
+
+def assistant_driver_command(driver: dict[str, Any], plan: dict[str, Any], extra_args: list[str]) -> tuple[list[str] | None, list[str]]:
+    warnings: list[str] = []
+    driver_id = driver.get("id")
+    if driver_id == "manual" or driver.get("driver_kind") == "manual":
+        return None, warnings
+    if driver_id not in {"codex", "gemini"}:
+        return None, [f"live invocation is not implemented for driver: {driver_id}"]
+    executable = driver.get("executable_name")
+    if not isinstance(executable, str) or not executable:
+        return None, [f"{driver_id}: missing executable_name"]
+    command = [executable]
+    if plan.get("model"):
+        if driver_supports_setting(driver, "model_selection_support"):
+            command.extend(["--model", str(plan["model"])])
+        else:
+            warnings.append("model value recorded in plan but not passed because the driver contract does not verify model selection")
+    if plan.get("reasoning"):
+        if driver_supports_setting(driver, "reasoning_selection_support"):
+            command.extend(["--reasoning", str(plan["reasoning"])])
+        else:
+            warnings.append("reasoning value recorded in plan but not passed because the driver contract does not verify reasoning selection")
+    command.extend(extra_args)
+    return command, warnings
+
+
+def run_assistant_driver(command: list[str], payload: str, root: Path, timeout_seconds: int) -> dict[str, Any]:
+    try:
+        result = subprocess.run(
+            command,
+            cwd=root,
+            input=payload,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "status": "driver-failed", "returncode": None, "failure_reason": "timeout"}
+    except OSError as exc:
+        return {"ok": False, "status": "driver-failed", "returncode": None, "failure_reason": str(exc)}
+    if result.returncode != 0:
+        return {"ok": False, "status": "driver-failed", "returncode": result.returncode, "failure_reason": result.stderr.strip() or "driver exited non-zero"}
+    return {"ok": True, "status": "completed", "returncode": result.returncode, "failure_reason": None}
+
+
+def write_outer_step_summary(root: Path, run_dir: Path, step: dict[str, Any]) -> str:
+    summary_dir = run_dir / "step-summaries"
+    summary_dir.mkdir(parents=True, exist_ok=True)
+    path = summary_dir / f"{step['prompt_id']}.md"
+    lines = [
+        "# Outer Run Step Summary",
+        "",
+        f"- Prompt id: {step['prompt_id']}",
+        f"- Status: {step['status']}",
+        f"- Mode: {step['mode']}",
+        f"- Driver status: {step['driver']['status']}",
+        f"- Gate status: {step.get('gate', {}).get('status', 'not-run')}",
+        f"- Payload: {step['payload_artifact']}",
+        "",
+        "## Notes",
+        "",
+        step.get("notes") or "No final assistant summary was captured.",
+        "",
+    ]
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return repo_relative_path(root, path)
+
+
+def outer_run_ledger(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    plan_path, plan_path_problem = outer_plan_path(root, args.plan)
+    if plan_path_problem:
+        return {"ok": False, "status": "blocked", "run_id": None, "plan_id": None, "mode": "live" if args.execute else "dry-run", "driver": None, "steps": [], "problems": [plan_path_problem]}
+    assert plan_path is not None
+    plan, plan_problem = load_outer_plan(root, args.plan)
+    if plan_problem:
+        return {"ok": False, "status": "blocked", "run_id": None, "plan_id": None, "mode": "live" if args.execute else "dry-run", "driver": None, "steps": [], "problems": [plan_problem]}
+    assert plan is not None
+
+    problems = validate_outer_run_plan(root, plan)
+    if args.max_prompts is not None and args.max_prompts < 1:
+        problems.append("--max-prompts must be greater than zero")
+    if args.timeout_seconds < 1:
+        problems.append("--timeout-seconds must be greater than zero")
+    driver_map, driver_problems = load_assistant_driver_map(root)
+    problems.extend(driver_problems)
+    driver_id = plan.get("driver", {}).get("id") if isinstance(plan.get("driver"), dict) else None
+    driver = driver_map.get(driver_id) if isinstance(driver_id, str) else None
+    mode = "live" if args.execute else "dry-run"
+    run_id = args.run_id or f"{plan.get('plan_id', 'outer-run')}-run-{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}".lower()
+    plan_hash = file_sha256(plan_path)
+    run_dir_value = plan.get("run_artifact_dir") if isinstance(plan.get("run_artifact_dir"), str) else f"runs/outer-loop/{run_id}"
+    run_dir = root / run_dir_value
+    ledger_path = run_dir / "run-ledger.json"
+
+    ledger: dict[str, Any] = {
+        "ok": False,
+        "schema": OUTER_RUN_LEDGER_SCHEMA,
+        "status": "blocked" if problems else "running",
+        "run_id": run_id,
+        "plan_id": plan.get("plan_id"),
+        "mode": mode,
+        "execute": bool(args.execute),
+        "dry_run": not args.execute,
+        "started_at": utc_timestamp(),
+        "ended_at": None,
+        "plan_artifact": repo_relative_path(root, plan_path),
+        "plan_sha256": plan_hash,
+        "driver": {
+            "id": driver_id,
+            "driver_kind": driver.get("driver_kind") if driver else None,
+            "display_name": driver.get("display_name") if driver else None,
+        },
+        "max_prompts": args.max_prompts,
+        "timeout_seconds": args.timeout_seconds,
+        "transcript_capture_policy": plan.get("transcript_capture_policy", dict(OUTER_DEFAULT_TRANSCRIPT_POLICY)),
+        "steps": [],
+        "problems": list(problems),
+    }
+    if problems:
+        ledger["ended_at"] = utc_timestamp()
+        return ledger
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+    prompt_items = plan.get("prompts", [])
+    if args.max_prompts is not None:
+        prompt_items = prompt_items[: args.max_prompts]
+
+    payload_dir = run_dir / "payloads"
+    payload_dir.mkdir(parents=True, exist_ok=True)
+    for index, item in enumerate(prompt_items, start=1):
+        assert isinstance(item, dict)
+        prompt_id = str(item["prompt_id"])
+        payload = build_outer_prompt_payload(plan, item)
+        payload_path = payload_dir / f"{prompt_id}.md"
+        payload_path.write_text(payload, encoding="utf-8")
+        step: dict[str, Any] = {
+            "index": index,
+            "prompt_id": prompt_id,
+            "prompt_file": item.get("path"),
+            "mode": mode,
+            "status": "dry-run" if not args.execute else "running",
+            "payload_artifact": repo_relative_path(root, payload_path),
+            "validation_commands": item.get("validation_commands", []),
+            "driver": {"status": "not-invoked" if not args.execute else "pending", "command": None, "returncode": None, "failure_reason": None},
+            "gate": {"status": "not-run"},
+            "notes": None,
+            "problems": [],
+        }
+
+        if args.execute:
+            assert driver is not None
+            command, command_warnings = assistant_driver_command(driver, plan, args.driver_arg or [])
+            step["driver"]["warnings"] = command_warnings
+            if command_warnings and command is None:
+                step["driver"].update({"status": "driver-failed", "failure_reason": "; ".join(command_warnings)})
+                step["status"] = "driver-failed"
+                step["problems"].extend(command_warnings)
+            elif command is None:
+                step["driver"]["status"] = "manual-action-required"
+                step["status"] = "manual-action-required"
+                step["notes"] = "Manual driver selected; operator must start a fresh assistant session and use the payload artifact."
+            else:
+                step["driver"]["command"] = command
+                driver_result = run_assistant_driver(command, payload, root, args.timeout_seconds)
+                step["driver"].update(driver_result)
+                step["status"] = "driver-completed" if driver_result["ok"] else "driver-failed"
+                if not driver_result["ok"]:
+                    step["problems"].append(str(driver_result["failure_reason"]))
+        else:
+            step["notes"] = "Dry-run only; no assistant CLI was invoked."
+
+        if file_sha256(plan_path) != plan_hash:
+            step["status"] = "unexpected-plan-mutation"
+            step["problems"].append("plan artifact changed during run")
+            ledger["steps"].append(step)
+            ledger["problems"].append("unexpected plan mutation")
+            ledger["status"] = "unexpected-plan-mutation"
+            break
+
+        if step["status"] == "driver-failed":
+            ledger["steps"].append(step)
+            ledger["problems"].extend(step["problems"])
+            ledger["status"] = "driver-failed"
+            break
+
+        gate_args = argparse.Namespace(prompt=prompt_id, plan=args.plan, audit_artifact=None)
+        gate = outer_gate_report(root, gate_args)
+        step["gate"] = {"status": gate["status"], "decision": gate["decision"], "ok": gate["ok"], "problems": gate["problems"], "warnings": gate["warnings"]}
+        if file_sha256(plan_path) != plan_hash:
+            step["status"] = "unexpected-plan-mutation"
+            step["problems"].append("plan artifact changed during gate evaluation")
+            ledger["steps"].append(step)
+            ledger["problems"].append("unexpected plan mutation")
+            ledger["status"] = "unexpected-plan-mutation"
+            break
+        if gate["status"] in OUTER_RUN_STOP_GATE_STATUSES:
+            step["status"] = gate["status"]
+            step["problems"].extend(gate["problems"])
+            ledger["problems"].extend(f"{prompt_id}: {problem}" for problem in gate["problems"])
+            ledger["status"] = gate["status"]
+            step["summary_artifact"] = write_outer_step_summary(root, run_dir, step)
+            ledger["steps"].append(step)
+            break
+
+        if step["status"] in {"running", "dry-run", "driver-completed"}:
+            step["status"] = "completed" if args.execute else "dry-run"
+        step["summary_artifact"] = write_outer_step_summary(root, run_dir, step)
+        ledger["steps"].append(step)
+
+    if ledger["status"] == "running":
+        ledger["status"] = "completed"
+    ledger["ended_at"] = utc_timestamp()
+    ledger["ok"] = ledger["status"] in {"completed"}
+    ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    ledger["artifact"] = repo_relative_path(root, ledger_path)
+    return ledger
 
 
 def git_status_report(root: Path) -> dict[str, Any]:
@@ -1974,6 +2320,19 @@ def outer_gate_report(root: Path, args: argparse.Namespace) -> dict[str, Any]:
 def command_outer(args: argparse.Namespace) -> int:
     if args.action == "plan":
         return command_outer_plan(args)
+    if args.action == "run":
+        root = repo_root()
+        data = outer_run_ledger(root, args)
+        human = [
+            f"outer run: {data['status']}",
+            f"- plan: {data['plan_id'] or 'unknown'}",
+            f"- mode: {data['mode']}",
+            f"- steps: {len(data['steps'])}",
+        ]
+        if data.get("artifact"):
+            human.append(f"- ledger: {data['artifact']}")
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
     if args.action == "gate":
         root = repo_root()
         data = outer_gate_report(root, args)
@@ -3277,6 +3636,18 @@ def build_parser() -> argparse.ArgumentParser:
     outer_dry_run.add_argument("--plan", required=True, help="Path to a plan.json artifact.")
     outer_dry_run.add_argument("--json", action="store_true")
     outer_dry_run.set_defaults(func=command_outer)
+
+    outer_run = outer_subparsers.add_parser("run", help="Run a sequential outer-loop plan, dry-run by default.")
+    outer_run.add_argument("--plan", required=True, help="Path to a plan.json artifact.")
+    mode_group = outer_run.add_mutually_exclusive_group()
+    mode_group.add_argument("--dry-run", action="store_true", help="Build payloads and ledger entries without invoking assistant CLIs.")
+    mode_group.add_argument("--execute", action="store_true", help="Explicitly allow live assistant CLI invocation.")
+    outer_run.add_argument("--max-prompts", type=int, help="Limit the number of plan prompts processed.")
+    outer_run.add_argument("--timeout-seconds", type=int, default=900, help="Timeout for each live assistant CLI invocation.")
+    outer_run.add_argument("--driver-arg", action="append", default=[], help="Explicit extra argument passed to a live driver command.")
+    outer_run.add_argument("--run-id", help=argparse.SUPPRESS)
+    outer_run.add_argument("--json", action="store_true")
+    outer_run.set_defaults(func=command_outer)
 
     outer_gate = outer_subparsers.add_parser("gate", help="Collect post-prompt validation, audit, and readiness evidence.")
     outer_gate.add_argument("prompt", help="Prompt id to gate, such as PROMPT_36.")
