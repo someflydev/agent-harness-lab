@@ -419,6 +419,181 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["probe"]["available"])
         self.assertTrue(any("executable not found on PATH: codex" in problem for problem in data["problems"]))
 
+    def add_outer_promptset(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02", "PROMPT_03"))
+        self.write(".prompts/PROMPT_03.txt", self.prompt_text("PROMPT_03"))
+        self.write_driver_registry()
+
+    def test_outer_plan_creates_valid_prompt_range(self):
+        self.add_outer_promptset()
+
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "2",
+            "--driver",
+            "manual",
+            "--plan-id",
+            "fixture-plan",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["plan_id"], "fixture-plan")
+        self.assertEqual([item["prompt_id"] for item in data["prompts"]], ["PROMPT_01", "PROMPT_02"])
+        self.assertTrue((self.root / "runs" / "outer-loop" / "fixture-plan" / "plan.json").exists())
+
+    def test_outer_plan_missing_prompt_in_range_fails(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01"))
+        self.write_driver_registry()
+
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "2",
+            "--driver",
+            "manual",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing prompt file: .prompts/PROMPT_02.txt" in problem for problem in data["problems"]))
+
+    def test_outer_plan_invalid_driver_fails(self):
+        self.add_outer_promptset()
+
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "1",
+            "--driver",
+            "missing",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertIn("unknown assistant driver: missing", data["problems"])
+
+    def test_outer_plan_next_selects_fixture_promptset_start(self):
+        self.add_outer_promptset()
+
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--next",
+            "2",
+            "--driver",
+            "manual",
+            "--plan-id",
+            "next-two",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["requested_range"]["mode"], "next")
+        self.assertEqual([item["prompt_id"] for item in data["prompts"]], ["PROMPT_01", "PROMPT_02"])
+
+    def test_outer_dry_run_pass_json_has_stable_fields(self):
+        self.add_outer_promptset()
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "1",
+            "--driver",
+            "manual",
+            "--plan-id",
+            "dry-run-pass",
+            "--json",
+        )
+        self.assertEqual(code, 0)
+        plan = json.loads(output)["artifact"]
+
+        code2, output2 = self.run_cli("outer", "dry-run", "--plan", plan, "--json")
+        data = json.loads(output2)
+
+        self.assertEqual(code2, 0)
+        self.assertTrue(data["ok"])
+        for key in ("ok", "plan_id", "steps", "problems"):
+            self.assertIn(key, data)
+        for key in ("prompt_id", "path", "status", "validation_commands", "problems"):
+            self.assertIn(key, data["steps"][0])
+
+    def test_outer_dry_run_detects_missing_prompt_referenced_by_plan(self):
+        self.add_outer_promptset()
+        plan = {
+            "plan_id": "missing-prompt-plan",
+            "driver": {"id": "manual"},
+            "required_ahl_checks": ["python3 scripts/ahl.py doctor"],
+            "stop_conditions": ["missing_prompt_file"],
+            "prompts": [
+                {
+                    "prompt_id": "PROMPT_09",
+                    "path": ".prompts/PROMPT_09.txt",
+                    "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+                }
+            ],
+        }
+        self.write("runs/outer-loop/missing-prompt-plan/plan.json", json.dumps(plan))
+
+        code, output = self.run_cli(
+            "outer",
+            "dry-run",
+            "--plan",
+            "runs/outer-loop/missing-prompt-plan/plan.json",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(data["steps"][0]["status"], "fail")
+        self.assertTrue(any("referenced path does not exist" in problem for problem in data["problems"]))
+
+    def test_outer_plan_refuses_artifact_overwrite(self):
+        self.add_outer_promptset()
+        args = (
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "1",
+            "--driver",
+            "manual",
+            "--plan-id",
+            "overwrite-plan",
+            "--json",
+        )
+
+        code, _ = self.run_cli(*args)
+        self.assertEqual(code, 0)
+        code2, output2 = self.run_cli(*args)
+        data = json.loads(output2)
+
+        self.assertEqual(code2, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("refusing to overwrite" in problem for problem in data["problems"]))
+
     def write_docs_index(self):
         for dirname in (
             "domain-packs",
@@ -637,6 +812,69 @@ class AhlTest(unittest.TestCase):
                     "head": "abc1234",
                     "changed_files": [],
                     "docs_changed": False,
+                }
+            ),
+        )
+        self.write(
+            "fixtures/outer-loop/plans/valid-next-three.json",
+            json.dumps(
+                {
+                    "plan_id": "fixture-valid-next-three",
+                    "created_at": "2026-05-06T00:00:00Z",
+                    "requested_range": {"mode": "explicit", "from": "PROMPT_01", "count": 2},
+                    "prompts": [
+                        {
+                            "prompt_id": "PROMPT_01",
+                            "path": ".prompts/PROMPT_01.txt",
+                            "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+                        }
+                    ],
+                    "driver": {"id": "manual"},
+                    "required_ahl_checks": ["python3 scripts/ahl.py doctor"],
+                    "stop_conditions": ["missing_prompt_file"],
+                    "commit_policy": "none",
+                    "run_artifact_dir": "runs/outer-loop/fixture-valid-next-three",
+                }
+            ),
+        )
+        self.write(
+            "fixtures/outer-loop/plans/missing-prompt.json",
+            json.dumps(
+                {
+                    "plan_id": "fixture-missing-prompt",
+                    "created_at": "2026-05-06T00:00:00Z",
+                    "requested_range": {"mode": "explicit", "from": "PROMPT_09", "count": 1},
+                    "prompts": [
+                        {
+                            "prompt_id": "PROMPT_09",
+                            "path": ".prompts/PROMPT_09.txt",
+                            "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+                        }
+                    ],
+                    "driver": {"id": "manual"},
+                    "required_ahl_checks": ["python3 scripts/ahl.py doctor"],
+                    "stop_conditions": ["missing_prompt_file"],
+                    "commit_policy": "none",
+                    "run_artifact_dir": "runs/outer-loop/fixture-missing-prompt",
+                }
+            ),
+        )
+        self.write(
+            "fixtures/outer-loop/reports/dry-run-pass.json",
+            json.dumps(
+                {
+                    "ok": True,
+                    "plan_id": "fixture-valid-next-three",
+                    "steps": [
+                        {
+                            "prompt_id": "PROMPT_01",
+                            "path": ".prompts/PROMPT_01.txt",
+                            "status": "pass",
+                            "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+                            "problems": [],
+                        }
+                    ],
+                    "problems": [],
                 }
             ),
         )

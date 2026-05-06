@@ -32,6 +32,11 @@ justifies more.
 - `driver list`, `driver check`, and `driver probe` list conservative
   assistant driver records, validate required driver fields, and run safe local
   capability probes without live model calls.
+- `outer plan` creates an inspectable sequential batch plan under
+  `runs/outer-loop/` without invoking assistants, staging, or committing.
+- `outer dry-run` validates a batch plan's prompt files, driver record,
+  validation commands, AHL checks, and stop conditions without invoking
+  assistants.
 - `dry-run list` and `dry-run check` list deterministic scenario manifests,
   validate their referenced artifacts, and check `dry-runs/PARITY.md` backing
   files.
@@ -87,6 +92,9 @@ python3 scripts/ahl.py driver list
 python3 scripts/ahl.py driver list --json
 python3 scripts/ahl.py driver check
 python3 scripts/ahl.py driver probe codex --help-only --json
+python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
+python3 scripts/ahl.py outer plan --next 10 --driver codex --json
+python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json --json
 python3 scripts/ahl.py dry-run list
 python3 scripts/ahl.py dry-run check sequential-prompt-run
 python3 scripts/ahl.py dry-run check --all --json
@@ -151,6 +159,13 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `driver list`: `ok`, `drivers`, `checks`, `problems`
 - `driver check`: `ok`, `drivers`, `checks`, `problems`
 - `driver probe`: `ok`, `drivers`, `checks`, `problems`, `probe`
+- `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
+  `driver`, `model`, `reasoning`, `permission_posture`,
+  `required_ahl_checks`, `stop_conditions`, `commit_policy`,
+  `transcript_capture_policy`, `run_artifact_dir`, `problems`, and `artifact`
+  when creation succeeds
+- `outer dry-run`: `ok`, `plan_id`, `steps`, `problems`; each step includes
+  stable `prompt_id`, `path`, `status`, `validation_commands`, and `problems`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
 - `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
   `problems`; each result includes stable `id`, `status`, and `problems`

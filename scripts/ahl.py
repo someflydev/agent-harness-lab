@@ -174,6 +174,18 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": None,
         "required": ("prompt_id", "prompt_file_exists", "branch", "head", "changed_files", "docs_changed"),
     },
+    "fixtures/outer-loop/plans/valid-next-three.json": {
+        "schema": "schemas/outer-loop-plan.schema.json",
+        "required": ("plan_id", "created_at", "requested_range", "prompts", "driver", "required_ahl_checks", "stop_conditions", "commit_policy", "run_artifact_dir"),
+    },
+    "fixtures/outer-loop/plans/missing-prompt.json": {
+        "schema": "schemas/outer-loop-plan.schema.json",
+        "required": ("plan_id", "created_at", "requested_range", "prompts", "driver", "required_ahl_checks", "stop_conditions", "commit_policy", "run_artifact_dir"),
+    },
+    "fixtures/outer-loop/reports/dry-run-pass.json": {
+        "schema": "schemas/outer-loop-dry-run-report.schema.json",
+        "required": ("ok", "plan_id", "steps", "problems"),
+    },
 }
 DRY_RUN_REQUIRED_FIELDS = (
     "id",
@@ -289,6 +301,29 @@ ASSISTANT_DRIVER_REQUIRED_FIELDS = (
 )
 ASSISTANT_DRIVER_KINDS = ("subscription-cli", "api-cli", "external-harness", "manual")
 ASSISTANT_DRIVER_PROMPT_INPUT_METHODS = ("argument", "stdin", "prompt_file", "tool_specific_option", "manual")
+OUTER_PLAN_SCHEMA = "schemas/outer-loop-plan.schema.json"
+OUTER_DRY_RUN_REPORT_SCHEMA = "schemas/outer-loop-dry-run-report.schema.json"
+OUTER_DEFAULT_PERMISSION_POSTURE = "workspace-write"
+OUTER_DEFAULT_COMMIT_POLICY = "none"
+OUTER_DEFAULT_TRANSCRIPT_POLICY = {
+    "capture": False,
+    "mode": "off-by-default",
+    "notes": "Do not store raw transcripts unless a later explicit policy authorizes it.",
+}
+OUTER_REQUIRED_AHL_CHECKS = (
+    "python3 scripts/ahl.py promptset lint",
+    "python3 scripts/ahl.py doctor",
+)
+OUTER_STOP_CONDITIONS = (
+    "missing_prompt_file",
+    "missing_driver_record",
+    "missing_validation_commands",
+    "missing_stop_conditions",
+    "failed_prompt_validation",
+    "failed_ahl_check",
+    "unsafe_git_state",
+    "operator_approval_required",
+)
 COMMAND_HELP: tuple[dict[str, str], ...] = (
     {
         "name": "help",
@@ -372,6 +407,18 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "name": "driver",
         "command": "python3 scripts/ahl.py driver check",
         "summary": "Validate assistant driver records and safe local probes.",
+        "safety": "read-only",
+    },
+    {
+        "name": "outer-plan",
+        "command": "python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver manual",
+        "summary": "Create an inspectable sequential outer-loop batch plan.",
+        "safety": "writes runs/outer-loop/<plan-id>/plan.json",
+    },
+    {
+        "name": "outer-dry-run",
+        "command": "python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json",
+        "summary": "Validate a batch plan without invoking assistant CLIs.",
         "safety": "read-only",
     },
     {
@@ -1384,6 +1431,261 @@ def command_driver(args: argparse.Namespace) -> int:
         return emit(data, args.json, ["driver probe requires a driver id"], 1)
     data = assistant_driver_probe_data(root, args.driver_id, args.help_only)
     human = [f"assistant driver probe: {args.driver_id}"]
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
+def prompt_id_to_number(prompt_id: str) -> int:
+    match = re.fullmatch(r"PROMPT_(\d{2})", prompt_id)
+    if not match:
+        raise SystemExit(f"invalid prompt id: {prompt_id}")
+    return int(match.group(1))
+
+
+def prompt_number_to_id(number: int) -> str:
+    return f"PROMPT_{number:02d}"
+
+
+def load_assistant_driver_map(root: Path) -> tuple[dict[str, dict[str, Any]], list[str]]:
+    drivers, problems = load_assistant_driver_registry(root)
+    driver_map: dict[str, dict[str, Any]] = {}
+    for driver in drivers:
+        driver_id = driver.get("id")
+        if isinstance(driver_id, str) and driver_id:
+            driver_map[driver_id] = driver
+    return driver_map, problems
+
+
+def available_prompt_numbers(root: Path) -> list[int]:
+    data = promptset_numbering_data(root, root / ".prompts")
+    return sorted(set(number for number in data["numbers"] if isinstance(number, int)))
+
+
+def resolve_outer_prompt_range(root: Path, args: argparse.Namespace) -> tuple[list[int], dict[str, Any], list[str]]:
+    problems: list[str] = []
+    numbers = available_prompt_numbers(root)
+    if args.next is not None:
+        count = args.next
+        requested = {"mode": "next", "count": count}
+        if count < 1:
+            return [], requested, ["--next must be greater than zero"]
+        selected = numbers[:count]
+        if len(selected) != count:
+            problems.append(f"requested next {count} prompts but only found {len(selected)}")
+        if selected:
+            expected = list(range(selected[0], selected[0] + len(selected)))
+            if selected != expected:
+                problems.append("next prompt selection is not strictly sequential")
+        return selected, requested, problems
+
+    start_id = normalize_prompt_id(args.from_prompt)
+    start = prompt_id_to_number(start_id)
+    count = args.count
+    requested = {"mode": "explicit", "from": start_id, "count": count}
+    if count is None:
+        return [], requested, ["--count is required with --from"]
+    if count < 1:
+        return [], requested, ["--count must be greater than zero"]
+    selected = list(range(start, start + count))
+    return selected, requested, problems
+
+
+def validation_commands_for_prompt(path: Path) -> list[str]:
+    if not path.is_file():
+        return []
+    commands: list[str] = []
+    in_validation = False
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if line.startswith("## "):
+            in_validation = line.lower().startswith("## validation")
+            continue
+        if not in_validation:
+            continue
+        candidate = line.lstrip("-").strip().strip("`")
+        if candidate.startswith(("python3 ", "make ", "./scripts/", "scripts/")):
+            commands.append(candidate)
+    return commands or ["python3 -m unittest tests/test_ahl.py"]
+
+
+def utc_timestamp() -> str:
+    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def outer_plan_id(numbers: list[int], driver_id: str) -> str:
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if numbers:
+        span = f"{prompt_number_to_id(numbers[0])}-{prompt_number_to_id(numbers[-1])}"
+    else:
+        span = "empty"
+    return f"outer-{span}-{driver_id}-{stamp}".lower()
+
+
+def create_outer_plan_data(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    numbers, requested, problems = resolve_outer_prompt_range(root, args)
+    driver_map, driver_problems = load_assistant_driver_map(root)
+    problems.extend(driver_problems)
+    driver = driver_map.get(args.driver)
+    if driver is None:
+        problems.append(f"unknown assistant driver: {args.driver}")
+
+    prompts: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    for number in numbers:
+        prompt_id = prompt_number_to_id(number)
+        path = root / ".prompts" / f"{prompt_id}.txt"
+        rel_path = f".prompts/{prompt_id}.txt"
+        if number in seen:
+            problems.append(f"duplicate prompt in requested range: {prompt_id}")
+        seen.add(number)
+        if not path.is_file():
+            problems.append(f"missing prompt file: {rel_path}")
+        prompts.append(
+            {
+                "prompt_id": prompt_id,
+                "path": rel_path,
+                "validation_commands": validation_commands_for_prompt(path),
+            }
+        )
+
+    if numbers:
+        expected = list(range(numbers[0], numbers[-1] + 1))
+        if numbers != expected:
+            problems.append("resolved prompts are not strictly sequential")
+
+    plan_id = args.plan_id or outer_plan_id(numbers, args.driver)
+    run_artifact_dir = f"runs/outer-loop/{plan_id}"
+    return {
+        "ok": not problems,
+        "plan_id": plan_id,
+        "created_at": utc_timestamp(),
+        "requested_range": requested,
+        "prompts": prompts,
+        "driver": {
+            "id": args.driver,
+            "display_name": driver.get("display_name") if driver else None,
+            "driver_kind": driver.get("driver_kind") if driver else None,
+        },
+        "model": args.model,
+        "reasoning": args.reasoning,
+        "permission_posture": args.permission_posture,
+        "required_ahl_checks": list(OUTER_REQUIRED_AHL_CHECKS),
+        "stop_conditions": list(OUTER_STOP_CONDITIONS),
+        "commit_policy": args.commit_policy,
+        "transcript_capture_policy": dict(OUTER_DEFAULT_TRANSCRIPT_POLICY),
+        "run_artifact_dir": run_artifact_dir,
+        "schema": OUTER_PLAN_SCHEMA,
+        "problems": problems,
+    }
+
+
+def command_outer_plan(args: argparse.Namespace) -> int:
+    root = repo_root()
+    data = create_outer_plan_data(root, args)
+    if not data["ok"]:
+        human = ["outer plan: problems found"]
+        human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 1)
+
+    out_dir = root / data["run_artifact_dir"]
+    plan_path = out_dir / "plan.json"
+    if plan_path.exists():
+        data["ok"] = False
+        data["problems"].append(f"refusing to overwrite existing plan artifact: {plan_path.relative_to(root)}")
+        return emit(data, args.json, ["outer plan: refusing to overwrite existing plan artifact"], 1)
+    out_dir.mkdir(parents=True, exist_ok=False)
+    plan_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    data["artifact"] = str(plan_path.relative_to(root))
+    human = [
+        f"outer plan: {data['plan_id']}",
+        f"- prompts: {len(data['prompts'])}",
+        f"- driver: {data['driver']['id']}",
+        f"- artifact: {data['artifact']}",
+    ]
+    return emit(data, args.json, human, 0)
+
+
+def load_outer_plan(root: Path, plan_value: str) -> tuple[dict[str, Any] | None, str | None]:
+    path = (root / plan_value).resolve()
+    try:
+        path.relative_to(root.resolve())
+    except ValueError:
+        return None, f"plan path escapes repository root: {plan_value}"
+    if not path.is_file():
+        return None, f"missing plan artifact: {plan_value}"
+    data, problem = load_json_file(path)
+    if problem:
+        return None, problem
+    if not isinstance(data, dict):
+        return None, f"{plan_value}: top-level value must be an object"
+    return data, None
+
+
+def outer_dry_run_report(root: Path, plan_value: str) -> dict[str, Any]:
+    plan, problem = load_outer_plan(root, plan_value)
+    if problem:
+        return {"ok": False, "plan_id": None, "steps": [], "problems": [problem]}
+    assert plan is not None
+
+    problems: list[str] = []
+    driver_map, driver_problems = load_assistant_driver_map(root)
+    problems.extend(driver_problems)
+    driver_id = plan.get("driver", {}).get("id") if isinstance(plan.get("driver"), dict) else None
+    if not isinstance(driver_id, str) or driver_id not in driver_map:
+        problems.append(f"missing driver record: {driver_id}")
+
+    stop_conditions = plan.get("stop_conditions")
+    if not isinstance(stop_conditions, list) or not stop_conditions:
+        problems.append("plan has no stop conditions")
+    required_ahl_checks = plan.get("required_ahl_checks")
+    if not isinstance(required_ahl_checks, list) or not required_ahl_checks:
+        problems.append("plan has no required AHL checks")
+
+    steps: list[dict[str, Any]] = []
+    prompt_items = plan.get("prompts")
+    if not isinstance(prompt_items, list) or not prompt_items:
+        problems.append("plan has no prompts")
+        prompt_items = []
+
+    for item in prompt_items:
+        item_problems: list[str] = []
+        prompt_id = item.get("prompt_id") if isinstance(item, dict) else None
+        path_value = item.get("path") if isinstance(item, dict) else None
+        validation_commands = item.get("validation_commands") if isinstance(item, dict) else None
+        if not isinstance(prompt_id, str) or not PROMPT_ID_RE.fullmatch(prompt_id):
+            item_problems.append(f"invalid prompt id: {prompt_id}")
+        if not isinstance(path_value, str) or not path_value:
+            item_problems.append("missing prompt path")
+        else:
+            ok, path_problem = relative_path_exists(root, path_value)
+            if not ok and path_problem:
+                item_problems.append(path_problem)
+        if not isinstance(validation_commands, list) or not validation_commands:
+            item_problems.append("missing validation commands")
+        status = "fail" if item_problems else "pass"
+        steps.append(
+            {
+                "prompt_id": prompt_id,
+                "path": path_value,
+                "status": status,
+                "validation_commands": validation_commands if isinstance(validation_commands, list) else [],
+                "problems": item_problems,
+            }
+        )
+        problems.extend(f"{prompt_id or 'unknown'}: {step_problem}" for step_problem in item_problems)
+
+    return {"ok": not problems, "plan_id": plan.get("plan_id"), "steps": steps, "problems": problems}
+
+
+def command_outer(args: argparse.Namespace) -> int:
+    if args.action == "plan":
+        return command_outer_plan(args)
+    root = repo_root()
+    data = outer_dry_run_report(root, args.plan)
+    human = ["outer dry-run: ok" if data["ok"] else "outer dry-run: problems found"]
+    human.append(f"- plan: {data['plan_id'] or 'unknown'}")
+    for step in data["steps"]:
+        human.append(f"- {step['prompt_id']}: {step['status']}")
     human.extend(f"- {problem}" for problem in data["problems"])
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
@@ -2640,6 +2942,35 @@ def build_parser() -> argparse.ArgumentParser:
     driver.add_argument("--help-only", action="store_true", help="Run only the driver's configured help command.")
     driver.add_argument("--json", action="store_true")
     driver.set_defaults(func=command_driver)
+
+    outer = subparsers.add_parser("outer", help="Create and dry-run sequential outer-loop batch plans.")
+    outer_subparsers = outer.add_subparsers(dest="action", required=True)
+    outer_plan = outer_subparsers.add_parser("plan", help="Create an inspectable sequential batch plan artifact.")
+    range_group = outer_plan.add_mutually_exclusive_group(required=True)
+    range_group.add_argument("--from", dest="from_prompt", help="First prompt id, such as PROMPT_33.")
+    range_group.add_argument("--next", type=int, help="Plan the next N prompt files from the promptset.")
+    outer_plan.add_argument("--count", type=int, help="Number of prompts when using --from.")
+    outer_plan.add_argument("--driver", required=True, help="Assistant driver id from registry/assistant-drivers.json.")
+    outer_plan.add_argument("--model", help="Model name to record in the plan.")
+    outer_plan.add_argument("--reasoning", help="Reasoning or thinking setting to record in the plan.")
+    outer_plan.add_argument(
+        "--permission-posture",
+        choices=("read-only", "workspace-write", "manual-required"),
+        default=OUTER_DEFAULT_PERMISSION_POSTURE,
+    )
+    outer_plan.add_argument(
+        "--commit-policy",
+        choices=("none", "plan-only", "explicit"),
+        default=OUTER_DEFAULT_COMMIT_POLICY,
+    )
+    outer_plan.add_argument("--plan-id", help="Deterministic plan id for tests or operator-chosen artifacts.")
+    outer_plan.add_argument("--json", action="store_true")
+    outer_plan.set_defaults(func=command_outer)
+
+    outer_dry_run = outer_subparsers.add_parser("dry-run", help="Validate a batch plan without assistant invocation.")
+    outer_dry_run.add_argument("--plan", required=True, help="Path to a plan.json artifact.")
+    outer_dry_run.add_argument("--json", action="store_true")
+    outer_dry_run.set_defaults(func=command_outer)
 
     docs = subparsers.add_parser("docs", help="Check markdown navigation and local links.")
     docs.add_argument("action", choices=("check",))
