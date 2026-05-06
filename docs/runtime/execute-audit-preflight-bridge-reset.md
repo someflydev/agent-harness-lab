@@ -28,6 +28,10 @@ docs for claims that overstate current capabilities.
 The audit answers: "Did this session satisfy the active prompt?" It does not
 answer whether future prompts are already implemented.
 
+Include a bounded adversarial pass: name one way the work could appear complete
+while still failing the prompt's intent, or state that none was found after
+checking the prompt, diff, and validation evidence.
+
 ## Preflight
 
 Inspect the immediate next prompt and the current repo state for readiness. A
@@ -36,6 +40,10 @@ shared terminology, navigation links, and any expected artifacts.
 
 Preflight should stay adjacent. It is not a plan for the whole promptset and it
 must not implement the next prompt.
+
+Include a bounded adversarial pass: name one way the next prompt could fail
+despite startup files existing, or state that none was found after checking the
+next prompt's startup instructions, deliverables, constraints, and validation.
 
 ## Bridge
 

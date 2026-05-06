@@ -25,6 +25,9 @@
 ## Findings
 
 - Readiness label: Ready / Risky / Blocked
+- Ready evidence:
+- Adversarial pass:
+- Verdict impact:
 - Blockers:
 - Warnings:
 - Cheap bridge fixes applied:

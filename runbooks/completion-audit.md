@@ -39,7 +39,16 @@ record is needed.
    index.
 6. Review validation evidence. Note commands run, inventories checked, and
    checks that could not run.
-7. Classify the result:
+7. Assign completion confidence:
+   - `high`: deliverables, constraints, and validation evidence align cleanly.
+   - `medium`: deliverables exist, but there is a named residual risk or
+     skipped check.
+   - `low`: evidence is thin, indirect, or dependent on assumptions.
+8. Run one lightweight adversarial pass: ask what could make the prompt look
+   complete while still failing its intent. Record one concrete risk and its
+   verdict impact, or state that none was found after checking requirements,
+   diff, and validation evidence.
+9. Classify the result:
    - `done`: every required deliverable exists, explicit content is present,
      constraints are honored, and validation evidence is sufficient for the
      prompt.
@@ -47,13 +56,16 @@ record is needed.
      but the remaining work is known and can continue in the same session.
    - `blocked`: completion depends on missing prerequisites, operator input, a
      failed check that cannot be fixed in scope, or a scope conflict.
-8. Fix incomplete in-scope gaps before closeout.
-9. If blocked, decide whether to create `tmp/HANDOFF.md` using
+10. Fix incomplete in-scope gaps before closeout.
+11. If blocked, decide whether to create `tmp/HANDOFF.md` using
    `bridge-fix-session.md`.
 
 ## Expected Artifacts
 
 - A pass, warning, incomplete, or blocked statement in closeout.
+- A completion confidence label with one evidence sentence.
+- A short adversarial note covering one plausible soft failure or why no such
+  risk was found.
 - Optional `templates/reports/completion-audit.md` record when the operator or
   prompt asks for one.
 - Fixes for any small in-scope gaps found during the audit.

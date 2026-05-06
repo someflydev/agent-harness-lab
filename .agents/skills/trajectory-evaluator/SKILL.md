@@ -56,6 +56,14 @@ prompt BLOCKED is a net-negative trajectory step.
 
 ### 3. Trajectory Rating
 
+Before rating, run a lightweight adversarial pass:
+
+- Completion risk: one way the completed prompt could appear done while still
+  failing its intent, or `none found after checked evidence`.
+- Adjacency risk: one way the next prompt could fail despite startup files
+  existing, or `none found after checked prerequisites`.
+- Verdict impact: whether either risk changes Execution or Adjacency Ready.
+
 Rate the session across these dimensions:
 
 | Dimension       | Options                                        |
@@ -108,9 +116,10 @@ A brief structured report covering:
 
 1. Completion audit summary (PASS / PARTIAL / FAIL with specifics)
 2. Adjacency readiness verdict (READY / RISKY / BLOCKED with reason)
-3. Trajectory rating table
-4. Commit grouping suggestion (if changes exist)
-5. Optional: `tmp/SESSION_EVAL.md` if there is a real signal
+3. Lightweight adversarial pass
+4. Trajectory rating table
+5. Commit grouping suggestion (if changes exist)
+6. Optional: `tmp/SESSION_EVAL.md` if there is a real signal
 
 ## Stop Conditions
 

@@ -23,14 +23,20 @@ review.
 2. Verify referenced prerequisites and docs exist.
 3. Check whether current changes created missing links, registry gaps, or
    ambiguous foundations for that prompt.
-4. Classify readiness as `READY`, `RISKY`, or `BLOCKED`.
-5. Name cheap bridge fixes only when they directly unblock startup.
-6. Avoid implementing the next prompt's deliverables.
+4. Run a lightweight adversarial pass: name one way the next prompt could fail
+   despite startup files existing, or state that none was found after checking
+   its startup instructions, deliverables, constraints, and validation.
+5. Classify readiness as `READY`, `RISKY`, or `BLOCKED`.
+6. For `READY`, include one evidence sentence explaining why the next fresh
+   session can start cleanly.
+7. Name cheap bridge fixes only when they directly unblock startup.
+8. Avoid implementing the next prompt's deliverables.
 
 ## Expected Output
 
 - Readiness verdict
 - Concrete reason and affected files or docs
+- Lightweight adversarial note and any verdict impact
 - Optional bridge-fix recommendation
 - Explicit statement when no handoff is needed
 

@@ -36,20 +36,28 @@ readiness report is needed.
    instructions.
 6. Confirm the current session has not already implemented next-prompt
    deliverables.
-7. Assign one readiness label:
+7. Run one lightweight adversarial pass: ask what would make the next prompt
+   fail despite startup files existing. Record one concrete risk and its
+   verdict impact, or state that none was found after checking startup
+   instructions, deliverables, constraints, and validation.
+8. Assign one readiness label:
    - `ready`: no obvious blocker or material warning.
    - `risky`: the next session can start, but a concrete warning should be
      carried in closeout.
    - `blocked`: a required prerequisite is missing or the next prompt cannot
      safely proceed.
-8. If a blocker is a cheap navigation or terminology issue caused or revealed
+9. Include one evidence sentence for `ready`, explaining why a fresh session
+   can start cleanly.
+10. If a blocker is a cheap navigation or terminology issue caused or revealed
    by the current session, apply a bridge fix.
-9. If a blocker remains and the next session needs context beyond the final
+11. If a blocker remains and the next session needs context beyond the final
    answer, create `tmp/HANDOFF.md` from `templates/handoffs/handoff.md`.
 
 ## Expected Artifacts
 
 - A readiness label and concrete reasons in the final closeout.
+- A short adversarial note covering one plausible soft failure or why no such
+  risk was found.
 - Optional readiness report from `templates/reports/readiness-report.md`.
 - Optional bridge fix limited to navigation, terminology, or references.
 

@@ -26,13 +26,20 @@ implementation except for separately approved bridge fixes.
 4. Confirm docs or registries updated by the prompt do not overstate current
    capabilities.
 5. Classify each deliverable as done, partial, or missing.
-6. Report blockers, warnings, and residual risks with file-level evidence.
+6. Assign completion confidence as `HIGH`, `MEDIUM`, or `LOW`, with one
+   evidence sentence.
+7. Run a lightweight adversarial pass: name one way the prompt could appear
+   complete while still failing its intent, or state that none was found after
+   checking the prompt requirements, diff, and validation evidence.
+8. Report blockers, warnings, and residual risks with file-level evidence.
 
 ## Expected Output
 
 - Pass, warning, or blocker verdict
 - Deliverable checklist with evidence
 - Validation commands run and results
+- Completion confidence with evidence
+- Lightweight adversarial note and any verdict impact
 - Clear list of remaining gaps, if any
 
 ## Stop Conditions

@@ -30,6 +30,10 @@
 
 ## Findings
 
+- Completion confidence: High / Medium / Low
+- Confidence evidence:
+- Adversarial pass:
+- Verdict impact:
 - Missing deliverables:
 - Open issues or blockers:
 - Risks:
