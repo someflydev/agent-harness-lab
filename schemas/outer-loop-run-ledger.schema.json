@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Outer Loop Run Ledger",
+  "type": "object",
+  "required": [
+    "ok",
+    "status",
+    "run_id",
+    "plan_id",
+    "mode",
+    "driver",
+    "steps",
+    "problems"
+  ],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "schema": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "blocked",
+        "driver-failed",
+        "failed-validation",
+        "unsafe-git-state",
+        "unexpected-plan-mutation",
+        "running"
+      ]
+    },
+    "run_id": { "type": ["string", "null"] },
+    "plan_id": { "type": ["string", "null"] },
+    "mode": { "type": "string", "enum": ["dry-run", "live"] },
+    "execute": { "type": "boolean" },
+    "dry_run": { "type": "boolean" },
+    "started_at": { "type": "string" },
+    "ended_at": { "type": ["string", "null"] },
+    "plan_artifact": { "type": "string" },
+    "plan_sha256": { "type": "string" },
+    "driver": { "type": ["object", "null"] },
+    "max_prompts": { "type": ["integer", "null"] },
+    "timeout_seconds": { "type": "integer" },
+    "transcript_capture_policy": { "type": "object" },
+    "steps": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "artifact": { "type": "string" },
+    "problems": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -15,7 +15,9 @@ safety boundary layer.
    conservative gate docs, schema, fixtures, template, and
    `scripts/ahl.py outer gate` report generation. Prompt validation commands
    are recorded, not executed arbitrarily.
-4. Live sequential runner.
+4. Live sequential runner. Implemented as a dry-run-default `outer run` MVP
+   with prompt payloads, run ledgers, manual driver support, conservative
+   Codex/Gemini CLI invocation, per-step gates, and stop conditions.
 5. Commit planning and explicit commit execution.
 6. Resume and failure handling.
 7. Pi adapter experiment.
@@ -31,8 +33,9 @@ safety boundary layer.
 - Keep API-backed provider work separate from subscription CLI drivers.
 - Treat commit execution as a separate approval boundary from assistant
   invocation.
-- Use driver probes only for local availability checks until a later prompt
-  adds explicit live-run consent.
+- Use driver probes for local availability checks. Live assistant invocation is
+  now available only through explicit `outer run --execute` consent and remains
+  bounded by driver contracts.
 
 ## Exit Criteria
 

@@ -106,9 +106,10 @@ The initial baseline for Prompts 01 through 32 is recorded in
 `docs/capstone/promptset-completion-report.md`. Future work is tracked as
 backlog in `docs/capstone/future-backlog.md`, not as implemented capability.
 Phase-two outer-loop requirements and safety boundaries live in
-`docs/outer-loop/`. Those docs describe a possible future sequential wrapper
-around existing assistant CLIs; they do not mean live assistant invocation is
-implemented.
+`docs/outer-loop/`. The current outer-loop helper can plan batches, dry-run
+plans, collect gates, and build run ledgers. Live assistant CLI invocation is
+available only through explicit `outer run --execute` consent for supported
+local driver contracts.
 
 Release-readiness guidance lives in `docs/release-readiness.md`, with current
 limitations in `docs/known-limitations.md`, maintenance guidance in
@@ -172,7 +173,7 @@ usage guides, navigation docs, guardrails, safety and permission guidance,
 doctrine, roles, skills, routines, runtime lifecycle notes, memory governance,
 contracts, templates, runbooks, examples, quality guidance, metadata rules,
 final capstone baseline docs, future-facing architecture guidance, and
-lightweight helper scripts. It also has phase-two outer-loop requirements docs
-for a future sequential runner. It does not yet have provider integrations,
-graph or vector database dependencies, live assistant invocation, an
-autonomous runner, or a heavy runtime.
+lightweight helper scripts. It also has phase-two outer-loop planning,
+dry-run, gate, and dry-run-default live-runner helpers. It does not yet have
+provider credentials, graph or vector database dependencies, an autonomous
+runner, or a heavy runtime.

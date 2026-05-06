@@ -40,8 +40,8 @@ richer orchestration remains future work.
 - `release-readiness.md` - checks required before calling the repo usable.
 - `known-limitations.md` - honest current runtime, validation, and architecture
   limits.
-- `outer-loop/README.md` - phase-two requirements and safety boundary docs for
-  a future sequential runner that is not implemented yet.
+- `outer-loop/README.md` - phase-two requirements, safety boundary docs, and
+  the dry-run-default sequential runner MVP.
 - `maintenance.md` - how to update prompts, registries, templates, skills,
   scripts, domain packs, and release checks.
 - `contributing.md` - scoped contribution guidance and validation
@@ -250,6 +250,12 @@ richer orchestration remains future work.
   guidance before any future live execution path.
 - `outer-loop/gates.md` - post-prompt gate statuses, expected evidence, report
   format, and command boundary.
+- `outer-loop/live-runner.md` - dry-run-default `outer run` behavior, live
+  execution consent, driver mapping, and stop conditions.
+- `outer-loop/prompt-payloads.md` - exact bounded fresh-session payload
+  requirements for each planned prompt step.
+- `outer-loop/run-artifacts.md` - run ledger, payload, step-summary,
+  transcript, and commit-policy artifact boundaries.
 - `outer-loop/completion-audit-integration.md` - how deterministic gate checks
   connect to human or assistant completion audit.
 - `outer-loop/readiness-gate.md` - immediate next-prompt readiness inspection,

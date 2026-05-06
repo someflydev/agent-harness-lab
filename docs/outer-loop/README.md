@@ -2,8 +2,8 @@
 
 The outer loop is a phase-two design area for a local sequential wrapper around
 the existing fresh-session prompt workflow. It now includes deterministic
-planning, dry-run checks, and post-prompt gate reports, while live assistant
-invocation remains future work.
+planning, dry-run checks, post-prompt gate reports, and a conservative
+dry-run-default live runner MVP.
 
 The goal is bounded orchestration of already-authenticated assistant tools, one
 prompt at a time. The runner should make decisions visible through files,
@@ -30,6 +30,12 @@ operator approval points.
   future live execution.
 - `gates.md` - post-prompt gate statuses, evidence fields, report format, and
   CLI boundary.
+- `live-runner.md` - dry-run-default sequential runner behavior and live
+  execution consent boundary.
+- `prompt-payloads.md` - exact bounded payload shape sent to each fresh
+  assistant session.
+- `run-artifacts.md` - ledger, payload, summary, transcript, and commit-policy
+  boundaries for outer runs.
 - `completion-audit-integration.md` - how gate reports integrate deterministic
   checks with human or assistant semantic audit.
 - `readiness-gate.md` - immediate next-prompt readiness checks and stop
@@ -41,7 +47,8 @@ operator approval points.
 ## Current Status
 
 The current layer includes requirements, safety boundaries, conservative driver
-contracts, safe capability probes, plan artifacts, dry-run plan validation, and
-gate reports for validation, audit, and readiness evidence. It does not add
-live assistant invocation, provider credentials, a daemon, a TUI, an MCP
-server, a scheduler, or dependency-backed runtime code.
+contracts, safe capability probes, plan artifacts, dry-run plan validation,
+gate reports, prompt payload generation, run ledgers, and explicit
+`--execute` live CLI invocation for supported local driver contracts. It does
+not add provider credentials, a daemon, a TUI, an MCP server, a scheduler, or
+dependency-backed runtime code.

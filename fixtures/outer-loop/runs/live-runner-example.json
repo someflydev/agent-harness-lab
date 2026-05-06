@@ -1,0 +1,52 @@
+{
+  "ok": true,
+  "schema": "schemas/outer-loop-run-ledger.schema.json",
+  "status": "completed",
+  "run_id": "fixture-live-runner-example",
+  "plan_id": "fixture-valid-next-three",
+  "mode": "dry-run",
+  "execute": false,
+  "dry_run": true,
+  "started_at": "2026-05-06T00:00:00Z",
+  "ended_at": "2026-05-06T00:00:01Z",
+  "plan_artifact": "fixtures/outer-loop/plans/valid-next-three.json",
+  "plan_sha256": "fixture",
+  "driver": {
+    "id": "manual",
+    "driver_kind": "manual",
+    "display_name": "Manual Session"
+  },
+  "max_prompts": 1,
+  "timeout_seconds": 900,
+  "transcript_capture_policy": {
+    "capture": false,
+    "mode": "off-by-default"
+  },
+  "steps": [
+    {
+      "index": 1,
+      "prompt_id": "PROMPT_01",
+      "prompt_file": ".prompts/PROMPT_01.txt",
+      "mode": "dry-run",
+      "status": "dry-run",
+      "payload_artifact": "runs/outer-loop/fixture-valid-next-three/payloads/PROMPT_01.md",
+      "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+      "driver": {
+        "status": "not-invoked",
+        "command": null,
+        "returncode": null,
+        "failure_reason": null
+      },
+      "gate": {
+        "status": "pass",
+        "decision": "continue",
+        "ok": true,
+        "problems": [],
+        "warnings": []
+      },
+      "notes": "Dry-run only; no assistant CLI was invoked.",
+      "problems": []
+    }
+  ],
+  "problems": []
+}
