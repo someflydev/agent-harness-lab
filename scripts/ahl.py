@@ -186,6 +186,26 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": "schemas/outer-loop-dry-run-report.schema.json",
         "required": ("ok", "plan_id", "steps", "problems"),
     },
+    "fixtures/outer-loop/gates/pass.json": {
+        "schema": "schemas/outer-loop-gate-report.schema.json",
+        "required": ("ok", "status", "prompt_id", "changed_files", "validation_commands", "validation_outcomes", "ahl_checks", "completion_audit", "next_prompt_readiness", "handoff", "commit_plan", "decision"),
+    },
+    "fixtures/outer-loop/gates/blocked.json": {
+        "schema": "schemas/outer-loop-gate-report.schema.json",
+        "required": ("ok", "status", "prompt_id", "changed_files", "validation_commands", "validation_outcomes", "ahl_checks", "completion_audit", "next_prompt_readiness", "handoff", "commit_plan", "decision"),
+    },
+    "fixtures/assistant-drivers/codex.json": {
+        "schema": "schemas/assistant-driver.schema.json",
+        "required": ("id", "display_name", "driver_kind", "executable_name", "probe_expectation", "live_run_status"),
+    },
+    "fixtures/assistant-drivers/gemini.json": {
+        "schema": "schemas/assistant-driver.schema.json",
+        "required": ("id", "display_name", "driver_kind", "executable_name", "probe_expectation", "live_run_status"),
+    },
+    "fixtures/assistant-drivers/pi.json": {
+        "schema": "schemas/assistant-driver.schema.json",
+        "required": ("id", "display_name", "driver_kind", "executable_name", "probe_expectation", "live_run_status"),
+    },
 }
 DRY_RUN_REQUIRED_FIELDS = (
     "id",
@@ -303,6 +323,7 @@ ASSISTANT_DRIVER_KINDS = ("subscription-cli", "api-cli", "external-harness", "ma
 ASSISTANT_DRIVER_PROMPT_INPUT_METHODS = ("argument", "stdin", "prompt_file", "tool_specific_option", "manual")
 OUTER_PLAN_SCHEMA = "schemas/outer-loop-plan.schema.json"
 OUTER_DRY_RUN_REPORT_SCHEMA = "schemas/outer-loop-dry-run-report.schema.json"
+OUTER_GATE_REPORT_SCHEMA = "schemas/outer-loop-gate-report.schema.json"
 OUTER_DEFAULT_PERMISSION_POSTURE = "workspace-write"
 OUTER_DEFAULT_COMMIT_POLICY = "none"
 OUTER_DEFAULT_TRANSCRIPT_POLICY = {
@@ -323,6 +344,19 @@ OUTER_STOP_CONDITIONS = (
     "failed_ahl_check",
     "unsafe_git_state",
     "operator_approval_required",
+)
+OUTER_GATE_STATUSES = (
+    "pass",
+    "pass-with-warnings",
+    "blocked",
+    "failed-validation",
+    "needs-human-review",
+    "driver-failed",
+    "unsafe-git-state",
+)
+OUTER_GATE_ALLOWED_AHL_CHECKS = (
+    "python3 scripts/ahl.py promptset lint",
+    "python3 scripts/ahl.py doctor",
 )
 COMMAND_HELP: tuple[dict[str, str], ...] = (
     {
@@ -420,6 +454,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "command": "python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json",
         "summary": "Validate a batch plan without invoking assistant CLIs.",
         "safety": "read-only",
+    },
+    {
+        "name": "outer-gate",
+        "command": "python3 scripts/ahl.py outer gate PROMPT_36 --json",
+        "summary": "Collect post-prompt validation, audit, and readiness gate evidence.",
+        "safety": "read-only; records prompt validation commands without executing arbitrary shell",
     },
     {
         "name": "memory-check",
@@ -1677,9 +1717,275 @@ def outer_dry_run_report(root: Path, plan_value: str) -> dict[str, Any]:
     return {"ok": not problems, "plan_id": plan.get("plan_id"), "steps": steps, "problems": problems}
 
 
+def git_status_report(root: Path) -> dict[str, Any]:
+    result, problem = run_git(root, ["status", "--short", "--untracked-files=all"])
+    if problem:
+        return {
+            "available": False,
+            "ok": False,
+            "unsafe": True,
+            "lines": [],
+            "paths": [],
+            "problems": [problem],
+        }
+    if result is None or result.returncode != 0:
+        stderr = result.stderr.strip() if result is not None else ""
+        return {
+            "available": True,
+            "ok": False,
+            "unsafe": True,
+            "lines": [],
+            "paths": [],
+            "problems": [stderr or "could not read git status"],
+        }
+
+    lines = [line for line in result.stdout.splitlines() if line.strip()]
+    conflict_statuses = {"DD", "AU", "UD", "UA", "DU", "AA", "UU"}
+    unsafe_lines = [line for line in lines if line[:2] in conflict_statuses]
+    problems = [f"unmerged git status entry: {line}" for line in unsafe_lines]
+    return {
+        "available": True,
+        "ok": not unsafe_lines,
+        "unsafe": bool(unsafe_lines),
+        "lines": lines,
+        "paths": changed_paths_from_status(lines),
+        "problems": problems,
+    }
+
+
+def run_outer_gate_ahl_check(root: Path, command: str) -> dict[str, Any]:
+    if command == "python3 scripts/ahl.py promptset lint":
+        data = promptset_lint_data(root)
+        return {"command": command, "status": "passed" if data["ok"] else "failed", "ok": data["ok"], "problems": data["problems"]}
+    if command == "python3 scripts/ahl.py doctor":
+        script = root / "scripts" / "ahl.py"
+        if not script.is_file():
+            return {"command": command, "status": "unavailable", "ok": None, "problems": ["scripts/ahl.py is unavailable"]}
+        try:
+            result = subprocess.run(
+                [sys.executable, str(script), "doctor", "--json"],
+                cwd=root,
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        except OSError as exc:
+            return {"command": command, "status": "unavailable", "ok": None, "problems": [f"could not run doctor: {exc}"]}
+        try:
+            data = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            data = {"ok": False, "problems": [result.stderr.strip() or "doctor did not emit JSON"]}
+        problems = data.get("problems", [])
+        if not isinstance(problems, list):
+            problems = []
+        return {"command": command, "status": "passed" if result.returncode == 0 else "failed", "ok": result.returncode == 0, "problems": problems}
+    return {"command": command, "status": "skipped", "ok": None, "problems": ["not in outer gate AHL check allowlist"]}
+
+
+def prompt_item_from_plan(plan: dict[str, Any], prompt_id: str) -> tuple[dict[str, Any] | None, bool]:
+    prompt_items = plan.get("prompts")
+    if not isinstance(prompt_items, list):
+        return None, False
+    matching_index: int | None = None
+    for index, item in enumerate(prompt_items):
+        if isinstance(item, dict) and item.get("prompt_id") == prompt_id:
+            matching_index = index
+            break
+    if matching_index is None:
+        return None, False
+    return prompt_items[matching_index], matching_index == len(prompt_items) - 1
+
+
+def completion_audit_from_artifact(root: Path, artifact_value: str | None) -> dict[str, Any]:
+    if not artifact_value:
+        return {
+            "status": "missing",
+            "artifact": None,
+            "semantic_completion_claimed": False,
+            "notes": "No explicit completion audit artifact was supplied; structural gate cannot claim semantic completion.",
+        }
+    path = (root / artifact_value).resolve()
+    try:
+        rel = path.relative_to(root.resolve())
+    except ValueError:
+        return {
+            "status": "blocked",
+            "artifact": artifact_value,
+            "semantic_completion_claimed": False,
+            "notes": "Completion audit artifact path escapes the repository.",
+        }
+    if not path.is_file():
+        return {
+            "status": "missing",
+            "artifact": str(rel),
+            "semantic_completion_claimed": False,
+            "notes": "Completion audit artifact was supplied but does not exist.",
+        }
+    return {
+        "status": "present",
+        "artifact": str(rel),
+        "semantic_completion_claimed": False,
+        "notes": "Audit artifact exists; reviewers still own semantic judgment.",
+    }
+
+
+def outer_gate_report(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    prompt_id = normalize_prompt_id(args.prompt)
+    prompt_number = prompt_id_to_number(prompt_id)
+    prompt_path = root / ".prompts" / f"{prompt_id}.txt"
+    plan: dict[str, Any] | None = None
+    plan_problem: str | None = None
+    plan_prompt: dict[str, Any] | None = None
+    final_prompt_in_plan = False
+    problems: list[str] = []
+    warnings: list[str] = []
+
+    if args.plan:
+        plan, plan_problem = load_outer_plan(root, args.plan)
+        if plan_problem:
+            problems.append(plan_problem)
+        elif plan is not None:
+            plan_prompt, final_prompt_in_plan = prompt_item_from_plan(plan, prompt_id)
+            if plan_prompt is None:
+                problems.append(f"prompt {prompt_id} is not present in supplied plan")
+
+    git = git_status_report(root)
+    problems.extend(git["problems"])
+
+    prompt_exists = prompt_path.is_file()
+    if not prompt_exists:
+        problems.append(f"missing prompt file: .prompts/{prompt_id}.txt")
+
+    next_prompt_id = prompt_number_to_id(prompt_number + 1)
+    next_prompt_path = root / ".prompts" / f"{next_prompt_id}.txt"
+    next_required = not final_prompt_in_plan
+    next_exists = next_prompt_path.is_file()
+    next_blockers: list[str] = []
+    if next_required and not next_exists:
+        next_blockers.append(f"missing next prompt file: .prompts/{next_prompt_id}.txt")
+        problems.extend(next_blockers)
+
+    if plan_prompt and isinstance(plan_prompt.get("validation_commands"), list):
+        validation_commands = [item for item in plan_prompt["validation_commands"] if isinstance(item, str)]
+        validation_source = "plan"
+    else:
+        validation_commands = validation_commands_for_prompt(prompt_path)
+        validation_source = "prompt" if prompt_exists else "unavailable"
+    validation_outcomes = [
+        {
+            "command": command,
+            "status": "skipped",
+            "reason": "record-only mode; outer gate does not execute arbitrary prompt validation commands",
+        }
+        for command in validation_commands
+    ]
+    if not validation_commands:
+        warnings.append("no validation commands were available to record")
+
+    if plan and isinstance(plan.get("required_ahl_checks"), list):
+        requested_ahl_checks = [item for item in plan["required_ahl_checks"] if isinstance(item, str)]
+    else:
+        requested_ahl_checks = list(OUTER_REQUIRED_AHL_CHECKS)
+    ahl_checks = [run_outer_gate_ahl_check(root, command) for command in requested_ahl_checks]
+    failed_ahl_checks = [item for item in ahl_checks if item["status"] == "failed"]
+    if failed_ahl_checks:
+        problems.extend(f"AHL check failed: {item['command']}" for item in failed_ahl_checks)
+    skipped_or_unavailable = [item for item in ahl_checks if item["status"] in {"skipped", "unavailable"}]
+    if skipped_or_unavailable:
+        warnings.extend(f"AHL check {item['status']}: {item['command']}" for item in skipped_or_unavailable)
+
+    completion_audit = completion_audit_from_artifact(root, args.audit_artifact)
+    if completion_audit["status"] == "blocked":
+        problems.append(completion_audit["notes"])
+    elif completion_audit["status"] == "missing":
+        warnings.append(completion_audit["notes"])
+
+    handoff_path = root / "tmp" / "HANDOFF.md"
+    commit_policy = plan.get("commit_policy") if isinstance(plan, dict) else None
+    if commit_policy not in ("none", "plan-only", "explicit"):
+        commit_policy = "none"
+
+    if git["unsafe"]:
+        status = "unsafe-git-state"
+    elif not prompt_exists or next_blockers or plan_problem or (plan is not None and plan_prompt is None):
+        status = "blocked"
+    elif failed_ahl_checks:
+        status = "failed-validation"
+    elif completion_audit["status"] != "present":
+        status = "needs-human-review"
+    elif warnings:
+        status = "pass-with-warnings"
+    else:
+        status = "pass"
+
+    decision_by_status = {
+        "pass": "continue",
+        "pass-with-warnings": "continue-with-review",
+        "blocked": "stop",
+        "failed-validation": "stop",
+        "needs-human-review": "stop-for-human-review",
+        "driver-failed": "stop",
+        "unsafe-git-state": "stop",
+    }
+    return {
+        "ok": status in {"pass", "pass-with-warnings", "needs-human-review"},
+        "schema": OUTER_GATE_REPORT_SCHEMA,
+        "generated_at": utc_timestamp(),
+        "status": status,
+        "prompt_id": prompt_id,
+        "prompt_file": f".prompts/{prompt_id}.txt",
+        "prompt_file_exists": prompt_exists,
+        "plan": {
+            "supplied": bool(args.plan),
+            "path": args.plan,
+            "plan_id": plan.get("plan_id") if isinstance(plan, dict) else None,
+            "prompt_in_plan": plan_prompt is not None if plan is not None else None,
+            "final_prompt_in_plan": final_prompt_in_plan,
+        },
+        "git": git,
+        "changed_files": git["lines"],
+        "validation_commands": {"source": validation_source, "commands": validation_commands},
+        "validation_outcomes": validation_outcomes,
+        "ahl_checks": ahl_checks,
+        "completion_audit": completion_audit,
+        "next_prompt_readiness": {
+            "status": "not-required" if not next_required else ("ready" if next_exists else "blocked"),
+            "next_prompt": next_prompt_id,
+            "path": f".prompts/{next_prompt_id}.txt",
+            "required": next_required,
+            "blockers": next_blockers,
+        },
+        "handoff": {
+            "status": "present" if handoff_path.is_file() else "absent",
+            "path": "tmp/HANDOFF.md",
+        },
+        "commit_plan": {
+            "status": "planned" if commit_policy in {"plan-only", "explicit"} else "none",
+            "policy": commit_policy,
+            "notes": "Gate records commit intent only; it does not stage or commit.",
+        },
+        "decision": decision_by_status[status],
+        "warnings": warnings,
+        "problems": problems,
+    }
+
+
 def command_outer(args: argparse.Namespace) -> int:
     if args.action == "plan":
         return command_outer_plan(args)
+    if args.action == "gate":
+        root = repo_root()
+        data = outer_gate_report(root, args)
+        human = [
+            f"outer gate: {data['status']}",
+            f"- prompt: {data['prompt_id']}",
+            f"- decision: {data['decision']}",
+            f"- changed files: {len(data['changed_files'])}",
+        ]
+        human.extend(f"- warning: {warning}" for warning in data["warnings"])
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
     root = repo_root()
     data = outer_dry_run_report(root, args.plan)
     human = ["outer dry-run: ok" if data["ok"] else "outer dry-run: problems found"]
@@ -2943,7 +3249,7 @@ def build_parser() -> argparse.ArgumentParser:
     driver.add_argument("--json", action="store_true")
     driver.set_defaults(func=command_driver)
 
-    outer = subparsers.add_parser("outer", help="Create and dry-run sequential outer-loop batch plans.")
+    outer = subparsers.add_parser("outer", help="Plan, dry-run, and gate sequential outer-loop batches.")
     outer_subparsers = outer.add_subparsers(dest="action", required=True)
     outer_plan = outer_subparsers.add_parser("plan", help="Create an inspectable sequential batch plan artifact.")
     range_group = outer_plan.add_mutually_exclusive_group(required=True)
@@ -2971,6 +3277,13 @@ def build_parser() -> argparse.ArgumentParser:
     outer_dry_run.add_argument("--plan", required=True, help="Path to a plan.json artifact.")
     outer_dry_run.add_argument("--json", action="store_true")
     outer_dry_run.set_defaults(func=command_outer)
+
+    outer_gate = outer_subparsers.add_parser("gate", help="Collect post-prompt validation, audit, and readiness evidence.")
+    outer_gate.add_argument("prompt", help="Prompt id to gate, such as PROMPT_36.")
+    outer_gate.add_argument("--plan", help="Path to a plan.json artifact to read validation commands and final-step context.")
+    outer_gate.add_argument("--audit-artifact", help="Path to an explicit completion audit artifact, when one exists.")
+    outer_gate.add_argument("--json", action="store_true")
+    outer_gate.set_defaults(func=command_outer)
 
     docs = subparsers.add_parser("docs", help="Check markdown navigation and local links.")
     docs.add_argument("action", choices=("check",))

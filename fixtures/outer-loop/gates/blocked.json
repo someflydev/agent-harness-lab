@@ -1,0 +1,37 @@
+{
+  "ok": false,
+  "status": "blocked",
+  "prompt_id": "PROMPT_36",
+  "changed_files": [],
+  "validation_commands": {
+    "source": "unavailable",
+    "commands": []
+  },
+  "validation_outcomes": [],
+  "ahl_checks": [],
+  "completion_audit": {
+    "status": "missing",
+    "artifact": null,
+    "semantic_completion_claimed": false,
+    "notes": "No explicit completion audit artifact was supplied."
+  },
+  "next_prompt_readiness": {
+    "status": "blocked",
+    "next_prompt": "PROMPT_37",
+    "path": ".prompts/PROMPT_37.txt",
+    "required": true,
+    "blockers": ["missing next prompt file: .prompts/PROMPT_37.txt"]
+  },
+  "handoff": {
+    "status": "absent",
+    "path": "tmp/HANDOFF.md"
+  },
+  "commit_plan": {
+    "status": "none",
+    "policy": "none",
+    "notes": "Fixture only."
+  },
+  "decision": "stop",
+  "warnings": ["No explicit completion audit artifact was supplied."],
+  "problems": ["missing next prompt file: .prompts/PROMPT_37.txt"]
+}

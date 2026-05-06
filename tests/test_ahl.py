@@ -594,6 +594,113 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["ok"])
         self.assertTrue(any("refusing to overwrite" in problem for problem in data["problems"]))
 
+    def git_status_ok(self, lines=""):
+        return subprocess.CompletedProcess(["git"], 0, stdout=lines, stderr="")
+
+    def test_outer_gate_existing_prompt_no_plan_needs_human_review(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok(""), None)):
+            code, output = self.run_cli("outer", "gate", "PROMPT_01", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["status"], "needs-human-review")
+        self.assertEqual(data["prompt_id"], "PROMPT_01")
+        self.assertEqual(data["next_prompt_readiness"]["status"], "ready")
+
+    def test_outer_gate_detects_missing_prompt(self):
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok(""), None)):
+            code, output = self.run_cli("outer", "gate", "PROMPT_01", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "blocked")
+        self.assertTrue(any("missing prompt file: .prompts/PROMPT_01.txt" in problem for problem in data["problems"]))
+
+    def test_outer_gate_detects_missing_next_prompt_when_required(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01"))
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok(""), None)):
+            code, output = self.run_cli("outer", "gate", "PROMPT_01", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "blocked")
+        self.assertEqual(data["next_prompt_readiness"]["status"], "blocked")
+        self.assertTrue(any("missing next prompt file: .prompts/PROMPT_02.txt" in problem for problem in data["problems"]))
+
+    def test_outer_gate_records_skipped_validations_honestly(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+        plan = {
+            "plan_id": "gate-plan",
+            "prompts": [
+                {
+                    "prompt_id": "PROMPT_01",
+                    "path": ".prompts/PROMPT_01.txt",
+                    "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+                }
+            ],
+            "required_ahl_checks": ["python3 scripts/ahl.py promptset lint"],
+            "commit_policy": "none",
+        }
+        self.write("runs/outer-loop/gate-plan/plan.json", json.dumps(plan))
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok(""), None)):
+            code, output = self.run_cli("outer", "gate", "PROMPT_01", "--plan", "runs/outer-loop/gate-plan/plan.json", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["validation_commands"]["source"], "plan")
+        self.assertEqual(data["validation_outcomes"][0]["status"], "skipped")
+        self.assertIn("record-only mode", data["validation_outcomes"][0]["reason"])
+        self.assertEqual(data["next_prompt_readiness"]["status"], "not-required")
+
+    def test_outer_gate_json_has_stable_fields(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok("?? notes.md\n"), None)):
+            code, output = self.run_cli("outer", "gate", "PROMPT_01", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in (
+            "ok",
+            "status",
+            "prompt_id",
+            "changed_files",
+            "validation_commands",
+            "validation_outcomes",
+            "ahl_checks",
+            "completion_audit",
+            "next_prompt_readiness",
+            "handoff",
+            "commit_plan",
+            "decision",
+            "warnings",
+            "problems",
+        ):
+            self.assertIn(key, data)
+
+    def test_outer_gate_represents_unsafe_git_state_without_crashing(self):
+        self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
+        self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02"))
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok("UU docs/conflict.md\n"), None)):
+            code, output = self.run_cli("outer", "gate", "PROMPT_01", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "unsafe-git-state")
+        self.assertTrue(data["git"]["unsafe"])
+        self.assertTrue(any("unmerged git status entry" in problem for problem in data["problems"]))
+
     def write_docs_index(self):
         for dirname in (
             "domain-packs",
@@ -815,6 +922,20 @@ class AhlTest(unittest.TestCase):
                 }
             ),
         )
+        for driver_id in ("codex", "gemini", "pi"):
+            self.write(
+                f"fixtures/assistant-drivers/{driver_id}.json",
+                json.dumps(
+                    {
+                        "id": driver_id,
+                        "display_name": f"{driver_id.title()} Driver",
+                        "driver_kind": "subscription-cli",
+                        "executable_name": driver_id,
+                        "probe_expectation": "PATH lookup only.",
+                        "live_run_status": "deferred",
+                    }
+                ),
+            )
         self.write(
             "fixtures/outer-loop/plans/valid-next-three.json",
             json.dumps(
@@ -878,6 +999,31 @@ class AhlTest(unittest.TestCase):
                 }
             ),
         )
+        gate_report = {
+            "ok": True,
+            "status": "pass",
+            "prompt_id": "PROMPT_36",
+            "changed_files": [],
+            "validation_commands": {"source": "plan", "commands": []},
+            "validation_outcomes": [],
+            "ahl_checks": [],
+            "completion_audit": {"status": "present"},
+            "next_prompt_readiness": {"status": "ready", "next_prompt": "PROMPT_37"},
+            "handoff": {"status": "absent"},
+            "commit_plan": {"status": "none"},
+            "decision": "continue",
+        }
+        self.write("fixtures/outer-loop/gates/pass.json", json.dumps(gate_report))
+        blocked_gate_report = dict(gate_report)
+        blocked_gate_report.update(
+            {
+                "ok": False,
+                "status": "blocked",
+                "next_prompt_readiness": {"status": "blocked", "next_prompt": "PROMPT_37"},
+                "decision": "stop",
+            }
+        )
+        self.write("fixtures/outer-loop/gates/blocked.json", json.dumps(blocked_gate_report))
 
     def test_fixtures_check_accepts_expected_fixture_set(self):
         self.write_minimal_fixture_set()

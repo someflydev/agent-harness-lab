@@ -37,6 +37,11 @@ justifies more.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
   validation commands, AHL checks, and stop conditions without invoking
   assistants.
+- `outer gate` collects post-prompt gate evidence from git status, prompt and
+  next-prompt files, recorded validation commands, allowlisted AHL checks,
+  completion-audit artifact presence, handoff state, and commit-plan policy.
+  It records prompt validation commands in record-only mode rather than
+  executing arbitrary shell.
 - `dry-run list` and `dry-run check` list deterministic scenario manifests,
   validate their referenced artifacts, and check `dry-runs/PARITY.md` backing
   files.
@@ -95,6 +100,8 @@ python3 scripts/ahl.py driver probe codex --help-only --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
 python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json --json
+python3 scripts/ahl.py outer gate PROMPT_36 --json
+python3 scripts/ahl.py outer gate PROMPT_36 --plan runs/outer-loop/<plan-id>/plan.json --json
 python3 scripts/ahl.py dry-run list
 python3 scripts/ahl.py dry-run check sequential-prompt-run
 python3 scripts/ahl.py dry-run check --all --json
@@ -166,6 +173,10 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   when creation succeeds
 - `outer dry-run`: `ok`, `plan_id`, `steps`, `problems`; each step includes
   stable `prompt_id`, `path`, `status`, `validation_commands`, and `problems`
+- `outer gate`: `ok`, `status`, `prompt_id`, `changed_files`,
+  `validation_commands`, `validation_outcomes`, `ahl_checks`,
+  `completion_audit`, `next_prompt_readiness`, `handoff`, `commit_plan`,
+  `decision`, `warnings`, and `problems`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
 - `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
   `problems`; each result includes stable `id`, `status`, and `problems`

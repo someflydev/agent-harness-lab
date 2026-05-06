@@ -13,6 +13,7 @@ python3 scripts/ahl.py promptset
 python3 scripts/ahl.py validate
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
+python3 scripts/ahl.py outer gate PROMPT_36 --json
 python3 scripts/ahl.py resume
 python3 scripts/ahl.py trace PROMPT_20 --json
 python3 scripts/ahl.py checkpoint
@@ -36,6 +37,9 @@ Each command supports `--json` where machine-readable output is practical.
 - `registry check` validates curated registry JSON parsing, required fields,
   referenced paths, and prompt registry ordering.
 - `registry list` reports registry files and item counts.
+- `outer gate` collects post-prompt validation, audit, readiness, handoff, git,
+  and commit-plan evidence without invoking assistants or executing arbitrary
+  prompt validation commands.
 - `resume` prints a read-only Session Context Briefing from git state,
   runtime-note files, and local `tmp/*.md` counts.
 - `trace` summarizes prompt-related working tree changes, git branch and HEAD
@@ -61,6 +65,10 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `validate`: `ok`, `checks`, `problems`, `promptset`
 - `registry check`: `ok`, `checks`, `problems`, `registries`
 - `registry list`: `ok`, `registries`
+- `outer gate`: `ok`, `status`, `prompt_id`, `changed_files`,
+  `validation_commands`, `validation_outcomes`, `ahl_checks`,
+  `completion_audit`, `next_prompt_readiness`, `handoff`, `commit_plan`,
+  `decision`, `warnings`, `problems`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,

@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "status": "pass",
+  "prompt_id": "PROMPT_36",
+  "changed_files": ["M scripts/ahl.py"],
+  "validation_commands": {
+    "source": "plan",
+    "commands": ["python3 -m unittest tests/test_ahl.py"]
+  },
+  "validation_outcomes": [
+    {
+      "command": "python3 -m unittest tests/test_ahl.py",
+      "status": "skipped",
+      "reason": "record-only fixture"
+    }
+  ],
+  "ahl_checks": [
+    {
+      "command": "python3 scripts/ahl.py promptset lint",
+      "status": "passed",
+      "ok": true,
+      "problems": []
+    }
+  ],
+  "completion_audit": {
+    "status": "present",
+    "artifact": "reports/fixture-audit.md",
+    "semantic_completion_claimed": false,
+    "notes": "Fixture only."
+  },
+  "next_prompt_readiness": {
+    "status": "ready",
+    "next_prompt": "PROMPT_37",
+    "path": ".prompts/PROMPT_37.txt",
+    "required": true,
+    "blockers": []
+  },
+  "handoff": {
+    "status": "absent",
+    "path": "tmp/HANDOFF.md"
+  },
+  "commit_plan": {
+    "status": "none",
+    "policy": "none",
+    "notes": "Fixture only."
+  },
+  "decision": "continue",
+  "warnings": [],
+  "problems": []
+}
