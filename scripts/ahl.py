@@ -9,6 +9,7 @@ import fnmatch
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -268,6 +269,26 @@ MEMORY_CANDIDATE_REQUIRED_HEADINGS = (
     "## Review Notes",
     "## Disposition",
 )
+ASSISTANT_DRIVER_REGISTRY = "registry/assistant-drivers.json"
+ASSISTANT_DRIVER_REQUIRED_FIELDS = (
+    "id",
+    "display_name",
+    "driver_kind",
+    "executable_name",
+    "supported_invocation_modes",
+    "prompt_input_methods",
+    "structured_output_support",
+    "final_message_capture_support",
+    "sandbox_approval_controls",
+    "model_selection_support",
+    "reasoning_selection_support",
+    "fresh_session_behavior",
+    "resume_behavior",
+    "known_limitations",
+    "unsupported_operations",
+)
+ASSISTANT_DRIVER_KINDS = ("subscription-cli", "api-cli", "external-harness", "manual")
+ASSISTANT_DRIVER_PROMPT_INPUT_METHODS = ("argument", "stdin", "prompt_file", "tool_specific_option", "manual")
 COMMAND_HELP: tuple[dict[str, str], ...] = (
     {
         "name": "help",
@@ -345,6 +366,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "name": "registry",
         "command": "python3 scripts/ahl.py registry check",
         "summary": "Validate curated registry indexes.",
+        "safety": "read-only",
+    },
+    {
+        "name": "driver",
+        "command": "python3 scripts/ahl.py driver check",
+        "summary": "Validate assistant driver records and safe local probes.",
         "safety": "read-only",
     },
     {
@@ -1132,6 +1159,231 @@ def command_registry(args: argparse.Namespace) -> int:
 
     data = registry_check_data(repo_root())
     human = ["registry: ok" if data["ok"] else "registry: problems found"]
+    human.extend(f"- {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
+def load_assistant_driver_registry(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    path = root / ASSISTANT_DRIVER_REGISTRY
+    if not path.is_file():
+        return [], [f"missing assistant driver registry: {ASSISTANT_DRIVER_REGISTRY}"]
+    data, problem = load_registry(path)
+    if problem:
+        return [], [f"{ASSISTANT_DRIVER_REGISTRY}: {problem}"]
+    assert data is not None
+    drivers: list[dict[str, Any]] = []
+    problems: list[str] = []
+    for index, item in enumerate(data["items"]):
+        item_ref = f"{ASSISTANT_DRIVER_REGISTRY} item {index + 1}"
+        if not isinstance(item, dict):
+            problems.append(f"{item_ref}: item must be an object")
+            continue
+        drivers.append(item)
+    return drivers, problems
+
+
+def driver_public_record(driver: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": driver.get("id"),
+        "display_name": driver.get("display_name"),
+        "driver_kind": driver.get("driver_kind"),
+        "executable_name": driver.get("executable_name"),
+        "supported_invocation_modes": driver.get("supported_invocation_modes"),
+        "prompt_input_methods": driver.get("prompt_input_methods"),
+        "status": driver.get("status"),
+    }
+
+
+def validate_assistant_driver(driver: dict[str, Any], index: int, root: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    item_ref = f"{ASSISTANT_DRIVER_REGISTRY} item {index + 1}"
+    driver_id = driver.get("id", f"item-{index + 1}")
+    checks: list[dict[str, Any]] = []
+    problems: list[str] = []
+
+    missing = [field for field in ASSISTANT_DRIVER_REQUIRED_FIELDS if field not in driver]
+    checks.append({"name": f"{driver_id} required fields", "driver_id": driver_id, "ok": not missing})
+    if missing:
+        problems.append(f"{item_ref}: missing driver fields: {', '.join(missing)}")
+
+    kind = driver.get("driver_kind")
+    kind_ok = kind in ASSISTANT_DRIVER_KINDS
+    checks.append({"name": f"{driver_id} driver kind", "driver_id": driver_id, "ok": kind_ok})
+    if not kind_ok:
+        problems.append(f"{item_ref}: driver_kind must be one of {', '.join(ASSISTANT_DRIVER_KINDS)}")
+
+    executable = driver.get("executable_name")
+    executable_ok = executable is None or isinstance(executable, str)
+    checks.append({"name": f"{driver_id} executable name", "driver_id": driver_id, "ok": executable_ok})
+    if not executable_ok:
+        problems.append(f"{item_ref}: executable_name must be a string or null")
+    if kind != "manual" and not executable:
+        problems.append(f"{item_ref}: non-manual drivers must name an executable")
+
+    modes = driver.get("supported_invocation_modes")
+    modes_ok = isinstance(modes, list) and all(isinstance(item, str) and item for item in modes)
+    checks.append({"name": f"{driver_id} invocation modes", "driver_id": driver_id, "ok": modes_ok})
+    if not modes_ok:
+        problems.append(f"{item_ref}: supported_invocation_modes must be a list of strings")
+
+    methods = driver.get("prompt_input_methods")
+    methods_ok = (
+        isinstance(methods, list)
+        and bool(methods)
+        and all(isinstance(item, str) and item in ASSISTANT_DRIVER_PROMPT_INPUT_METHODS for item in methods)
+    )
+    checks.append({"name": f"{driver_id} prompt input methods", "driver_id": driver_id, "ok": methods_ok})
+    if not methods_ok:
+        problems.append(
+            f"{item_ref}: prompt_input_methods must use {', '.join(ASSISTANT_DRIVER_PROMPT_INPUT_METHODS)}"
+        )
+
+    for field in ("known_limitations", "unsupported_operations"):
+        value = driver.get(field)
+        ok = isinstance(value, list) and all(isinstance(item, str) and item for item in value)
+        checks.append({"name": f"{driver_id} {field}", "driver_id": driver_id, "ok": ok})
+        if not ok:
+            problems.append(f"{item_ref}: {field} must be a list of strings")
+
+    path_value = driver.get("path")
+    if isinstance(path_value, str) and path_value:
+        path_ok = (root / path_value).exists()
+        checks.append({"name": f"{driver_id} fixture path exists", "driver_id": driver_id, "path": path_value, "ok": path_ok})
+        if not path_ok:
+            problems.append(f"{item_ref}: referenced path does not exist: {path_value}")
+
+    return checks, problems
+
+
+def assistant_driver_check_data(root: Path) -> dict[str, Any]:
+    drivers, problems = load_assistant_driver_registry(root)
+    checks: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, driver in enumerate(drivers):
+        driver_id = driver.get("id")
+        if not isinstance(driver_id, str) or not driver_id:
+            problems.append(f"{ASSISTANT_DRIVER_REGISTRY} item {index + 1}: id must be a non-empty string")
+        elif driver_id in seen_ids:
+            problems.append(f"{ASSISTANT_DRIVER_REGISTRY} item {index + 1}: duplicate id {driver_id}")
+        else:
+            seen_ids.add(driver_id)
+        item_checks, item_problems = validate_assistant_driver(driver, index, root)
+        checks.extend(item_checks)
+        problems.extend(item_problems)
+    return {
+        "ok": not problems,
+        "drivers": [driver_public_record(driver) for driver in drivers],
+        "checks": checks,
+        "problems": problems,
+    }
+
+
+def assistant_driver_list_data(root: Path) -> dict[str, Any]:
+    drivers, problems = load_assistant_driver_registry(root)
+    return {
+        "ok": not problems,
+        "drivers": [driver_public_record(driver) for driver in drivers],
+        "checks": [],
+        "problems": problems,
+    }
+
+
+def assistant_driver_probe_data(root: Path, driver_id: str, help_only: bool) -> dict[str, Any]:
+    drivers, load_problems = load_assistant_driver_registry(root)
+    selected = next((driver for driver in drivers if driver.get("id") == driver_id), None)
+    checks: list[dict[str, Any]] = []
+    problems = list(load_problems)
+    probe: dict[str, Any] = {"driver_id": driver_id, "help_only": help_only, "executed_help": False}
+    if selected is None:
+        problems.append(f"unknown assistant driver: {driver_id}")
+        return {"ok": False, "drivers": [], "checks": checks, "problems": problems, "probe": probe}
+
+    executable = selected.get("executable_name")
+    if executable is None:
+        checks.append({"name": "manual driver has no executable", "driver_id": driver_id, "ok": True})
+        probe.update({"executable_name": None, "available": None, "path": None})
+        return {
+            "ok": not problems,
+            "drivers": [driver_public_record(selected)],
+            "checks": checks,
+            "problems": problems,
+            "probe": probe,
+        }
+
+    executable_path = shutil.which(executable)
+    available = executable_path is not None
+    checks.append({"name": "executable on PATH", "driver_id": driver_id, "executable": executable, "ok": available})
+    probe.update({"executable_name": executable, "available": available, "path": executable_path})
+    if not available:
+        problems.append(f"{driver_id}: executable not found on PATH: {executable}")
+        return {
+            "ok": False,
+            "drivers": [driver_public_record(selected)],
+            "checks": checks,
+            "problems": problems,
+            "probe": probe,
+        }
+
+    if help_only:
+        help_args = selected.get("capability_probe", {}).get("help_args", ["--help"])
+        if not isinstance(help_args, list) or not all(isinstance(item, str) for item in help_args):
+            help_args = ["--help"]
+        command = [executable, *help_args]
+        try:
+            result = subprocess.run(
+                command,
+                cwd=root,
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            problems.append(f"{driver_id}: help probe failed: {exc}")
+            checks.append({"name": "help-only command", "driver_id": driver_id, "ok": False})
+        else:
+            ok = result.returncode == 0
+            checks.append({"name": "help-only command", "driver_id": driver_id, "ok": ok, "returncode": result.returncode})
+            if not ok:
+                problems.append(f"{driver_id}: help probe exited with {result.returncode}")
+            probe.update(
+                {
+                    "executed_help": True,
+                    "returncode": result.returncode,
+                    "stdout_preview": result.stdout[:400],
+                    "stderr_preview": result.stderr[:400],
+                }
+            )
+    return {
+        "ok": not problems,
+        "drivers": [driver_public_record(selected)],
+        "checks": checks,
+        "problems": problems,
+        "probe": probe,
+    }
+
+
+def command_driver(args: argparse.Namespace) -> int:
+    root = repo_root()
+    if args.action == "list":
+        data = assistant_driver_list_data(root)
+        human = ["assistant drivers:"]
+        human.extend(f"- {driver['id']}: {driver['driver_kind']} ({driver['executable_name']})" for driver in data["drivers"])
+        if not data["drivers"]:
+            human.append("- none")
+        human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+    if args.action == "check":
+        data = assistant_driver_check_data(root)
+        human = ["assistant drivers: ok" if data["ok"] else "assistant drivers: problems found"]
+        human.extend(f"- {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+    if not args.driver_id:
+        data = {"ok": False, "drivers": [], "checks": [], "problems": ["driver probe requires a driver id"]}
+        return emit(data, args.json, ["driver probe requires a driver id"], 1)
+    data = assistant_driver_probe_data(root, args.driver_id, args.help_only)
+    human = [f"assistant driver probe: {args.driver_id}"]
     human.extend(f"- {problem}" for problem in data["problems"])
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
@@ -2381,6 +2633,13 @@ def build_parser() -> argparse.ArgumentParser:
     registry.add_argument("action", choices=("list", "check"))
     registry.add_argument("--json", action="store_true")
     registry.set_defaults(func=command_registry)
+
+    driver = subparsers.add_parser("driver", help="List, validate, or safely probe assistant driver records.")
+    driver.add_argument("action", choices=("list", "check", "probe"))
+    driver.add_argument("driver_id", nargs="?", help="Driver id for `driver probe`.")
+    driver.add_argument("--help-only", action="store_true", help="Run only the driver's configured help command.")
+    driver.add_argument("--json", action="store_true")
+    driver.set_defaults(func=command_driver)
 
     docs = subparsers.add_parser("docs", help="Check markdown navigation and local links.")
     docs.add_argument("action", choices=("check",))

@@ -327,6 +327,98 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["ok"])
         self.assertTrue(any("ordering does not match" in problem for problem in data["problems"]))
 
+    def driver_item(self, driver_id="codex", **overrides):
+        item = self.registry_item(driver_id, f"fixtures/assistant-drivers/{driver_id}.json", type="assistant-driver")
+        item.update(
+            {
+                "display_name": f"{driver_id.title()} Driver",
+                "driver_kind": "subscription-cli",
+                "executable_name": driver_id,
+                "supported_invocation_modes": ["interactive"],
+                "prompt_input_methods": ["stdin"],
+                "structured_output_support": {"status": "unknown"},
+                "final_message_capture_support": {"status": "unknown"},
+                "sandbox_approval_controls": "requires verification",
+                "model_selection_support": "requires verification",
+                "reasoning_selection_support": "requires verification",
+                "fresh_session_behavior": "new invocation",
+                "resume_behavior": "unknown",
+                "capability_probe": {"path_check": True, "help_args": ["--help"], "help_only_safe": True},
+                "known_limitations": ["not verified"],
+                "unsupported_operations": ["live calls during probes"],
+            }
+        )
+        item.update(overrides)
+        return item
+
+    def write_driver_registry(self, items=None):
+        if items is None:
+            items = [
+                self.driver_item("codex"),
+                self.driver_item("manual", driver_kind="manual", executable_name=None, prompt_input_methods=["manual"]),
+            ]
+        for item in items:
+            path = item.get("path")
+            if isinstance(path, str) and path.startswith("fixtures/"):
+                self.write(path, json.dumps({"id": item["id"]}))
+        self.write_registry("assistant-drivers.json", items)
+
+    def test_driver_check_accepts_valid_registry(self):
+        self.write_driver_registry()
+
+        code, output = self.run_cli("driver", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual([driver["id"] for driver in data["drivers"]], ["codex", "manual"])
+
+    def test_driver_check_reports_malformed_registry(self):
+        bad = self.driver_item("codex")
+        bad.pop("driver_kind")
+        self.write_driver_registry([bad])
+
+        code, output = self.run_cli("driver", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("missing driver fields: driver_kind" in problem for problem in data["problems"]))
+
+    def test_driver_list_json_has_stable_fields(self):
+        self.write_driver_registry()
+
+        code, output = self.run_cli("driver", "list", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "drivers", "checks", "problems"):
+            self.assertIn(key, data)
+        for key in ("id", "display_name", "driver_kind", "executable_name", "supported_invocation_modes"):
+            self.assertIn(key, data["drivers"][0])
+
+    def test_unknown_driver_probe_fails_clearly(self):
+        self.write_driver_registry()
+
+        code, output = self.run_cli("driver", "probe", "missing", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertIn("unknown assistant driver: missing", data["problems"])
+
+    def test_help_only_probe_degrades_when_executable_missing(self):
+        self.write_driver_registry()
+
+        with mock.patch("shutil.which", return_value=None):
+            code, output = self.run_cli("driver", "probe", "codex", "--help-only", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertFalse(data["probe"]["available"])
+        self.assertTrue(any("executable not found on PATH: codex" in problem for problem in data["problems"]))
+
     def write_docs_index(self):
         for dirname in (
             "domain-packs",
