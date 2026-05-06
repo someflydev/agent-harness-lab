@@ -20,6 +20,7 @@ make promptset
 make lint-prompts
 make check-docs
 make test
+make domain-pack
 make trace PROMPT=PROMPT_26
 make dry-run
 make lane-check
@@ -42,6 +43,7 @@ Read-only targets:
 - `lint-prompts`
 - `check-docs`
 - `test`
+- `domain-pack`
 - `trace`
 - `dry-run`
 - `lane-check`

@@ -106,6 +106,10 @@ include:
 python3 scripts/ahl.py promptset
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py validate
+python3 scripts/ahl.py docs check
+python3 scripts/ahl.py registry check
+python3 scripts/ahl.py dry-run check --all
+python3 scripts/ahl.py domain-pack check
 python3 -m unittest tests/test_ahl.py
 ```
 

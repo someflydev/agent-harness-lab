@@ -110,6 +110,7 @@ The stable Makefile targets are:
 - `lint-prompts`
 - `check-docs`
 - `test`
+- `domain-pack`
 - `trace`
 - `dry-run`
 - `registry`

@@ -1,4 +1,4 @@
-.PHONY: help doctor resume checkpoint promptset lint-prompts check-docs test trace dry-run lane-check registry memory-check experiment-check
+.PHONY: help doctor resume checkpoint promptset lint-prompts check-docs test domain-pack trace dry-run lane-check registry memory-check experiment-check
 
 PROMPT ?= PROMPT_26
 
@@ -25,6 +25,9 @@ check-docs:
 
 test:
 	@python3 -m unittest tests/test_ahl.py
+
+domain-pack:
+	@python3 scripts/ahl.py domain-pack check
 
 trace:
 	@python3 scripts/ahl.py trace $(PROMPT)

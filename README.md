@@ -136,6 +136,7 @@ make help
 make doctor
 make promptset
 make test
+make domain-pack
 python3 scripts/ahl.py promptset
 python3 scripts/ahl.py doctor
 python3 scripts/ahl.py docs check
