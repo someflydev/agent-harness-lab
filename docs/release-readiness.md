@@ -24,6 +24,10 @@ claim.
 - README and AGENT boot paths are current, concise, and aligned with the
   active workflow.
 - Known limitations are documented in `docs/known-limitations.md`.
+- Operating baseline and final audit docs are current when closing the initial
+  baseline: `docs/capstone/operating-baseline.md`,
+  `docs/capstone/final-audit.md`, and
+  `docs/capstone/promptset-completion-report.md`.
 
 ## Console Sweep
 
@@ -58,3 +62,7 @@ Before closing a release-readiness pass, verify:
 - Registry guidance remains clear that registries are navigation aids, not a
   second source of truth.
 - Any remaining gaps are named as limitations instead of implied features.
+- Capstone docs identify unavailable checks honestly and do not claim provider
+  orchestration, autonomous runners, graph or vector retrieval, or production
+  safety scanning unless those capabilities have actually been implemented and
+  validated.

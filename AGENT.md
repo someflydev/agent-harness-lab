@@ -46,6 +46,11 @@ when a prompt or operator asks how to run this repo with Codex, Claude Code,
 Gemini, Pi, generic chat, or subscription-friendly workflows. Keep that
 guidance tool-agnostic unless the current environment proves a capability.
 
+The initial promptset baseline is recorded in
+`docs/capstone/operating-baseline.md`, with final audit evidence in
+`docs/capstone/final-audit.md`. Treat `PROMPT_33+` files, when present, as
+phase-two work unless the operator explicitly asks to run one of them.
+
 ## Project Skills
 
 Optional project-level skills live in `.agents/skills/`. They are on-demand
@@ -84,6 +89,9 @@ Use this closeout loop for prompt-execution sessions:
 3. Preflight the next prompt for obvious readiness issues.
 4. Bridge only if there is a real blocker or non-trivial warning.
 5. Reset by leaving the repo ready for the next fresh session.
+
+For the completed initial baseline, no prompt after Prompt 32 is required.
+Optional Prompt 33 and later files belong to a separate phase-two promptset.
 
 Create `tmp/HANDOFF.md` only when it materially helps the next session. Do not
 create or update it for routine completion notes that fit in the final answer.

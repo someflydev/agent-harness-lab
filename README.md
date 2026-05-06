@@ -94,10 +94,17 @@ such as:
 - Examples and experiments that test the harness model.
 - Findings and reports that summarize validation evidence.
 
-The repo does not yet contain all of those areas. They should be added by later
-prompts when the structure and workflow justify them.
+The initial baseline now contains those areas in documentation-first form.
+Later prompts should refine them only when usage evidence or a scoped prompt
+justifies the change.
 
-## Release Readiness
+## Operating Baseline
+
+The initial baseline for Prompts 01 through 32 is recorded in
+`docs/capstone/operating-baseline.md`, with final audit evidence in
+`docs/capstone/final-audit.md` and a completion report in
+`docs/capstone/promptset-completion-report.md`. Future work is tracked as
+backlog in `docs/capstone/future-backlog.md`, not as implemented capability.
 
 Release-readiness guidance lives in `docs/release-readiness.md`, with current
 limitations in `docs/known-limitations.md`, maintenance guidance in
@@ -160,6 +167,6 @@ This repository has public identity, assistant bootstrap guidance, assistant
 usage guides, navigation docs, guardrails, safety and permission guidance,
 doctrine, roles, skills, routines, runtime lifecycle notes, memory governance,
 contracts, templates, runbooks, examples, quality guidance, metadata rules,
-capstone audits, future-facing architecture guidance, and lightweight helper
-scripts. It does not yet have provider integrations, graph or vector database
-dependencies, an autonomous runner, or a heavy runtime.
+final capstone baseline docs, future-facing architecture guidance, and
+lightweight helper scripts. It does not yet have provider integrations, graph
+or vector database dependencies, an autonomous runner, or a heavy runtime.

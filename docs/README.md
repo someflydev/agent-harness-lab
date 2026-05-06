@@ -6,8 +6,9 @@ guardrails, safety, doctrine, role boundaries, skills, routines, runbooks,
 runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
-release-readiness, maintenance, contributing guidance, known limitations, and
-future-facing architecture. Role packs and lane playbooks now provide
+release-readiness, operating baseline, maintenance, contributing guidance,
+known limitations, and future-facing architecture. Role packs and lane
+playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
 richer orchestration remains future work.
@@ -68,6 +69,13 @@ richer orchestration remains future work.
   severity, completion states, and failure classes.
 - `architecture/README.md` - future-facing architecture guidance and
   automation boundaries.
+- `capstone/operating-baseline.md` - supported baseline workflows, passing
+  commands, manual responsibilities, and unimplemented automation.
+- `capstone/final-audit.md` - final audit evidence across the full initial
+  promptset.
+- `capstone/promptset-completion-report.md` - prompt range, artifacts, checks,
+  handoff status, and recommended next human action.
+- `capstone/future-backlog.md` - backlog categories for post-baseline work.
 - `capstone/phase-one-audit.md` - foundation-phase audit of covered areas,
   gaps, and next improvements.
 - `../role-packs/README.md` - pasteable role startup briefs for manual
@@ -220,6 +228,14 @@ richer orchestration remains future work.
 
 ## Capstone
 
+- `capstone/final-audit.md` - full final audit for the completed initial
+  baseline.
+- `capstone/operating-baseline.md` - baseline operating model for operators and
+  fresh assistant sessions.
+- `capstone/future-backlog.md` - future work categories that are not baseline
+  requirements.
+- `capstone/promptset-completion-report.md` - completion report for Prompts 01
+  through 32.
 - `capstone/phase-one-audit.md` - audit across foundation-phase areas.
 - `capstone/navigation-audit.md` - check that operators can find important
   docs without prompt history.

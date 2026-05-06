@@ -14,6 +14,9 @@
 - Added curated registries, schemas, deterministic fixtures, dry-run scenarios,
   optional domain packs, role packs, lane playbooks, assistant usage guides,
   and capstone audit material.
+- Added final capstone baseline docs covering the final audit, operating
+  baseline, future backlog, and promptset completion report for Prompts 01
+  through 32.
 - Documented current limitations: no provider orchestration runtime, no live
   multi-agent daemon, no autonomous sequential runner, and no graph or vector
   retrieval implementation.
