@@ -6,8 +6,9 @@ guardrails, safety, doctrine, role boundaries, skills, routines, runbooks,
 runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
-release-readiness, operating baseline, maintenance, contributing guidance,
-known limitations, and future-facing architecture. Role packs and lane
+release-readiness, operating baseline, phase-two outer-loop requirements,
+maintenance, contributing guidance, known limitations, and future-facing
+architecture. Role packs and lane
 playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
@@ -39,6 +40,8 @@ richer orchestration remains future work.
 - `release-readiness.md` - checks required before calling the repo usable.
 - `known-limitations.md` - honest current runtime, validation, and architecture
   limits.
+- `outer-loop/README.md` - phase-two requirements and safety boundary docs for
+  a future sequential runner that is not implemented yet.
 - `maintenance.md` - how to update prompts, registries, templates, skills,
   scripts, domain packs, and release checks.
 - `contributing.md` - scoped contribution guidance and validation
@@ -225,6 +228,21 @@ richer orchestration remains future work.
 - `architecture/traceability-graph-and-semantic-retrieval.md` - future graph
   and semantic retrieval guidance as derived indexes.
 - `architecture/non-goals.md` - foundation-phase non-goals and boundaries.
+
+## Outer Loop
+
+- `outer-loop/README.md` - index for phase-two outer-loop requirements.
+- `outer-loop/requirements.md` - target sequential workflow, stop conditions,
+  outputs, and commit policy.
+- `outer-loop/safety-boundary.md` - dry-run, consent, provider, data, git, and
+  failure boundaries.
+- `outer-loop/sequential-runner-model.md` - local wrapper component model and
+  implementation status.
+- `outer-loop/assistant-driver-boundary.md` - driver vocabulary and supported
+  subscription CLI versus API runtime boundary.
+- `outer-loop/non-goals.md` - explicit exclusions from the outer-loop design.
+- `outer-loop/roadmap.md` - rest of phase-two sequence toward an outer-loop
+  capstone.
 
 ## Capstone
 

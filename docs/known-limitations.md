@@ -10,8 +10,9 @@ handoff is justified, and controls commits.
 - No live multi-agent daemon exists.
 - No assistant invocation layer, model router, queue worker, server, TUI, or
   background scheduler is implemented.
-- Any outer sequential runner is post-baseline future work until explicitly
-  implemented and validated.
+- Phase-two outer-loop docs in `outer-loop/` define requirements and safety
+  boundaries for a possible sequential runner, but no live runner is
+  implemented yet.
 
 ## Validation Limits
 

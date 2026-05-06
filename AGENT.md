@@ -50,6 +50,9 @@ The initial promptset baseline is recorded in
 `docs/capstone/operating-baseline.md`, with final audit evidence in
 `docs/capstone/final-audit.md`. Treat `PROMPT_33+` files, when present, as
 phase-two work unless the operator explicitly asks to run one of them.
+Phase-two outer-loop docs live in `docs/outer-loop/` when present. They are
+design and boundary material for a possible sequential wrapper, not mandatory
+startup context and not proof that live assistant invocation exists.
 
 ## Project Skills
 

@@ -28,15 +28,21 @@ session after evidence and scope are clear.
 
 ## Post-Baseline Outer Sequential Runner
 
+- Use `../outer-loop/README.md` as the phase-two requirements and safety
+  boundary index.
 - Define a dry-run-first outer loop for supported assistant CLIs.
 - Plan prompt batches without executing them by default.
 - Run prompts sequentially, not in parallel, unless a later design justifies a
   narrower exception.
 - Stop on failed validation, unsafe git state, driver failure, or unclear
   permissions.
+- Treat the current outer-loop docs as design inputs, not implemented runner
+  behavior.
 
 ## Driver Adapters
 
+- Use `../outer-loop/assistant-driver-boundary.md` for shared vocabulary and
+  provider boundary rules.
 - Consider Codex, Gemini, Pi, or other tool adapters only when their local
   invocation model can be inspected and safely bounded.
 - Keep subscription CLI usage separate from API-backed provider runtimes.
