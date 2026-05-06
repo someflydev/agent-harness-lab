@@ -701,6 +701,141 @@ class AhlTest(unittest.TestCase):
         self.assertTrue(data["git"]["unsafe"])
         self.assertTrue(any("unmerged git status entry" in problem for problem in data["problems"]))
 
+    def create_outer_plan_fixture(self, plan_id="run-plan", driver_id="manual", count=2):
+        self.add_outer_promptset()
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            str(count),
+            "--driver",
+            driver_id,
+            "--plan-id",
+            plan_id,
+            "--json",
+        )
+        self.assertEqual(code, 0)
+        return json.loads(output)["artifact"]
+
+    def passing_gate(self, prompt_id):
+        return {
+            "ok": True,
+            "status": "pass",
+            "prompt_id": prompt_id,
+            "decision": "continue",
+            "problems": [],
+            "warnings": [],
+        }
+
+    def test_outer_run_dry_run_does_not_invoke_external_commands(self):
+        plan = self.create_outer_plan_fixture(count=1)
+
+        with mock.patch.object(ahl.subprocess, "run", side_effect=AssertionError("external command invoked")):
+            with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+                code, output = self.run_cli("outer", "run", "--plan", plan, "--dry-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["mode"], "dry-run")
+        self.assertEqual(data["steps"][0]["driver"]["status"], "not-invoked")
+
+    def test_outer_run_manual_driver_creates_ledger_entry(self):
+        plan = self.create_outer_plan_fixture(count=1)
+
+        with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--execute", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["steps"][0]["driver"]["status"], "manual-action-required")
+        self.assertTrue((self.root / data["artifact"]).exists())
+
+    def test_outer_run_live_execution_requires_execute(self):
+        plan = self.create_outer_plan_fixture(plan_id="live-default", driver_id="codex", count=1)
+
+        with mock.patch.object(ahl.subprocess, "run", side_effect=AssertionError("external command invoked")):
+            with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+                code, output = self.run_cli("outer", "run", "--plan", plan, "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["mode"], "dry-run")
+        self.assertEqual(data["steps"][0]["driver"]["status"], "not-invoked")
+
+    def test_outer_run_max_prompts_limits_execution(self):
+        plan = self.create_outer_plan_fixture(count=2)
+
+        with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--max-prompts", "1", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(len(data["steps"]), 1)
+        self.assertEqual(data["steps"][0]["prompt_id"], "PROMPT_01")
+
+    def test_outer_run_driver_failure_records_and_stops(self):
+        plan = self.create_outer_plan_fixture(plan_id="driver-fail", driver_id="codex", count=2)
+        failure = subprocess.CompletedProcess(["codex"], 2, stdout="", stderr="boom")
+
+        with mock.patch.object(ahl.subprocess, "run", return_value=failure):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--execute", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "driver-failed")
+        self.assertEqual(len(data["steps"]), 1)
+        self.assertEqual(data["steps"][0]["driver"]["returncode"], 2)
+
+    def test_outer_run_gate_failure_stops_subsequent_steps(self):
+        plan = self.create_outer_plan_fixture(count=2)
+        gate = {
+            "ok": False,
+            "status": "failed-validation",
+            "prompt_id": "PROMPT_01",
+            "decision": "stop",
+            "problems": ["failed check"],
+            "warnings": [],
+        }
+
+        with mock.patch.object(ahl, "outer_gate_report", return_value=gate):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "failed-validation")
+        self.assertEqual(len(data["steps"]), 1)
+
+    def test_outer_run_prompt_payload_includes_required_guardrails(self):
+        plan = self.create_outer_plan_fixture(count=1)
+
+        with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--json")
+        data = json.loads(output)
+        payload = (self.root / data["steps"][0]["payload_artifact"]).read_text(encoding="utf-8")
+
+        self.assertEqual(code, 0)
+        self.assertIn("Run exactly one prompt file", payload)
+        self.assertIn("AGENT.md", payload)
+        self.assertIn("Do not commit", payload)
+        self.assertIn("Preserve unrelated", payload)
+        self.assertIn("Do not store raw transcripts", payload)
+
+    def test_outer_run_json_has_stable_fields(self):
+        plan = self.create_outer_plan_fixture(count=1)
+
+        with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems"):
+            self.assertIn(key, data)
+        for key in ("prompt_id", "status", "payload_artifact", "driver", "gate"):
+            self.assertIn(key, data["steps"][0])
+
     def write_docs_index(self):
         for dirname in (
             "domain-packs",
@@ -1024,6 +1159,21 @@ class AhlTest(unittest.TestCase):
             }
         )
         self.write("fixtures/outer-loop/gates/blocked.json", json.dumps(blocked_gate_report))
+        self.write(
+            "fixtures/outer-loop/runs/live-runner-example.json",
+            json.dumps(
+                {
+                    "ok": True,
+                    "status": "completed",
+                    "run_id": "fixture-live-runner-example",
+                    "plan_id": "fixture-valid-next-three",
+                    "mode": "dry-run",
+                    "driver": {"id": "manual"},
+                    "steps": [],
+                    "problems": [],
+                }
+            ),
+        )
 
     def test_fixtures_check_accepts_expected_fixture_set(self):
         self.write_minimal_fixture_set()
