@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "description": "Conservative local assistant driver contracts for phase-two outer-loop planning.",
+  "source_of_truth_note": "Driver records describe local CLI contracts only; docs and checked-in fixtures remain authoritative.",
+  "items": [
+    {
+      "id": "codex",
+      "name": "Codex Driver",
+      "type": "assistant-driver",
+      "path": "fixtures/assistant-drivers/codex.json",
+      "purpose": "Describe a conservative local Codex CLI contract for later dry-run planning.",
+      "owner_role": "operator",
+      "status": "draft",
+      "inputs": [
+        "prompt payload",
+        "operator-authenticated local Codex CLI"
+      ],
+      "outputs": [
+        "assistant session result when a later live runner is authorized"
+      ],
+      "related_docs": [
+        "docs/outer-loop/driver-contracts.md",
+        "docs/outer-loop/capability-probes.md",
+        "docs/outer-loop/assistant-driver-boundary.md"
+      ],
+      "safe_use_notes": "Capability probes may inspect PATH and help output only; live model calls require later explicit consent.",
+      "display_name": "Codex CLI",
+      "driver_kind": "subscription-cli",
+      "executable_name": "codex",
+      "supported_invocation_modes": [
+        "interactive",
+        "headless-requires-verification"
+      ],
+      "prompt_input_methods": [
+        "argument",
+        "stdin",
+        "prompt_file"
+      ],
+      "structured_output_support": {
+        "status": "unknown",
+        "evidence": "Requires local CLI help or documentation verification before use."
+      },
+      "final_message_capture_support": {
+        "status": "unknown",
+        "evidence": "Not verified by this prompt."
+      },
+      "sandbox_approval_controls": "Expected to be controlled by the local Codex CLI and operator-selected permission posture; exact flags require local verification.",
+      "model_selection_support": "Requires local CLI help or documentation verification.",
+      "reasoning_selection_support": "Requires local CLI help or documentation verification.",
+      "fresh_session_behavior": "Later runner should start a new bounded CLI invocation for one prompt payload.",
+      "resume_behavior": "Unknown; do not assume resume support for batch execution.",
+      "capability_probe": {
+        "path_check": true,
+        "help_args": [
+          "--help"
+        ],
+        "help_only_safe": true
+      },
+      "known_limitations": [
+        "Authentication, quota, structured output, and final-message capture are not verified by repo-local evidence.",
+        "No live prompt invocation is implemented in this prompt."
+      ],
+      "unsupported_operations": [
+        "Do not store credentials.",
+        "Do not call a model during capability probing.",
+        "Do not infer Claude subscription automation from this driver."
+      ]
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini Driver",
+      "type": "assistant-driver",
+      "path": "fixtures/assistant-drivers/gemini.json",
+      "purpose": "Describe a conservative local Gemini CLI contract for later dry-run planning.",
+      "owner_role": "operator",
+      "status": "draft",
+      "inputs": [
+        "prompt payload",
+        "operator-authenticated local Gemini CLI"
+      ],
+      "outputs": [
+        "assistant session result when a later live runner is authorized"
+      ],
+      "related_docs": [
+        "docs/outer-loop/driver-contracts.md",
+        "docs/outer-loop/capability-probes.md"
+      ],
+      "safe_use_notes": "Capability probes may inspect PATH and help output only; live model calls require later explicit consent.",
+      "display_name": "Gemini CLI",
+      "driver_kind": "subscription-cli",
+      "executable_name": "gemini",
+      "supported_invocation_modes": [
+        "interactive",
+        "headless-requires-verification"
+      ],
+      "prompt_input_methods": [
+        "argument",
+        "stdin",
+        "prompt_file"
+      ],
+      "structured_output_support": {
+        "status": "unknown",
+        "evidence": "Requires local CLI help or documentation verification before use."
+      },
+      "final_message_capture_support": {
+        "status": "unknown",
+        "evidence": "Not verified by this prompt."
+      },
+      "sandbox_approval_controls": "Requires local CLI help or documentation verification.",
+      "model_selection_support": "Requires local CLI help or documentation verification.",
+      "reasoning_selection_support": "Unknown.",
+      "fresh_session_behavior": "Later runner should start a new bounded CLI invocation for one prompt payload.",
+      "resume_behavior": "Unknown; do not assume resume support for batch execution.",
+      "capability_probe": {
+        "path_check": true,
+        "help_args": [
+          "--help"
+        ],
+        "help_only_safe": true
+      },
+      "known_limitations": [
+        "Authentication, quota, structured output, and final-message capture are not verified by repo-local evidence.",
+        "No live prompt invocation is implemented in this prompt."
+      ],
+      "unsupported_operations": [
+        "Do not store credentials.",
+        "Do not call a model during capability probing."
+      ]
+    },
+    {
+      "id": "pi",
+      "name": "Pi Driver",
+      "type": "assistant-driver",
+      "path": "fixtures/assistant-drivers/pi.json",
+      "purpose": "Describe a conservative external-harness contract for Pi-style local usage.",
+      "owner_role": "operator",
+      "status": "draft",
+      "inputs": [
+        "prompt payload",
+        "operator-authenticated local Pi harness"
+      ],
+      "outputs": [
+        "assistant session result when a later live runner is authorized"
+      ],
+      "related_docs": [
+        "docs/outer-loop/driver-contracts.md",
+        "docs/outer-loop/capability-probes.md",
+        "docs/outer-loop/assistant-driver-boundary.md"
+      ],
+      "safe_use_notes": "Local Pi reference docs may inform the contract, but AHL must not edit pi-mono or copy Pi internals.",
+      "display_name": "Pi Coding Agent",
+      "driver_kind": "external-harness",
+      "executable_name": "pi",
+      "supported_invocation_modes": [
+        "interactive",
+        "print-or-json",
+        "rpc-requires-verification"
+      ],
+      "prompt_input_methods": [
+        "argument",
+        "stdin",
+        "tool_specific_option"
+      ],
+      "structured_output_support": {
+        "status": "requires-verification",
+        "evidence": "Local Pi README describes print or JSON and RPC modes; exact AHL contract still requires probing."
+      },
+      "final_message_capture_support": {
+        "status": "requires-verification",
+        "evidence": "Likely tied to print or JSON mode, not validated by this prompt."
+      },
+      "sandbox_approval_controls": "Controlled by Pi provider, tool, extension, and local settings; exact AHL-safe flags require verification.",
+      "model_selection_support": "Local Pi README describes model selection through UI commands; headless selection requires verification.",
+      "reasoning_selection_support": "Local Pi README describes thinking-level controls in the terminal UI; headless selection requires verification.",
+      "fresh_session_behavior": "Later runner should launch a bounded Pi mode only after confirming the safe non-interactive contract.",
+      "resume_behavior": "Local Pi README describes sessions; batch resume behavior requires explicit design.",
+      "capability_probe": {
+        "path_check": true,
+        "help_args": [
+          "--help"
+        ],
+        "help_only_safe": true
+      },
+      "known_limitations": [
+        "Pi behavior is referenced from a local clone when present and must be verified on the operator machine.",
+        "No live prompt invocation is implemented in this prompt."
+      ],
+      "unsupported_operations": [
+        "Do not edit pi-mono.",
+        "Do not call a model during capability probing.",
+        "Do not assume API credentials are available."
+      ]
+    },
+    {
+      "id": "manual",
+      "name": "Manual Driver",
+      "type": "assistant-driver",
+      "path": "docs/outer-loop/driver-contracts.md",
+      "purpose": "Represent copy/paste or human-operated assistant sessions when no safe CLI driver is available.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": [
+        "prompt payload",
+        "operator instructions"
+      ],
+      "outputs": [
+        "human-recorded result and validation evidence"
+      ],
+      "related_docs": [
+        "docs/outer-loop/driver-contracts.md",
+        "docs/assistants/generic-chat.md"
+      ],
+      "safe_use_notes": "Manual execution has no executable probe and remains controlled by the operator.",
+      "display_name": "Manual Session",
+      "driver_kind": "manual",
+      "executable_name": null,
+      "supported_invocation_modes": [
+        "manual"
+      ],
+      "prompt_input_methods": [
+        "manual"
+      ],
+      "structured_output_support": {
+        "status": "manual",
+        "evidence": "The operator records structured evidence in repo artifacts."
+      },
+      "final_message_capture_support": {
+        "status": "manual",
+        "evidence": "The operator summarizes the result without storing raw transcripts by default."
+      },
+      "sandbox_approval_controls": "Manual operator control.",
+      "model_selection_support": "Manual operator control.",
+      "reasoning_selection_support": "Manual operator control.",
+      "fresh_session_behavior": "Operator starts a fresh assistant session and pastes the bounded prompt payload.",
+      "resume_behavior": "Operator decides whether a manual resume is appropriate; runner should not automate it.",
+      "capability_probe": {
+        "path_check": false,
+        "help_args": [],
+        "help_only_safe": true
+      },
+      "known_limitations": [
+        "No automatic CLI invocation.",
+        "Structured evidence depends on operator discipline."
+      ],
+      "unsupported_operations": [
+        "Do not automate browser or subscription UI interactions.",
+        "Do not store raw transcripts by default."
+      ]
+    }
+  ]
+}

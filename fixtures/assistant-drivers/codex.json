@@ -1,0 +1,9 @@
+{
+  "id": "codex",
+  "display_name": "Codex CLI",
+  "driver_kind": "subscription-cli",
+  "executable_name": "codex",
+  "probe_expectation": "PATH lookup and optional `codex --help` only.",
+  "live_run_status": "deferred",
+  "notes": "Authentication, quota, structured output, and final-message capture require local verification."
+}

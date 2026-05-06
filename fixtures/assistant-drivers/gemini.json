@@ -1,0 +1,9 @@
+{
+  "id": "gemini",
+  "display_name": "Gemini CLI",
+  "driver_kind": "subscription-cli",
+  "executable_name": "gemini",
+  "probe_expectation": "PATH lookup and optional `gemini --help` only.",
+  "live_run_status": "deferred",
+  "notes": "Authentication, quota, structured output, and final-message capture require local verification."
+}

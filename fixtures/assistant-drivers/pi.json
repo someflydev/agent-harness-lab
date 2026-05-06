@@ -1,0 +1,9 @@
+{
+  "id": "pi",
+  "display_name": "Pi Coding Agent",
+  "driver_kind": "external-harness",
+  "executable_name": "pi",
+  "probe_expectation": "PATH lookup and optional `pi --help` only.",
+  "live_run_status": "deferred",
+  "notes": "Local Pi README describes interactive, print or JSON, RPC, and SDK modes; exact AHL-safe use requires verification."
+}

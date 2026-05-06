@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://someflydev.example/agent-harness-lab/schemas/assistant-driver.schema.json",
+  "title": "Assistant Driver Registry",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "description",
+    "source_of_truth_note",
+    "items"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_of_truth_note": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "path",
+          "purpose",
+          "status",
+          "related_docs",
+          "safe_use_notes",
+          "display_name",
+          "driver_kind",
+          "executable_name",
+          "supported_invocation_modes",
+          "prompt_input_methods",
+          "structured_output_support",
+          "final_message_capture_support",
+          "sandbox_approval_controls",
+          "model_selection_support",
+          "reasoning_selection_support",
+          "fresh_session_behavior",
+          "resume_behavior",
+          "known_limitations",
+          "unsupported_operations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "driver_kind": {
+            "enum": [
+              "subscription-cli",
+              "api-cli",
+              "external-harness",
+              "manual"
+            ]
+          },
+          "executable_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "supported_invocation_modes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prompt_input_methods": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "argument",
+                "stdin",
+                "prompt_file",
+                "tool_specific_option",
+                "manual"
+              ]
+            }
+          },
+          "known_limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "unsupported_operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
