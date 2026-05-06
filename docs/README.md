@@ -6,7 +6,8 @@ guardrails, safety, doctrine, role boundaries, skills, routines, runbooks,
 runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
-and future-facing architecture. Role packs and lane playbooks now provide
+release-readiness, maintenance, contributing guidance, known limitations, and
+future-facing architecture. Role packs and lane playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
 richer orchestration remains future work.
@@ -34,6 +35,13 @@ richer orchestration remains future work.
   relationships, and source-of-truth boundaries.
 - `navigation-validation.md` - local markdown link checking, docs index
   coverage, checker limits, and registry relationship.
+- `release-readiness.md` - checks required before calling the repo usable.
+- `known-limitations.md` - honest current runtime, validation, and architecture
+  limits.
+- `maintenance.md` - how to update prompts, registries, templates, skills,
+  scripts, domain packs, and release checks.
+- `contributing.md` - scoped contribution guidance and validation
+  expectations.
 - `safety/README.md` - safety, permission posture, destructive action, data
   hygiene, secret, transcript, reference repo, and approval guidance.
 - `assistants/README.md` - practical usage guides for Codex, Claude Code,

@@ -146,6 +146,11 @@ Current and expected hot spots include:
 - `scripts/ahl.py`
 - `tests/test_ahl.py`
 - `Makefile`
+- `CHANGELOG.md`
+- `docs/release-readiness.md`
+- `docs/known-limitations.md`
+- `docs/maintenance.md`
+- `docs/contributing.md`
 
 ## Core Guardrails
 

@@ -18,6 +18,9 @@ just enough metadata to support lightweight validation.
 - `examples.json` - example scenarios and evidence artifacts.
 - `scripts.json` - helper script commands and script documentation.
 
+Release-readiness and maintenance guidance for these indexes lives in
+`../docs/release-readiness.md` and `../docs/maintenance.md`.
+
 ## Update Rules
 
 Update these registries when a prompt explicitly names a registry file in its

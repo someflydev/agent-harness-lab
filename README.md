@@ -97,6 +97,14 @@ such as:
 The repo does not yet contain all of those areas. They should be added by later
 prompts when the structure and workflow justify them.
 
+## Release Readiness
+
+Release-readiness guidance lives in `docs/release-readiness.md`, with current
+limitations in `docs/known-limitations.md`, maintenance guidance in
+`docs/maintenance.md`, and contribution guidance in `docs/contributing.md`.
+The project is usable as a human-assisted lab when local structural checks pass
+and limitations are stated honestly; this is not a production-readiness claim.
+
 ## Running The Promptset
 
 At a high level, an operator should run the promptset one prompt at a time in a
