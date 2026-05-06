@@ -20,13 +20,17 @@ operator approval points.
   implementation status.
 - `assistant-driver-boundary.md` - vocabulary and provider boundary for
   subscription CLIs and API-backed runtimes.
+- `driver-contracts.md` - conservative local assistant driver record shape and
+  live-run boundary.
+- `capability-probes.md` - safe PATH and help-only probe behavior before live
+  assistant invocation exists.
 - `non-goals.md` - explicit exclusions for the outer-loop design.
 - `roadmap.md` - phase-two implementation sequence after this requirements
   layer.
 
 ## Current Status
 
-This prompt creates the requirements layer. It does not add live assistant
+The current layer includes requirements, safety boundaries, conservative driver
+contracts, and safe capability probes. It does not add live assistant
 invocation, provider credentials, a daemon, a TUI, an MCP server, a scheduler,
 or dependency-backed runtime code.
-

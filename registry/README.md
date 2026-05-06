@@ -17,6 +17,8 @@ just enough metadata to support lightweight validation.
 - `templates.json` - reusable templates and template groups.
 - `examples.json` - example scenarios and evidence artifacts.
 - `scripts.json` - helper script commands and script documentation.
+- `assistant-drivers.json` - conservative local assistant driver contracts for
+  phase-two outer-loop planning.
 
 Release-readiness and maintenance guidance for these indexes lives in
 `../docs/release-readiness.md` and `../docs/maintenance.md`.
@@ -41,3 +43,4 @@ python3 scripts/ahl.py registry list --json
 
 The check validates JSON parsing, required item fields, local path references,
 and `prompts.json` ordering against the actual `.prompts/PROMPT_*.txt` files.
+Driver-specific checks live in `python3 scripts/ahl.py driver check`.

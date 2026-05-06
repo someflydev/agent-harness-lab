@@ -29,6 +29,9 @@ justifies more.
   registry path consistency without fetching external URLs.
 - `registry list` and `registry check` list and validate curated registry JSON
   indexes.
+- `driver list`, `driver check`, and `driver probe` list conservative
+  assistant driver records, validate required driver fields, and run safe local
+  capability probes without live model calls.
 - `dry-run list` and `dry-run check` list deterministic scenario manifests,
   validate their referenced artifacts, and check `dry-runs/PARITY.md` backing
   files.
@@ -60,6 +63,8 @@ justifies more.
 - It does not replace human closeout, readiness, or promotion judgment.
 - It does not provide graph, vector, provider, plugin, or server
   infrastructure.
+- Driver probes do not authenticate, send prompts, create sessions, or prove
+  quota. They inspect the registry, `PATH`, and optional help output only.
 
 ## Examples
 
@@ -78,6 +83,10 @@ python3 scripts/ahl.py docs check
 python3 scripts/ahl.py docs check --json
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
+python3 scripts/ahl.py driver list
+python3 scripts/ahl.py driver list --json
+python3 scripts/ahl.py driver check
+python3 scripts/ahl.py driver probe codex --help-only --json
 python3 scripts/ahl.py dry-run list
 python3 scripts/ahl.py dry-run check sequential-prompt-run
 python3 scripts/ahl.py dry-run check --all --json
@@ -139,6 +148,9 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `registry`
 - `registry list`: `ok`, `registries`
 - `registry check`: `ok`, `checks`, `problems`, `registries`
+- `driver list`: `ok`, `drivers`, `checks`, `problems`
+- `driver check`: `ok`, `drivers`, `checks`, `problems`
+- `driver probe`: `ok`, `drivers`, `checks`, `problems`, `probe`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
 - `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
   `problems`; each result includes stable `id`, `status`, and `problems`

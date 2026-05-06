@@ -17,6 +17,9 @@ actually happened.
 - `traceability/prompt-to-commit.json` - artificial prompt-to-commit links.
 - `traceability/working-tree-summary.json` - artificial
   `scripts/ahl.py trace --json` style working tree summary.
+- `assistant-drivers/codex.json`, `assistant-drivers/gemini.json`, and
+  `assistant-drivers/pi.json` - compact examples for conservative driver
+  contract records.
 - `docs-links/valid/README.md` - markdown link fixture with resolvable local
   and ignored external links.
 - `docs-links/broken/README.md` - markdown link fixture with an intentionally

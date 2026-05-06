@@ -240,6 +240,10 @@ richer orchestration remains future work.
   implementation status.
 - `outer-loop/assistant-driver-boundary.md` - driver vocabulary and supported
   subscription CLI versus API runtime boundary.
+- `outer-loop/driver-contracts.md` - assistant driver record fields,
+  conservative initial drivers, and live-run boundary.
+- `outer-loop/capability-probes.md` - safe executable and help-only probe
+  behavior for driver planning.
 - `outer-loop/non-goals.md` - explicit exclusions from the outer-loop design.
 - `outer-loop/roadmap.md` - rest of phase-two sequence toward an outer-loop
   capstone.
