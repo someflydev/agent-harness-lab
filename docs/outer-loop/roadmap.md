@@ -11,7 +11,10 @@ safety boundary layer.
    JSON schemas, fixtures, docs, and `scripts/ahl.py outer plan` /
    `scripts/ahl.py outer dry-run` checks. This layer still performs no live
    assistant invocation.
-3. Validation, audit, and readiness gate integration.
+3. Validation, audit, and readiness gate integration. Implemented as
+   conservative gate docs, schema, fixtures, template, and
+   `scripts/ahl.py outer gate` report generation. Prompt validation commands
+   are recorded, not executed arbitrarily.
 4. Live sequential runner.
 5. Commit planning and explicit commit execution.
 6. Resume and failure handling.

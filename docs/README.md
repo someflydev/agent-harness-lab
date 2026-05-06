@@ -7,8 +7,8 @@ runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
 release-readiness, operating baseline, phase-two outer-loop requirements,
-maintenance, contributing guidance, known limitations, and future-facing
-architecture. Role packs and lane
+gate reports, maintenance, contributing guidance, known limitations, and
+future-facing architecture. Role packs and lane
 playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
@@ -248,6 +248,12 @@ richer orchestration remains future work.
   explicit range handling, driver settings, and commit policy boundaries.
 - `outer-loop/dry-run-runner.md` - plan dry-run validation, limits, and review
   guidance before any future live execution path.
+- `outer-loop/gates.md` - post-prompt gate statuses, expected evidence, report
+  format, and command boundary.
+- `outer-loop/completion-audit-integration.md` - how deterministic gate checks
+  connect to human or assistant completion audit.
+- `outer-loop/readiness-gate.md` - immediate next-prompt readiness inspection,
+  blockers, and stop behavior.
 - `outer-loop/non-goals.md` - explicit exclusions from the outer-loop design.
 - `outer-loop/roadmap.md` - rest of phase-two sequence toward an outer-loop
   capstone.

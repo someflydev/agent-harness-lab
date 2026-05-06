@@ -2,8 +2,8 @@
 
 The outer loop is a phase-two design area for a local sequential wrapper around
 the existing fresh-session prompt workflow. It now includes deterministic
-planning and dry-run checks, while live assistant invocation remains future
-work.
+planning, dry-run checks, and post-prompt gate reports, while live assistant
+invocation remains future work.
 
 The goal is bounded orchestration of already-authenticated assistant tools, one
 prompt at a time. The runner should make decisions visible through files,
@@ -28,6 +28,12 @@ operator approval points.
   resolution rules.
 - `dry-run-runner.md` - structural dry-run checks for batch plans before any
   future live execution.
+- `gates.md` - post-prompt gate statuses, evidence fields, report format, and
+  CLI boundary.
+- `completion-audit-integration.md` - how gate reports integrate deterministic
+  checks with human or assistant semantic audit.
+- `readiness-gate.md` - immediate next-prompt readiness checks and stop
+  behavior.
 - `non-goals.md` - explicit exclusions for the outer-loop design.
 - `roadmap.md` - phase-two implementation sequence after this requirements
   layer.
@@ -35,6 +41,7 @@ operator approval points.
 ## Current Status
 
 The current layer includes requirements, safety boundaries, conservative driver
-contracts, safe capability probes, plan artifacts, and dry-run plan validation.
-It does not add live assistant invocation, provider credentials, a daemon, a
-TUI, an MCP server, a scheduler, or dependency-backed runtime code.
+contracts, safe capability probes, plan artifacts, dry-run plan validation, and
+gate reports for validation, audit, and readiness evidence. It does not add
+live assistant invocation, provider credentials, a daemon, a TUI, an MCP
+server, a scheduler, or dependency-backed runtime code.
