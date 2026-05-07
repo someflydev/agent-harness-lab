@@ -8,8 +8,8 @@ optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
 release-readiness, operating baseline, phase-two outer-loop requirements,
 gate reports, run-ledger recovery, maintenance, contributing guidance, known
-limitations, commit planning, explicit commit execution, and future-facing architecture. Role packs
-and lane playbooks now provide
+limitations, commit planning, explicit commit execution, Pi adapter comparison,
+and future-facing architecture. Role packs and lane playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
 richer orchestration remains future work.
@@ -246,6 +246,13 @@ richer orchestration remains future work.
   subscription CLI versus API runtime boundary.
 - `outer-loop/driver-contracts.md` - assistant driver record fields,
   conservative initial drivers, and live-run boundary.
+- `outer-loop/pi-adapter.md` - Pi external-harness adapter design, safe probe
+  boundary, expected payload/result shape, and unverified areas.
+- `outer-loop/pi-vs-ahl.md` - why Pi remains an external coding-agent harness
+  while AHL remains a promptset, validation, traceability, and orchestration
+  lab.
+- `outer-loop/provider-harness-comparison.md` - safety, auth, output capture,
+  model-selection, and testing tradeoffs across driver categories.
 - `outer-loop/capability-probes.md` - safe executable and help-only probe
   behavior for driver planning.
 - `outer-loop/batch-planning.md` - deterministic prompt batch plan artifacts,

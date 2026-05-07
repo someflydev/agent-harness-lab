@@ -24,7 +24,10 @@ safety boundary layer.
 6. Resume and failure handling. Implemented as run-ledger semantics, failure
    classification docs, recovery handoff template, artificial ledger fixtures,
    and `outer status` / `outer resume` / `outer recovery-handoff` helpers.
-7. Pi adapter experiment.
+7. Pi adapter experiment. Implemented as conservative adapter design docs,
+   comparison docs, registry and fixture updates, help-only probe coverage,
+   dry-run planning support, and guarded live invocation marked
+   `manual-confirmation-required`.
 8. Outer-loop capstone.
 
 ## Implementation Notes

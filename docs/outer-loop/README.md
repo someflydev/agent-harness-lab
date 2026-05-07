@@ -22,6 +22,11 @@ operator approval points.
   subscription CLIs and API-backed runtimes.
 - `driver-contracts.md` - conservative local assistant driver record shape and
   live-run boundary.
+- `pi-adapter.md` - bounded Pi external-harness adapter design and unknowns.
+- `pi-vs-ahl.md` - comparison between Pi as a coding-agent harness and AHL as
+  a promptset, validation, traceability, and orchestration lab.
+- `provider-harness-comparison.md` - safety, auth, output, model-selection,
+  and testing differences across current and future driver categories.
 - `capability-probes.md` - safe PATH and help-only probe behavior before live
   assistant invocation exists.
 - `batch-planning.md` - inspectable prompt batch plan artifacts and range
@@ -53,8 +58,9 @@ operator approval points.
 ## Current Status
 
 The current layer includes requirements, safety boundaries, conservative driver
-contracts, safe capability probes, plan artifacts, dry-run plan validation,
-gate reports, prompt payload generation, run ledgers, dry-run resume planning,
-recovery handoffs, and explicit `--execute` live CLI invocation for supported
-local driver contracts. It does not add provider credentials, a daemon, a TUI,
-an MCP server, a scheduler, or dependency-backed runtime code.
+contracts, a guarded Pi external-harness adapter experiment, safe capability
+probes, plan artifacts, dry-run plan validation, gate reports, prompt payload
+generation, run ledgers, dry-run resume planning, recovery handoffs, and
+explicit `--execute` live CLI invocation for supported local driver contracts.
+It does not add provider credentials, a daemon, a TUI, an MCP server, a
+scheduler, or dependency-backed runtime code.
