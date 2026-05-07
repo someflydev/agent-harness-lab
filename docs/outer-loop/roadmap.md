@@ -18,7 +18,9 @@ safety boundary layer.
 4. Live sequential runner. Implemented as a dry-run-default `outer run` MVP
    with prompt payloads, run ledgers, manual driver support, conservative
    Codex/Gemini CLI invocation, per-step gates, and stop conditions.
-5. Commit planning and explicit commit execution.
+5. Commit planning and explicit commit execution. Implemented as plan-only
+   commit grouping, schema, fixtures, templates, docs, and an explicit
+   approval-gated executor that stages only listed files.
 6. Resume and failure handling.
 7. Pi adapter experiment.
 8. Outer-loop capstone.
@@ -32,7 +34,7 @@ safety boundary layer.
   explicitly authorizes and designs them.
 - Keep API-backed provider work separate from subscription CLI drivers.
 - Treat commit execution as a separate approval boundary from assistant
-  invocation.
+  invocation. Commit planning is default; execution requires operator approval.
 - Use driver probes for local availability checks. Live assistant invocation is
   now available only through explicit `outer run --execute` consent and remains
   bounded by driver contracts.

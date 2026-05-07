@@ -199,6 +199,14 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": "schemas/outer-loop-run-ledger.schema.json",
         "required": ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems"),
     },
+    "fixtures/outer-loop/commits/plan-one-prompt.json": {
+        "schema": "schemas/commit-plan.schema.json",
+        "required": ("ok", "schema", "plan_id", "mode", "prompt_ids", "groups", "git", "problems"),
+    },
+    "fixtures/outer-loop/commits/plan-batch.json": {
+        "schema": "schemas/commit-plan.schema.json",
+        "required": ("ok", "schema", "plan_id", "mode", "prompt_ids", "groups", "git", "problems"),
+    },
     "fixtures/assistant-drivers/codex.json": {
         "schema": "schemas/assistant-driver.schema.json",
         "required": ("id", "display_name", "driver_kind", "executable_name", "probe_expectation", "live_run_status"),
@@ -330,6 +338,7 @@ OUTER_PLAN_SCHEMA = "schemas/outer-loop-plan.schema.json"
 OUTER_DRY_RUN_REPORT_SCHEMA = "schemas/outer-loop-dry-run-report.schema.json"
 OUTER_GATE_REPORT_SCHEMA = "schemas/outer-loop-gate-report.schema.json"
 OUTER_RUN_LEDGER_SCHEMA = "schemas/outer-loop-run-ledger.schema.json"
+COMMIT_PLAN_SCHEMA = "schemas/commit-plan.schema.json"
 OUTER_DEFAULT_PERMISSION_POSTURE = "workspace-write"
 OUTER_DEFAULT_COMMIT_POLICY = "none"
 OUTER_DEFAULT_TRANSCRIPT_POLICY = {
@@ -2355,6 +2364,401 @@ def command_outer(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+PATH_TOKEN_RE = re.compile(r"(?:(?:^|[`\s(])((?:\.?[A-Za-z0-9_./-]+/)+[A-Za-z0-9_.-]+|[A-Za-z0-9_.-]+\.(?:py|md|json)))")
+
+
+def parse_git_status_line(line: str) -> dict[str, Any]:
+    index_status = line[0] if len(line) > 0 else " "
+    worktree_status = line[1] if len(line) > 1 else " "
+    raw_path = line[3:] if len(line) > 3 else line.strip()
+    paths = [part.strip() for part in raw_path.split(" -> ")] if " -> " in raw_path else [raw_path.strip()]
+    path = paths[-1] if paths else raw_path.strip()
+    if line.startswith("??"):
+        category = "untracked"
+    elif index_status != " " and worktree_status == " ":
+        category = "staged"
+    elif "D" in (index_status, worktree_status):
+        category = "deleted"
+    else:
+        category = "modified"
+    return {
+        "line": line,
+        "path": path,
+        "paths": paths,
+        "index_status": index_status,
+        "worktree_status": worktree_status,
+        "category": category,
+    }
+
+
+def extract_repo_paths_from_prompt(text: str) -> list[str]:
+    found: set[str] = set()
+    for match in PATH_TOKEN_RE.finditer(text):
+        value = match.group(1).strip("`.,)")
+        if value.startswith(("http://", "https://")) or value.startswith("../"):
+            continue
+        if value.startswith("/"):
+            continue
+        if value and "." not in Path(value).parts:
+            found.add(value)
+    return sorted(found)
+
+
+def prompt_section_text(text: str, heading: str) -> str:
+    pattern = re.compile(rf"^##\s+{re.escape(heading)}\s*$", re.I | re.M)
+    match = pattern.search(text)
+    if not match:
+        return ""
+    next_heading = re.search(r"^##\s+", text[match.end() :], re.M)
+    end = match.end() + next_heading.start() if next_heading else len(text)
+    return text[match.end() : end]
+
+
+def changed_file_matches_expected(path: str, expected_paths: list[str]) -> bool:
+    if not expected_paths:
+        return True
+    for expected in expected_paths:
+        if path == expected or path.startswith(expected.rstrip("/") + "/"):
+            return True
+    return False
+
+
+def prompt_commit_subject(prompt_ids: list[str], summary: str | None = None) -> str:
+    prefix = f"[{prompt_ids[0]}]" if len(prompt_ids) == 1 else f"[{prompt_ids[0]}-{prompt_ids[-1]}]"
+    return f"{prefix} {summary or 'Package prompt changes'}"
+
+
+def commit_plan_output_path(root: Path, prompt_ids: list[str], run_value: str | None) -> Path:
+    if run_value:
+        run_path = (root / run_value).resolve()
+        if run_path.name == "ledger.json" or run_path.name == "run-ledger.json":
+            return run_path.parent / "commit-plan.json"
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    label = "-".join(prompt_ids) if prompt_ids else "working-tree"
+    return root / "runs" / "outer-loop" / "commit-plans" / f"{label}-{stamp}.json"
+
+
+def commit_prompt_context(root: Path, prompt_id: str) -> dict[str, Any]:
+    path = root / ".prompts" / f"{prompt_id}.txt"
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    deliverables = prompt_section_text(text, "Required Deliverables")
+    expected_paths = extract_repo_paths_from_prompt(deliverables) or extract_repo_paths_from_prompt(text)
+    return {
+        "prompt_id": prompt_id,
+        "prompt_file": f".prompts/{prompt_id}.txt",
+        "prompt_file_exists": path.is_file(),
+        "expected_paths": expected_paths,
+    }
+
+
+def validation_from_ledger(ledger: dict[str, Any] | None, prompt_id: str) -> list[dict[str, Any]]:
+    if not isinstance(ledger, dict):
+        return []
+    evidence: list[dict[str, Any]] = []
+    for step in ledger.get("steps", []):
+        if not isinstance(step, dict) or step.get("prompt_id") != prompt_id:
+            continue
+        for command in step.get("validation_commands", []):
+            if isinstance(command, str):
+                evidence.append({"command": command, "status": "recorded"})
+        gate = step.get("gate")
+        if isinstance(gate, dict):
+            evidence.append({"command": "outer gate", "status": str(gate.get("status", "recorded"))})
+    return evidence
+
+
+def load_commit_ledger(root: Path, run_value: str | None) -> tuple[dict[str, Any] | None, str | None]:
+    if not run_value:
+        return None, None
+    path = (root / run_value).resolve()
+    try:
+        path.relative_to(root.resolve())
+    except ValueError:
+        return None, f"run ledger path escapes repository root: {run_value}"
+    if not path.is_file():
+        return None, f"missing run ledger artifact: {run_value}"
+    data, problem = load_json_file(path)
+    if problem:
+        return None, problem
+    if not isinstance(data, dict):
+        return None, f"{run_value}: top-level value must be an object"
+    return data, None
+
+
+def prompt_ids_from_commit_request(args: argparse.Namespace, ledger: dict[str, Any] | None) -> list[str]:
+    if args.prompt:
+        return [normalize_prompt_id(args.prompt)]
+    prompt_ids: list[str] = []
+    if isinstance(ledger, dict):
+        for step in ledger.get("steps", []):
+            if isinstance(step, dict) and isinstance(step.get("prompt_id"), str):
+                prompt_id = normalize_prompt_id(step["prompt_id"])
+                if prompt_id not in prompt_ids:
+                    prompt_ids.append(prompt_id)
+    return prompt_ids
+
+
+def create_commit_plan(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    ledger, ledger_problem = load_commit_ledger(root, args.run)
+    prompt_ids = prompt_ids_from_commit_request(args, ledger)
+    problems: list[str] = []
+    if ledger_problem:
+        problems.append(ledger_problem)
+    if not prompt_ids:
+        problems.append("commit plan needs a prompt id or a run ledger with steps")
+
+    git = git_status_report(root)
+    problems.extend(git["problems"])
+    entries = [parse_git_status_line(line) for line in git["lines"]]
+    prompt_contexts = [commit_prompt_context(root, prompt_id) for prompt_id in prompt_ids]
+    expected_paths: list[str] = []
+    for context in prompt_contexts:
+        expected_paths.extend(context["expected_paths"])
+        if not context["prompt_file_exists"]:
+            problems.append(f"missing prompt file: {context['prompt_file']}")
+    expected_paths = sorted(set(expected_paths))
+
+    candidate_entries = [entry for entry in entries if changed_file_matches_expected(entry["path"], expected_paths)]
+    unrelated_entries = [entry for entry in entries if entry not in candidate_entries]
+    changed_files = [
+        {
+            "path": entry["path"],
+            "status": entry["category"],
+            "git_status": entry["line"][:2],
+            "status_line": entry["line"],
+        }
+        for entry in candidate_entries
+    ]
+    validation_evidence: list[dict[str, Any]] = []
+    for prompt_id in prompt_ids:
+        validation_evidence.extend(validation_from_ledger(ledger, prompt_id))
+    if not validation_evidence:
+        validation_evidence.append({"command": "not recorded", "status": "skipped", "notes": "No run ledger validation evidence was supplied."})
+
+    validation_status = "passed"
+    if isinstance(ledger, dict) and ledger.get("status") in {"blocked", "failed-validation", "driver-failed", "unsafe-git-state"}:
+        validation_status = str(ledger.get("status"))
+    elif not isinstance(ledger, dict):
+        validation_status = "unknown"
+
+    groups = []
+    if prompt_ids:
+        groups.append(
+            {
+                "group_id": "commit-1",
+                "prompt_ids": prompt_ids,
+                "subject": prompt_commit_subject(prompt_ids),
+                "summary": "Package prompt-scoped changes for review.",
+                "changed_files": changed_files,
+                "validation_status": validation_status,
+                "validation_evidence": validation_evidence,
+                "follow_up_notes": [],
+                "allow_failed_required": validation_status in {"blocked", "failed", "failed-validation", "driver-failed", "unsafe-git-state"},
+            }
+        )
+
+    plan_id = f"commit-plan-{'-'.join(prompt_ids) if prompt_ids else 'unknown'}"
+    artifact_path = Path(args.out) if args.out else commit_plan_output_path(root, prompt_ids, args.run)
+    if not artifact_path.is_absolute():
+        artifact_path = root / artifact_path
+    try:
+        artifact_rel = repo_relative_path(root, artifact_path)
+    except ValueError:
+        artifact_rel = str(artifact_path)
+        problems.append(f"commit plan artifact path escapes repository root: {args.out}")
+
+    data = {
+        "ok": not problems,
+        "schema": COMMIT_PLAN_SCHEMA,
+        "plan_id": plan_id,
+        "created_at": utc_timestamp(),
+        "mode": "plan-only",
+        "source": {"prompt": args.prompt, "run": args.run},
+        "prompt_ids": prompt_ids,
+        "prompt_context": prompt_contexts,
+        "grouping_policy": {
+            "default": "one commit per prompt id",
+            "explicit_file_lists": True,
+            "unrelated_changes_excluded": True,
+        },
+        "git": {
+            "available": git["available"],
+            "unsafe": git["unsafe"],
+            "status_lines": git["lines"],
+            "modified": [entry["path"] for entry in entries if entry["category"] == "modified"],
+            "untracked": [entry["path"] for entry in entries if entry["category"] == "untracked"],
+            "deleted": [entry["path"] for entry in entries if entry["category"] == "deleted"],
+            "staged": [entry["path"] for entry in entries if entry["category"] == "staged"],
+        },
+        "groups": groups,
+        "unrelated_changes": [{"path": entry["path"], "status_line": entry["line"]} for entry in unrelated_entries],
+        "warnings": [],
+        "problems": problems,
+        "artifact": artifact_rel,
+    }
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    artifact_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return data
+
+
+def load_commit_plan(root: Path, plan_value: str) -> tuple[dict[str, Any] | None, str | None]:
+    path = (root / plan_value).resolve()
+    try:
+        path.relative_to(root.resolve())
+    except ValueError:
+        return None, f"commit plan path escapes repository root: {plan_value}"
+    if not path.is_file():
+        return None, f"missing commit plan artifact: {plan_value}"
+    data, problem = load_json_file(path)
+    if problem:
+        return None, problem
+    if not isinstance(data, dict):
+        return None, f"{plan_value}: top-level value must be an object"
+    return data, None
+
+
+def staged_paths(root: Path) -> tuple[list[str], list[str]]:
+    result, problem = run_git(root, ["diff", "--cached", "--name-only"])
+    if problem:
+        return [], [problem]
+    if result is None or result.returncode != 0:
+        return [], [result.stderr.strip() if result else "could not inspect staged files"]
+    return [line for line in result.stdout.splitlines() if line.strip()], []
+
+
+def render_commit_message(group: dict[str, Any]) -> str:
+    lines = [
+        str(group.get("subject") or prompt_commit_subject([str(item) for item in group.get("prompt_ids", [])])),
+        "",
+        str(group.get("summary") or "Package prompt-scoped changes."),
+        "",
+        "Validation:",
+    ]
+    evidence = group.get("validation_evidence") if isinstance(group.get("validation_evidence"), list) else []
+    if evidence:
+        for item in evidence:
+            if isinstance(item, dict):
+                command = item.get("command", "unknown")
+                status = item.get("status", "recorded")
+                lines.append(f"- {command}: {status}")
+    else:
+        lines.append("- not recorded")
+    lines.append("")
+    lines.append("Changed areas:")
+    for item in group.get("changed_files", []):
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('path')}")
+    follow_ups = group.get("follow_up_notes") if isinstance(group.get("follow_up_notes"), list) else []
+    if follow_ups:
+        lines.append("")
+        lines.append("Follow-up notes:")
+        lines.extend(f"- {note}" for note in follow_ups)
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def execute_commit_plan(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    plan, problem = load_commit_plan(root, args.plan)
+    problems: list[str] = []
+    commits: list[dict[str, Any]] = []
+    if problem:
+        return {"ok": False, "status": "blocked", "plan": args.plan, "dry_run": args.dry_run, "commits": [], "problems": [problem]}
+    assert plan is not None
+    if not args.operator_approved and not args.dry_run:
+        problems.append("commit execution requires --operator-approved")
+
+    groups = plan.get("groups")
+    if not isinstance(groups, list) or not groups:
+        problems.append("commit plan has no groups")
+        groups = []
+
+    plan_paths: set[str] = set()
+    for group in groups:
+        if not isinstance(group, dict):
+            problems.append("commit group must be an object")
+            continue
+        validation_status = group.get("validation_status")
+        if validation_status in {"blocked", "failed", "failed-validation", "driver-failed", "unsafe-git-state"} and not args.allow_failed:
+            problems.append(f"{group.get('group_id', 'commit group')}: validation status is {validation_status}; use --allow-failed to override")
+        files = group.get("changed_files")
+        if not isinstance(files, list) or not files:
+            problems.append(f"{group.get('group_id', 'commit group')}: no changed files listed")
+            continue
+        for file_item in files:
+            if not isinstance(file_item, dict) or not isinstance(file_item.get("path"), str):
+                problems.append(f"{group.get('group_id', 'commit group')}: changed file entry is invalid")
+                continue
+            rel = file_item["path"]
+            target = (root / rel).resolve()
+            try:
+                target.relative_to(root.resolve())
+            except ValueError:
+                problems.append(f"{group.get('group_id', 'commit group')}: file escapes repository root: {rel}")
+                continue
+            if not target.exists():
+                problems.append(f"{group.get('group_id', 'commit group')}: listed file is missing: {rel}")
+            plan_paths.add(rel)
+
+    staged, staged_problems = staged_paths(root)
+    problems.extend(staged_problems)
+    unexpected_staged = sorted(path for path in staged if path not in plan_paths)
+    if unexpected_staged:
+        problems.append("refusing to commit unrelated staged files: " + ", ".join(unexpected_staged))
+    if problems:
+        return {"ok": False, "status": "blocked", "plan": args.plan, "dry_run": args.dry_run, "commits": commits, "problems": problems}
+
+    message_dir = root / "tmp" / "commit-messages"
+    message_dir.mkdir(parents=True, exist_ok=True)
+    for index, group in enumerate(groups, start=1):
+        assert isinstance(group, dict)
+        file_paths = [item["path"] for item in group["changed_files"] if isinstance(item, dict) and isinstance(item.get("path"), str)]
+        message = render_commit_message(group)
+        message_path = message_dir / f"{plan.get('plan_id', 'commit-plan')}-{index}.txt"
+        message_path.write_text(message, encoding="utf-8")
+        command_record = {"group_id": group.get("group_id"), "files": file_paths, "message_file": repo_relative_path(root, message_path), "hash": None}
+        if args.dry_run:
+            command_record["status"] = "dry-run"
+            commits.append(command_record)
+            continue
+        add_result, add_problem = run_git(root, ["add", "--", *file_paths])
+        if add_problem or add_result is None or add_result.returncode != 0:
+            problems.append(add_problem or add_result.stderr.strip() or "git add failed")
+            break
+        commit_result, commit_problem = run_git(root, ["commit", "-F", str(message_path)])
+        if commit_problem or commit_result is None or commit_result.returncode != 0:
+            problems.append(commit_problem or commit_result.stderr.strip() or "git commit failed")
+            break
+        hash_result, hash_problem = run_git(root, ["rev-parse", "--short", "HEAD"])
+        commit_hash = None
+        if not hash_problem and hash_result is not None and hash_result.returncode == 0:
+            commit_hash = hash_result.stdout.strip()
+        command_record["status"] = "committed"
+        command_record["hash"] = commit_hash
+        commits.append(command_record)
+
+    return {"ok": not problems, "status": "committed" if not args.dry_run and not problems else ("dry-run" if args.dry_run and not problems else "blocked"), "plan": args.plan, "dry_run": args.dry_run, "commits": commits, "problems": problems}
+
+
+def command_commit(args: argparse.Namespace) -> int:
+    root = repo_root()
+    if args.action == "plan":
+        data = create_commit_plan(root, args)
+        human = [
+            "commit plan: ok" if data["ok"] else "commit plan: problems found",
+            f"- prompts: {', '.join(data['prompt_ids']) if data['prompt_ids'] else 'none'}",
+            f"- groups: {len(data['groups'])}",
+            f"- artifact: {data['artifact']}",
+        ]
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+    data = execute_commit_plan(root, args)
+    human = [
+        f"commit execute: {data['status']}",
+        f"- commits: {len(data['commits'])}",
+    ]
+    human.extend(f"- problem: {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def markdown_files_for_docs_check(root: Path) -> list[Path]:
     files: list[Path] = []
     for rel in DOCS_SCAN_ROOTS:
@@ -3655,6 +4059,23 @@ def build_parser() -> argparse.ArgumentParser:
     outer_gate.add_argument("--audit-artifact", help="Path to an explicit completion audit artifact, when one exists.")
     outer_gate.add_argument("--json", action="store_true")
     outer_gate.set_defaults(func=command_outer)
+
+    commit = subparsers.add_parser("commit", help="Plan or explicitly execute prompt-scoped commits.")
+    commit_subparsers = commit.add_subparsers(dest="action", required=True)
+    commit_plan = commit_subparsers.add_parser("plan", help="Create a prompt-scoped commit plan artifact.")
+    commit_plan.add_argument("prompt", nargs="?", help="Prompt id, number, or prompt filename.")
+    commit_plan.add_argument("--run", help="Path to a run ledger artifact.")
+    commit_plan.add_argument("--out", help="Path for the generated commit plan artifact.")
+    commit_plan.add_argument("--json", action="store_true")
+    commit_plan.set_defaults(func=command_commit)
+
+    commit_execute = commit_subparsers.add_parser("execute", help="Execute commits from an explicit commit plan.")
+    commit_execute.add_argument("--plan", required=True, help="Path to a commit plan artifact.")
+    commit_execute.add_argument("--operator-approved", action="store_true", help="Required approval flag for real commit execution.")
+    commit_execute.add_argument("--allow-failed", action="store_true", help="Allow committing blocked or failed validation status.")
+    commit_execute.add_argument("--dry-run", action="store_true", help="Check the plan and render message files without staging or committing.")
+    commit_execute.add_argument("--json", action="store_true")
+    commit_execute.set_defaults(func=command_commit)
 
     docs = subparsers.add_parser("docs", help="Check markdown navigation and local links.")
     docs.add_argument("action", choices=("check",))

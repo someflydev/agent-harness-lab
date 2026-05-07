@@ -6,7 +6,9 @@ filenames, scaffolds run and handoff artifacts from templates, validates
 deterministic dry-run scenario manifests, and reports a compact session context
 briefing. It also scaffolds and checks reviewed memory promotion artifacts and
 can run a dry-run-default sequential outer-loop plan through an explicitly
-selected assistant driver.
+selected assistant driver. It can also create prompt-scoped commit plans and
+execute reviewed plans only when the operator supplies an explicit approval
+flag.
 The repo Makefile provides a small operator console for the most common
 commands; this script remains the underlying command source.
 
@@ -48,6 +50,13 @@ justifies more.
   completion-audit artifact presence, handoff state, and commit-plan policy.
   It records prompt validation commands in record-only mode rather than
   executing arbitrary shell.
+- `commit plan` creates a plan-only artifact with prompt-prefixed subjects,
+  explicit file lists, validation evidence when available, and unrelated
+  working-tree changes separated.
+- `commit execute` stages only files listed in a commit plan and commits only
+  when `--operator-approved` is supplied. It refuses unrelated staged files,
+  missing listed files, and failed or blocked validation status unless
+  `--allow-failed` is explicit.
 - `dry-run list` and `dry-run check` list deterministic scenario manifests,
   validate their referenced artifacts, and check `dry-runs/PARITY.md` backing
   files.
@@ -71,6 +80,8 @@ justifies more.
 
 - It does not run prompts or call model providers unless `outer run --execute`
   is explicitly selected for a supported local driver.
+- It does not commit by default; commit execution requires a reviewed plan and
+  explicit `--operator-approved`.
 - It does not inspect, ingest, or store raw assistant transcripts.
 - It does not scan file contents for secrets or replace human review before
   committing.
@@ -111,6 +122,9 @@ python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dr
 python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --execute --max-prompts 1 --json
 python3 scripts/ahl.py outer gate PROMPT_36 --json
 python3 scripts/ahl.py outer gate PROMPT_36 --plan runs/outer-loop/<plan-id>/plan.json --json
+python3 scripts/ahl.py commit plan PROMPT_38 --json
+python3 scripts/ahl.py commit plan --run runs/outer-loop/<run-id>/run-ledger.json --json
+python3 scripts/ahl.py commit execute --plan runs/outer-loop/<run-id>/commit-plan.json --operator-approved
 python3 scripts/ahl.py dry-run list
 python3 scripts/ahl.py dry-run check sequential-prompt-run
 python3 scripts/ahl.py dry-run check --all --json
@@ -190,6 +204,11 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `dry_run`, `driver`, `steps`, `problems`, and `artifact` when a ledger is
   written; each step includes stable `prompt_id`, `status`,
   `payload_artifact`, `driver`, and `gate`
+- `commit plan`: `ok`, `schema`, `plan_id`, `created_at`, `mode`, `source`,
+  `prompt_ids`, `prompt_context`, `grouping_policy`, `git`, `groups`,
+  `unrelated_changes`, `warnings`, `problems`, and `artifact`
+- `commit execute`: `ok`, `status`, `plan`, `dry_run`, `commits`, and
+  `problems`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
 - `dry-run check`: `ok`, `scenario_count`, `checked`, `results`, `parity`,
   `problems`; each result includes stable `id`, `status`, and `problems`

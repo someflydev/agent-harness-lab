@@ -1174,6 +1174,42 @@ class AhlTest(unittest.TestCase):
                 }
             ),
         )
+        commit_plan = {
+            "ok": True,
+            "schema": "schemas/commit-plan.schema.json",
+            "plan_id": "commit-plan-PROMPT_38",
+            "mode": "plan-only",
+            "prompt_ids": ["PROMPT_38"],
+            "groups": [
+                {
+                    "group_id": "commit-1",
+                    "prompt_ids": ["PROMPT_38"],
+                    "subject": "[PROMPT_38] Package prompt changes",
+                    "changed_files": [{"path": "docs/outer-loop/commit-planning.md", "status": "modified"}],
+                    "validation_status": "passed",
+                }
+            ],
+            "git": {"available": True, "unsafe": False, "status_lines": [], "modified": [], "untracked": [], "deleted": [], "staged": []},
+            "problems": [],
+        }
+        self.write("fixtures/outer-loop/commits/plan-one-prompt.json", json.dumps(commit_plan))
+        batch_plan = dict(commit_plan)
+        batch_plan.update(
+            {
+                "plan_id": "commit-plan-PROMPT_38-PROMPT_39",
+                "prompt_ids": ["PROMPT_38", "PROMPT_39"],
+                "groups": [
+                    {
+                        "group_id": "commit-1",
+                        "prompt_ids": ["PROMPT_38", "PROMPT_39"],
+                        "subject": "[PROMPT_38-PROMPT_39] Package prompt changes",
+                        "changed_files": [{"path": "docs/outer-loop/commit-planning.md", "status": "modified"}],
+                        "validation_status": "passed",
+                    }
+                ],
+            }
+        )
+        self.write("fixtures/outer-loop/commits/plan-batch.json", json.dumps(batch_plan))
 
     def test_fixtures_check_accepts_expected_fixture_set(self):
         self.write_minimal_fixture_set()
@@ -1812,6 +1848,163 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(data["permission_posture"], "workspace-write")
         self.assertEqual(data["completion_audit_status"], "not_started")
         self.assertIn("changed_files", data)
+
+    def write_commit_prompt(self):
+        self.write(
+            ".prompts/PROMPT_38.txt",
+            "\n".join(
+                [
+                    "# PROMPT_38 - Commit Planner",
+                    "",
+                    "## Required Deliverables",
+                    "",
+                    "- `docs/outer-loop/commit-planning.md`",
+                    "- `templates/outer-loop/commit-plan.md`",
+                    "",
+                    "## Validation",
+                    "",
+                    "Run `python3 -m unittest tests/test_ahl.py`.",
+                    "",
+                ]
+            )
+            + "\n",
+        )
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_plan_generation_with_modified_and_untracked_files(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write_commit_prompt()
+        self.write("docs/outer-loop/commit-planning.md", "# Commit Planning\n")
+        self.write("templates/outer-loop/commit-plan.md", "# Commit Plan\n")
+        self.write("human-notes.md", "# Local notes\n")
+
+        code, output = self.run_cli("commit", "plan", "PROMPT_38", "--out", "runs/plan.json", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["groups"][0]["subject"], "[PROMPT_38] Package prompt changes")
+        planned = {item["path"] for item in data["groups"][0]["changed_files"]}
+        self.assertIn("docs/outer-loop/commit-planning.md", planned)
+        self.assertIn("templates/outer-loop/commit-plan.md", planned)
+        self.assertTrue(any(item["path"] == "human-notes.md" for item in data["unrelated_changes"]))
+        self.assertTrue((self.root / "runs/plan.json").exists())
+
+    def test_commit_execute_requires_explicit_approval(self):
+        plan = {
+            "ok": True,
+            "schema": "schemas/commit-plan.schema.json",
+            "plan_id": "commit-plan-PROMPT_38",
+            "mode": "plan-only",
+            "prompt_ids": ["PROMPT_38"],
+            "groups": [
+                {
+                    "group_id": "commit-1",
+                    "prompt_ids": ["PROMPT_38"],
+                    "subject": "[PROMPT_38] Package prompt changes",
+                    "changed_files": [{"path": "docs/file.md", "status": "modified"}],
+                    "validation_status": "passed",
+                }
+            ],
+            "git": {"available": True, "unsafe": False, "status_lines": [], "modified": [], "untracked": [], "deleted": [], "staged": []},
+            "problems": [],
+        }
+        self.write("plans/commit-plan.json", json.dumps(plan))
+        self.write("docs/file.md", "# File\n")
+
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok(""), None)):
+            code, output = self.run_cli("commit", "execute", "--plan", "plans/commit-plan.json", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("--operator-approved" in problem for problem in data["problems"]))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_executor_stages_only_listed_files_and_reports_hash(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.root, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.root, check=True)
+        self.write("README.md", "# Repo\n")
+        subprocess.run(["git", "add", "README.md"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "-m", "Initial"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write("docs/file.md", "# File\n")
+        self.write("notes.md", "# Notes\n")
+        plan = {
+            "ok": True,
+            "schema": "schemas/commit-plan.schema.json",
+            "plan_id": "commit-plan-PROMPT_38",
+            "mode": "plan-only",
+            "prompt_ids": ["PROMPT_38"],
+            "groups": [
+                {
+                    "group_id": "commit-1",
+                    "prompt_ids": ["PROMPT_38"],
+                    "subject": "[PROMPT_38] Add commit doc",
+                    "summary": "Add commit doc.",
+                    "changed_files": [{"path": "docs/file.md", "status": "untracked"}],
+                    "validation_status": "passed",
+                    "validation_evidence": [{"command": "python3 -m unittest tests/test_ahl.py", "status": "passed"}],
+                    "follow_up_notes": [],
+                }
+            ],
+            "git": {"available": True, "unsafe": False, "status_lines": [], "modified": [], "untracked": [], "deleted": [], "staged": []},
+            "problems": [],
+        }
+        self.write("plans/commit-plan.json", json.dumps(plan))
+
+        code, output = self.run_cli("commit", "execute", "--plan", "plans/commit-plan.json", "--operator-approved", "--json")
+        data = json.loads(output)
+        status = subprocess.run(["git", "status", "--short"], cwd=self.root, check=True, text=True, stdout=subprocess.PIPE)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["status"], "committed")
+        self.assertIsNotNone(data["commits"][0]["hash"])
+        self.assertIn("?? notes.md", status.stdout)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_executor_refuses_unrelated_staged_files(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write("docs/file.md", "# File\n")
+        self.write("notes.md", "# Notes\n")
+        subprocess.run(["git", "add", "notes.md"], cwd=self.root, check=True)
+        plan = {
+            "ok": True,
+            "schema": "schemas/commit-plan.schema.json",
+            "plan_id": "commit-plan-PROMPT_38",
+            "mode": "plan-only",
+            "prompt_ids": ["PROMPT_38"],
+            "groups": [
+                {
+                    "group_id": "commit-1",
+                    "prompt_ids": ["PROMPT_38"],
+                    "subject": "[PROMPT_38] Add commit doc",
+                    "changed_files": [{"path": "docs/file.md", "status": "untracked"}],
+                    "validation_status": "passed",
+                }
+            ],
+            "git": {"available": True, "unsafe": False, "status_lines": [], "modified": [], "untracked": [], "deleted": [], "staged": []},
+            "problems": [],
+        }
+        self.write("plans/commit-plan.json", json.dumps(plan))
+
+        code, output = self.run_cli("commit", "execute", "--plan", "plans/commit-plan.json", "--operator-approved", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("unrelated staged files" in problem for problem in data["problems"]))
+
+    def test_commit_plan_json_has_stable_fields(self):
+        self.write_commit_prompt()
+        with mock.patch.object(ahl, "run_git", return_value=(self.git_status_ok("?? docs/outer-loop/commit-planning.md\n"), None)):
+            code, output = self.run_cli("commit", "plan", "PROMPT_38", "--out", "runs/plan.json", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "schema", "plan_id", "created_at", "mode", "source", "prompt_ids", "prompt_context", "grouping_policy", "git", "groups", "unrelated_changes", "warnings", "problems", "artifact"):
+            self.assertIn(key, data)
 
     def test_trace_returns_degraded_result_outside_git_repo(self):
         self.write(".prompts/PROMPT_20.txt", "# Prompt\n")
