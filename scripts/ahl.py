@@ -1329,6 +1329,8 @@ def driver_public_record(driver: dict[str, Any]) -> dict[str, Any]:
         "supported_invocation_modes": driver.get("supported_invocation_modes"),
         "prompt_input_methods": driver.get("prompt_input_methods"),
         "status": driver.get("status"),
+        "live_run_status": driver.get("live_run_status"),
+        "manual_confirmation_required": bool(driver.get("manual_confirmation_required")),
     }
 
 
@@ -1885,6 +1887,8 @@ def assistant_driver_command(driver: dict[str, Any], plan: dict[str, Any], extra
     driver_id = driver.get("id")
     if driver_id == "manual" or driver.get("driver_kind") == "manual":
         return None, warnings
+    if driver.get("manual_confirmation_required") or driver.get("live_run_status") == "manual-confirmation-required":
+        return None, [f"{driver_id}: live invocation requires manual confirmation because the safe command shape is unverified"]
     if driver_id not in {"codex", "gemini"}:
         return None, [f"live invocation is not implemented for driver: {driver_id}"]
     executable = driver.get("executable_name")

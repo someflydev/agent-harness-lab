@@ -419,6 +419,41 @@ class AhlTest(unittest.TestCase):
         self.assertFalse(data["probe"]["available"])
         self.assertTrue(any("executable not found on PATH: codex" in problem for problem in data["problems"]))
 
+    def test_pi_driver_registry_shape_is_external_and_guarded(self):
+        pi = self.driver_item(
+            "pi",
+            driver_kind="external-harness",
+            executable_name="pi",
+            supported_invocation_modes=["interactive", "print", "json", "rpc-requires-verification"],
+            prompt_input_methods=["argument", "stdin", "tool_specific_option"],
+            live_run_status="manual-confirmation-required",
+            manual_confirmation_required=True,
+        )
+        self.write_driver_registry([pi])
+
+        code, output = self.run_cli("driver", "check", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["drivers"][0]["id"], "pi")
+        self.assertEqual(data["drivers"][0]["driver_kind"], "external-harness")
+        self.assertEqual(data["drivers"][0]["live_run_status"], "manual-confirmation-required")
+        self.assertTrue(data["drivers"][0]["manual_confirmation_required"])
+
+    def test_pi_help_only_probe_degrades_when_executable_missing(self):
+        pi = self.driver_item("pi", driver_kind="external-harness", executable_name="pi")
+        self.write_driver_registry([pi])
+
+        with mock.patch("shutil.which", return_value=None):
+            code, output = self.run_cli("driver", "probe", "pi", "--help-only", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertFalse(data["probe"]["available"])
+        self.assertTrue(any("pi: executable not found on PATH: pi" in problem for problem in data["problems"]))
+
     def add_outer_promptset(self):
         self.write(".prompts/PROMPT_01.txt", self.prompt_text("PROMPT_01", "PROMPT_02"))
         self.write(".prompts/PROMPT_02.txt", self.prompt_text("PROMPT_02", "PROMPT_03"))
@@ -489,6 +524,40 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertFalse(data["ok"])
         self.assertIn("unknown assistant driver: missing", data["problems"])
+
+    def test_pi_outer_plan_dry_run_works(self):
+        self.add_outer_promptset()
+        pi = self.driver_item(
+            "pi",
+            driver_kind="external-harness",
+            executable_name="pi",
+            supported_invocation_modes=["interactive", "print", "json"],
+            prompt_input_methods=["argument", "stdin", "tool_specific_option"],
+            live_run_status="manual-confirmation-required",
+            manual_confirmation_required=True,
+        )
+        self.write_driver_registry([pi])
+
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "1",
+            "--driver",
+            "pi",
+            "--plan-id",
+            "pi-plan",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["driver"]["id"], "pi")
+        self.assertEqual(data["driver"]["driver_kind"], "external-harness")
+        self.assertTrue((self.root / "runs" / "outer-loop" / "pi-plan" / "plan.json").exists())
 
     def test_outer_plan_next_selects_fixture_promptset_start(self):
         self.add_outer_promptset()
@@ -765,6 +834,80 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(data["mode"], "dry-run")
         self.assertEqual(data["steps"][0]["driver"]["status"], "not-invoked")
 
+    def test_outer_run_pi_live_invocation_is_guarded(self):
+        self.add_outer_promptset()
+        pi = self.driver_item(
+            "pi",
+            driver_kind="external-harness",
+            executable_name="pi",
+            supported_invocation_modes=["interactive", "print", "json"],
+            prompt_input_methods=["argument", "stdin", "tool_specific_option"],
+            live_run_status="manual-confirmation-required",
+            manual_confirmation_required=True,
+        )
+        self.write_driver_registry([pi])
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "1",
+            "--driver",
+            "pi",
+            "--plan-id",
+            "pi-guarded",
+            "--json",
+        )
+        self.assertEqual(code, 0)
+        plan = json.loads(output)["artifact"]
+
+        with mock.patch.object(ahl.subprocess, "run", side_effect=AssertionError("external command invoked")):
+            code, output = self.run_cli("outer", "run", "--plan", plan, "--execute", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "driver-failed")
+        self.assertEqual(data["steps"][0]["driver"]["status"], "driver-failed")
+        self.assertTrue(any("manual confirmation" in problem for problem in data["steps"][0]["problems"]))
+
+    def test_outer_run_pi_dry_run_never_invokes_executable(self):
+        self.add_outer_promptset()
+        pi = self.driver_item(
+            "pi",
+            driver_kind="external-harness",
+            executable_name="pi",
+            supported_invocation_modes=["interactive", "print", "json"],
+            prompt_input_methods=["argument", "stdin", "tool_specific_option"],
+            live_run_status="manual-confirmation-required",
+            manual_confirmation_required=True,
+        )
+        self.write_driver_registry([pi])
+        code, output = self.run_cli(
+            "outer",
+            "plan",
+            "--from",
+            "PROMPT_01",
+            "--count",
+            "1",
+            "--driver",
+            "pi",
+            "--plan-id",
+            "pi-dry-run",
+            "--json",
+        )
+        self.assertEqual(code, 0)
+        plan = json.loads(output)["artifact"]
+
+        with mock.patch.object(ahl.subprocess, "run", side_effect=AssertionError("external command invoked")):
+            with mock.patch.object(ahl, "outer_gate_report", return_value=self.passing_gate("PROMPT_01")):
+                code, output = self.run_cli("outer", "run", "--plan", plan, "--dry-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["driver"]["id"], "pi")
+        self.assertEqual(data["steps"][0]["driver"]["status"], "not-invoked")
+
     def test_outer_run_max_prompts_limits_execution(self):
         plan = self.create_outer_plan_fixture(count=2)
 
@@ -1035,6 +1178,13 @@ class AhlTest(unittest.TestCase):
         ):
             self.assertIn(key, data)
         self.assertFalse(data["anchors_validated"])
+
+    def test_outer_loop_navigation_links_pi_comparison_docs(self):
+        outer_index = (ROOT / "docs" / "outer-loop" / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("pi-adapter.md", outer_index)
+        self.assertIn("pi-vs-ahl.md", outer_index)
+        self.assertIn("provider-harness-comparison.md", outer_index)
 
     def test_docs_check_reports_missing_index_page(self):
         self.write("docs/topic.md", "# Topic\n")

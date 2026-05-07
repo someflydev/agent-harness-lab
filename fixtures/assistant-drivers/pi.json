@@ -4,6 +4,26 @@
   "driver_kind": "external-harness",
   "executable_name": "pi",
   "probe_expectation": "PATH lookup and optional `pi --help` only.",
-  "live_run_status": "deferred",
-  "notes": "Local Pi README describes interactive, print or JSON, RPC, and SDK modes; exact AHL-safe use requires verification."
+  "supported_invocation_modes": [
+    "interactive",
+    "print",
+    "json",
+    "rpc-requires-verification",
+    "sdk-not-used-by-ahl"
+  ],
+  "prompt_input_methods": [
+    "argument",
+    "stdin",
+    "tool_specific_option"
+  ],
+  "capability_probe": {
+    "path_check": true,
+    "help_args": [
+      "--help"
+    ],
+    "help_only_safe": true
+  },
+  "live_run_status": "manual-confirmation-required",
+  "manual_confirmation_required": true,
+  "notes": "Local Pi README describes interactive, print, JSON, RPC, and SDK modes. AHL can list, validate, probe, and dry-run plan the Pi driver, but live invocation remains guarded until the operator verifies the exact safe non-interactive command and output contract."
 }

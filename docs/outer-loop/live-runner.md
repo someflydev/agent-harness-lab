@@ -26,6 +26,8 @@ python3 scripts/ahl.py outer run --plan runs/outer-loop/<run-id>/plan.json --exe
 - `manual` never invokes a model; it records the operator action and payload.
 - `codex` and `gemini` use a small temporary internal mapping that sends the
   payload on stdin to the configured executable.
+- `pi` can appear in plans and dry-run ledgers, but live invocation is disabled
+  while its registry record is marked `manual-confirmation-required`.
 - Model and reasoning values are passed only when the driver contract marks
   that selection as supported or verified. Otherwise they stay recorded in the
   plan and ledger but are not put on the command line.

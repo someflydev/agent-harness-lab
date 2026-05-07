@@ -145,16 +145,20 @@
       "related_docs": [
         "docs/outer-loop/driver-contracts.md",
         "docs/outer-loop/capability-probes.md",
-        "docs/outer-loop/assistant-driver-boundary.md"
+        "docs/outer-loop/assistant-driver-boundary.md",
+        "docs/outer-loop/pi-adapter.md",
+        "docs/outer-loop/provider-harness-comparison.md"
       ],
-      "safe_use_notes": "Local Pi reference docs may inform the contract, but AHL must not edit pi-mono or copy Pi internals.",
+      "safe_use_notes": "Local Pi reference docs may inform the contract, but AHL must not edit pi-mono, copy Pi internals, or invoke Pi live until the operator confirms the safe command shape.",
       "display_name": "Pi Coding Agent",
       "driver_kind": "external-harness",
       "executable_name": "pi",
       "supported_invocation_modes": [
         "interactive",
-        "print-or-json",
-        "rpc-requires-verification"
+        "print",
+        "json",
+        "rpc-requires-verification",
+        "sdk-not-used-by-ahl"
       ],
       "prompt_input_methods": [
         "argument",
@@ -167,12 +171,12 @@
       },
       "final_message_capture_support": {
         "status": "requires-verification",
-        "evidence": "Likely tied to print or JSON mode, not validated by this prompt."
+        "evidence": "Pi print mode and JSON event mode are documented locally, but AHL has not validated final-message extraction from either mode."
       },
       "sandbox_approval_controls": "Controlled by Pi provider, tool, extension, and local settings; exact AHL-safe flags require verification.",
-      "model_selection_support": "Local Pi README describes model selection through UI commands; headless selection requires verification.",
-      "reasoning_selection_support": "Local Pi README describes thinking-level controls in the terminal UI; headless selection requires verification.",
-      "fresh_session_behavior": "Later runner should launch a bounded Pi mode only after confirming the safe non-interactive contract.",
+      "model_selection_support": "Pi owns provider and model selection. Local Pi README documents /model, --provider, --model, --models, and --list-models; AHL records desired values but should not reinterpret them.",
+      "reasoning_selection_support": "Pi owns thinking selection. Local Pi README documents /settings, Shift+Tab, --thinking, and model suffixes; AHL should pass no reasoning flags until the operator verifies the intended Pi command.",
+      "fresh_session_behavior": "AHL should prefer a new bounded Pi invocation with --no-session after confirming whether print or JSON mode is the safe headless contract.",
       "resume_behavior": "Local Pi README describes sessions; batch resume behavior requires explicit design.",
       "capability_probe": {
         "path_check": true,
@@ -181,14 +185,20 @@
         ],
         "help_only_safe": true
       },
+      "live_run_status": "manual-confirmation-required",
+      "manual_confirmation_required": true,
       "known_limitations": [
         "Pi behavior is referenced from a local clone when present and must be verified on the operator machine.",
-        "No live prompt invocation is implemented in this prompt."
+        "AHL has not validated Pi print or JSON output enough to parse a final assistant message.",
+        "AHL has not validated Pi permission, session, extension, or package settings for unattended use.",
+        "No live Pi prompt invocation is implemented by this prompt."
       ],
       "unsupported_operations": [
         "Do not edit pi-mono.",
+        "Do not vendor Pi code.",
         "Do not call a model during capability probing.",
-        "Do not assume API credentials are available."
+        "Do not assume API credentials or subscription login are available.",
+        "Do not invoke Pi from AHL tests."
       ]
     },
     {

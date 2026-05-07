@@ -35,7 +35,9 @@ justifies more.
   indexes.
 - `driver list`, `driver check`, and `driver probe` list conservative
   assistant driver records, validate required driver fields, and run safe local
-  capability probes without live model calls.
+  capability probes without live model calls. The Pi record is an external
+  harness candidate and is marked `manual-confirmation-required` for live use
+  until the local command shape and output contract are verified.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
@@ -119,7 +121,9 @@ python3 scripts/ahl.py driver list
 python3 scripts/ahl.py driver list --json
 python3 scripts/ahl.py driver check
 python3 scripts/ahl.py driver probe codex --help-only --json
+python3 scripts/ahl.py driver probe pi --help-only --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
+python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
 python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json --json
 python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dry-run --json
