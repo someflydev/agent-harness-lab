@@ -28,6 +28,12 @@ claim.
   baseline: `docs/capstone/operating-baseline.md`,
   `docs/capstone/final-audit.md`, and
   `docs/capstone/promptset-completion-report.md`.
+- Phase-two outer-loop capstone docs are current when claiming bounded
+  outer-loop support: `docs/outer-loop/capstone-audit.md`,
+  `docs/outer-loop/operating-baseline.md`,
+  `docs/outer-loop/smoke-test-plan.md`,
+  `docs/outer-loop/known-limitations.md`, and
+  `docs/outer-loop/future-work.md`.
 
 ## Console Sweep
 
@@ -66,3 +72,5 @@ Before closing a release-readiness pass, verify:
   orchestration, autonomous runners, graph or vector retrieval, or production
   safety scanning unless those capabilities have actually been implemented and
   validated.
+- Outer-loop release claims stay limited to bounded local support when checks
+  pass and the operator explicitly enables live execution.

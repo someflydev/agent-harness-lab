@@ -7,12 +7,13 @@ runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
 release-readiness, operating baseline, phase-two outer-loop requirements,
-gate reports, run-ledger recovery, maintenance, contributing guidance, known
-limitations, commit planning, explicit commit execution, Pi adapter comparison,
-and future-facing architecture. Role packs and lane playbooks now provide
+capstone audit, smoke tests, gate reports, run-ledger recovery, maintenance,
+contributing guidance, known limitations, commit planning, explicit commit
+execution, Pi adapter comparison, and future-facing architecture. Role packs
+and lane playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
-richer orchestration remains future work.
+heavier orchestration remains outside the baseline.
 
 ## Start Here
 
@@ -42,6 +43,17 @@ richer orchestration remains future work.
   limits.
 - `outer-loop/README.md` - phase-two requirements, safety boundary docs, and
   the dry-run-default sequential runner MVP.
+- `outer-loop/operating-baseline.md` - safe local outer-loop preparation,
+  driver probes, planning, dry-run, one-step live run, gate, recovery, and
+  commit-plan workflow.
+- `outer-loop/capstone-audit.md` - phase-two outer-loop implementation audit,
+  validation evidence, gaps, and baseline decision.
+- `outer-loop/smoke-test-plan.md` - offline-safe and opt-in real-assistant
+  smoke tests for outer-loop helpers.
+- `outer-loop/known-limitations.md` - outer-loop execution, validation, data,
+  git, and architecture limits.
+- `outer-loop/future-work.md` - backlog candidates beyond the phase-two
+  baseline.
 - `outer-loop/resume-and-recovery.md` - run-ledger status, dry-run resume
   planning, and recovery handoff behavior.
 - `outer-loop/failure-classification.md` - failure classes, repair needs, and
@@ -278,6 +290,14 @@ richer orchestration remains future work.
 - `outer-loop/non-goals.md` - explicit exclusions from the outer-loop design.
 - `outer-loop/roadmap.md` - rest of phase-two sequence toward an outer-loop
   capstone.
+- `outer-loop/capstone-audit.md` - phase-two implementation audit and local
+  validation evidence.
+- `outer-loop/operating-baseline.md` - supported outer-loop operating path.
+- `outer-loop/smoke-test-plan.md` - smoke test matrix for CI-safe and opt-in
+  real assistant checks.
+- `outer-loop/known-limitations.md` - limits specific to the outer-loop
+  helper.
+- `outer-loop/future-work.md` - future backlog after the capstone baseline.
 
 ## Capstone
 

@@ -50,9 +50,12 @@ The initial promptset baseline is recorded in
 `docs/capstone/operating-baseline.md`, with final audit evidence in
 `docs/capstone/final-audit.md`. Treat `PROMPT_33+` files, when present, as
 phase-two work unless the operator explicitly asks to run one of them.
-Phase-two outer-loop docs live in `docs/outer-loop/` when present. They are
-design and boundary material for a possible sequential wrapper, not mandatory
-startup context and not proof that live assistant invocation exists.
+Phase-two outer-loop docs live in `docs/outer-loop/` when present. The current
+baseline includes design, safety boundaries, driver contracts, dry-run plans,
+gate reports, prompt payloads, run ledgers, manual-driver rehearsal, resume
+helpers, conservative commit planning/execution, and explicit
+`outer run --execute` live invocation for supported local driver contracts.
+Treat it as bounded local helper tooling, not an autonomous runtime.
 
 ## Project Skills
 
@@ -94,7 +97,9 @@ Use this closeout loop for prompt-execution sessions:
 5. Reset by leaving the repo ready for the next fresh session.
 
 For the completed initial baseline, no prompt after Prompt 32 is required.
-Optional Prompt 33 and later files belong to a separate phase-two promptset.
+Prompt 33 through Prompt 41 are the phase-two outer-loop promptset. Prompt 41
+is the phase-two capstone; no further phase-two prompt is required after it
+unless an operator explicitly creates more work.
 
 Create `tmp/HANDOFF.md` only when it materially helps the next session. Do not
 create or update it for routine completion notes that fit in the final answer.

@@ -17,6 +17,12 @@
 - Added final capstone baseline docs covering the final audit, operating
   baseline, future backlog, and promptset completion report for Prompts 01
   through 32.
-- Documented current limitations: no provider orchestration runtime, no live
-  multi-agent daemon, no autonomous sequential runner, and no graph or vector
-  retrieval implementation.
+- Added phase-two outer-loop support for driver contracts, capability probes,
+  batch plans, dry-runs, gate reports, prompt payloads, run ledgers, a
+  dry-run-default sequential runner, resume helpers, Pi adapter planning,
+  commit planning, and explicit approval-gated commit execution.
+- Added phase-two outer-loop capstone docs covering the audit, operating
+  baseline, smoke tests, known limitations, and future-work backlog.
+- Documented current limitations: no provider credential manager, no live
+  multi-agent daemon, no autonomous production orchestration runtime, no raw
+  transcript store, and no graph or vector retrieval implementation.

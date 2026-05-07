@@ -94,9 +94,11 @@ such as:
 - Examples and experiments that test the harness model.
 - Findings and reports that summarize validation evidence.
 
-The initial baseline now contains those areas in documentation-first form.
-Later prompts should refine them only when usage evidence or a scoped prompt
-justifies the change.
+The initial baseline now contains those areas in documentation-first form. The
+phase-two outer-loop baseline adds bounded local planning, dry-runs, gate
+reports, run ledgers, manual-driver rehearsal, explicit one-step live runner
+support for verified local driver contracts, resume helpers, and conservative
+commit planning/execution boundaries.
 
 ## Operating Baseline
 
@@ -105,11 +107,12 @@ The initial baseline for Prompts 01 through 32 is recorded in
 `docs/capstone/final-audit.md` and a completion report in
 `docs/capstone/promptset-completion-report.md`. Future work is tracked as
 backlog in `docs/capstone/future-backlog.md`, not as implemented capability.
-Phase-two outer-loop requirements and safety boundaries live in
-`docs/outer-loop/`. The current outer-loop helper can plan batches, dry-run
-plans, collect gates, and build run ledgers. Live assistant CLI invocation is
-available only through explicit `outer run --execute` consent for supported
-local driver contracts.
+Phase-two outer-loop requirements, safety boundaries, capstone audit, and
+operating baseline live in `docs/outer-loop/`. The current outer-loop helper
+can plan batches, dry-run plans, collect gates, build prompt payloads and run
+ledgers, rehearse manual-driver runs, plan resumes, generate commit plans, and
+perform explicit one-step live CLI invocation only through `outer run --execute`
+for supported local driver contracts.
 
 Release-readiness guidance lives in `docs/release-readiness.md`, with current
 limitations in `docs/known-limitations.md`, maintenance guidance in
@@ -174,6 +177,7 @@ doctrine, roles, skills, routines, runtime lifecycle notes, memory governance,
 contracts, templates, runbooks, examples, quality guidance, metadata rules,
 final capstone baseline docs, future-facing architecture guidance, and
 lightweight helper scripts. It also has phase-two outer-loop planning,
-dry-run, gate, and dry-run-default live-runner helpers. It does not yet have
-provider credentials, graph or vector database dependencies, an autonomous
-runner, or a heavy runtime.
+dry-run, gate, dry-run-default live-runner, resume, recovery, Pi adapter, and
+commit-planning helpers. It does not have provider credentials, graph or
+vector database dependencies, an autonomous daemon, or a production
+orchestration runtime.

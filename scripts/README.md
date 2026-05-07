@@ -14,8 +14,8 @@ commands; this script remains the underlying command source.
 
 It is intentionally dependency-free and uses only the Python standard library.
 Future architecture docs may describe richer orchestration candidates, but
-this script remains a small helper layer until repeated workflow evidence
-justifies more.
+this script remains a small helper layer. The phase-two outer-loop baseline is
+bounded local support, not a daemon or provider platform.
 
 ## What It Does
 
@@ -133,6 +133,9 @@ python3 scripts/ahl.py outer gate PROMPT_36 --plan runs/outer-loop/<plan-id>/pla
 python3 scripts/ahl.py outer status --run <run-id> --json
 python3 scripts/ahl.py outer resume --run <run-id> --dry-run --json
 python3 scripts/ahl.py outer recovery-handoff --run <run-id>
+python3 scripts/ahl.py outer plan --from PROMPT_41 --count 1 --driver manual --json
+python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json --json
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --execute --max-prompts 1 --json
 python3 scripts/ahl.py commit plan PROMPT_38 --json
 python3 scripts/ahl.py commit plan --run runs/outer-loop/<run-id>/run-ledger.json --json
 python3 scripts/ahl.py commit execute --plan runs/outer-loop/<run-id>/commit-plan.json --operator-approved
