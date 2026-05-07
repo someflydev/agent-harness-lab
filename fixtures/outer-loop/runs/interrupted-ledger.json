@@ -1,0 +1,38 @@
+{
+  "ok": false,
+  "schema": "schemas/outer-loop-run-ledger.schema.json",
+  "status": "interrupted",
+  "run_id": "fixture-interrupted-ledger",
+  "plan_id": "fixture-valid-next-three",
+  "mode": "live",
+  "execute": true,
+  "dry_run": false,
+  "started_at": "2026-05-07T00:00:00Z",
+  "ended_at": "2026-05-07T00:08:00Z",
+  "plan_artifact": "runs/outer-loop/fixture-valid-next-three/plan.json",
+  "plan_sha256": "fixture",
+  "driver": { "id": "codex", "driver_kind": "subscription-cli" },
+  "model": "gpt-5.5",
+  "reasoning": "medium",
+  "permission_posture": "workspace-write",
+  "command_metadata": { "command": "outer run", "execute": true, "dry_run": false },
+  "validation_results": [],
+  "gate_results": [],
+  "commit_plan": null,
+  "commit_hashes": [],
+  "resume_pointer": {
+    "next_prompt": "PROMPT_02",
+    "completed_prompts": ["PROMPT_01"],
+    "failed_prompts": [],
+    "skipped_prompts": [],
+    "pending_prompts": ["PROMPT_02"],
+    "rerun_required": false
+  },
+  "stop_reason": "driver-timeout",
+  "recovery_recommendation": "Resume from PROMPT_02 only after quota, auth, and worktree state are confirmed.",
+  "steps": [
+    { "index": 1, "prompt_id": "PROMPT_01", "status": "completed" },
+    { "index": 2, "prompt_id": "PROMPT_02", "status": "running" }
+  ],
+  "problems": ["driver timed out before a final step summary was recorded"]
+}

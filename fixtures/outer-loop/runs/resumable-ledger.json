@@ -1,0 +1,39 @@
+{
+  "ok": false,
+  "schema": "schemas/outer-loop-run-ledger.schema.json",
+  "status": "interrupted",
+  "run_id": "fixture-resumable-ledger",
+  "plan_id": "fixture-valid-next-three",
+  "mode": "dry-run",
+  "execute": false,
+  "dry_run": true,
+  "started_at": "2026-05-07T00:00:00Z",
+  "ended_at": "2026-05-07T00:10:00Z",
+  "plan_artifact": "runs/outer-loop/fixture-valid-next-three/plan.json",
+  "plan_sha256": "fixture",
+  "driver": { "id": "manual", "driver_kind": "manual" },
+  "model": "fixture-model",
+  "reasoning": "medium",
+  "permission_posture": "workspace-write",
+  "command_metadata": { "command": "outer run", "execute": false, "dry_run": true },
+  "validation_results": [],
+  "gate_results": [],
+  "commit_plan": null,
+  "commit_hashes": [],
+  "resume_pointer": {
+    "next_prompt": "PROMPT_02",
+    "completed_prompts": ["PROMPT_01"],
+    "failed_prompts": [],
+    "skipped_prompts": [],
+    "pending_prompts": ["PROMPT_02", "PROMPT_03"],
+    "rerun_required": false
+  },
+  "stop_reason": "user-interrupted",
+  "recovery_recommendation": "Resume from PROMPT_02 after confirming the worktree is clean.",
+  "steps": [
+    { "index": 1, "prompt_id": "PROMPT_01", "status": "completed" },
+    { "index": 2, "prompt_id": "PROMPT_02", "status": "pending" },
+    { "index": 3, "prompt_id": "PROMPT_03", "status": "pending" }
+  ],
+  "problems": []
+}

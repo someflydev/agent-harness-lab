@@ -1,0 +1,38 @@
+{
+  "ok": false,
+  "schema": "schemas/outer-loop-run-ledger.schema.json",
+  "status": "blocked",
+  "run_id": "fixture-blocked-ledger",
+  "plan_id": "fixture-valid-next-three",
+  "mode": "dry-run",
+  "execute": false,
+  "dry_run": true,
+  "started_at": "2026-05-07T00:00:00Z",
+  "ended_at": "2026-05-07T00:05:00Z",
+  "plan_artifact": "runs/outer-loop/fixture-valid-next-three/plan.json",
+  "plan_sha256": "fixture",
+  "driver": { "id": "manual", "driver_kind": "manual" },
+  "model": null,
+  "reasoning": null,
+  "permission_posture": "workspace-write",
+  "command_metadata": { "command": "outer run", "execute": false, "dry_run": true },
+  "validation_results": [],
+  "gate_results": [{ "prompt_id": "PROMPT_02", "status": "blocked", "decision": "stop", "ok": false }],
+  "commit_plan": null,
+  "commit_hashes": [],
+  "resume_pointer": {
+    "next_prompt": "PROMPT_02",
+    "completed_prompts": ["PROMPT_01"],
+    "failed_prompts": ["PROMPT_02"],
+    "skipped_prompts": [],
+    "pending_prompts": [],
+    "rerun_required": true
+  },
+  "stop_reason": "next-prompt-readiness-blocked",
+  "recovery_recommendation": "Repair the blocked readiness artifact before resuming.",
+  "steps": [
+    { "index": 1, "prompt_id": "PROMPT_01", "status": "completed" },
+    { "index": 2, "prompt_id": "PROMPT_02", "status": "blocked" }
+  ],
+  "problems": ["missing next prompt file: .prompts/PROMPT_03.txt"]
+}
