@@ -21,7 +21,9 @@ safety boundary layer.
 5. Commit planning and explicit commit execution. Implemented as plan-only
    commit grouping, schema, fixtures, templates, docs, and an explicit
    approval-gated executor that stages only listed files.
-6. Resume and failure handling.
+6. Resume and failure handling. Implemented as run-ledger semantics, failure
+   classification docs, recovery handoff template, artificial ledger fixtures,
+   and `outer status` / `outer resume` / `outer recovery-handoff` helpers.
 7. Pi adapter experiment.
 8. Outer-loop capstone.
 

@@ -32,6 +32,12 @@ operator approval points.
   CLI boundary.
 - `live-runner.md` - dry-run-default sequential runner behavior and live
   execution consent boundary.
+- `run-ledger.md` - durable ledger fields, resume pointer semantics, and
+  transcript boundaries.
+- `failure-classification.md` - failure classes, resume safety, repair needs,
+  and automatic-action limits.
+- `resume-and-recovery.md` - `outer status`, `outer resume`, and recovery
+  handoff behavior.
 - `prompt-payloads.md` - exact bounded payload shape sent to each fresh
   assistant session.
 - `run-artifacts.md` - ledger, payload, summary, transcript, and commit-policy
@@ -48,7 +54,7 @@ operator approval points.
 
 The current layer includes requirements, safety boundaries, conservative driver
 contracts, safe capability probes, plan artifacts, dry-run plan validation,
-gate reports, prompt payload generation, run ledgers, and explicit
-`--execute` live CLI invocation for supported local driver contracts. It does
-not add provider credentials, a daemon, a TUI, an MCP server, a scheduler, or
-dependency-backed runtime code.
+gate reports, prompt payload generation, run ledgers, dry-run resume planning,
+recovery handoffs, and explicit `--execute` live CLI invocation for supported
+local driver contracts. It does not add provider credentials, a daemon, a TUI,
+an MCP server, a scheduler, or dependency-backed runtime code.

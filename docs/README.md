@@ -7,8 +7,8 @@ runtime session behavior, memory governance, contracts, quality gates, metadata,
 optional domain packs, examples, deterministic dry-run harness checks,
 experiments, reports, findings, lab method, capstone audits, lane simulations,
 release-readiness, operating baseline, phase-two outer-loop requirements,
-gate reports, maintenance, contributing guidance, known limitations, commit
-planning, explicit commit execution, and future-facing architecture. Role packs
+gate reports, run-ledger recovery, maintenance, contributing guidance, known
+limitations, commit planning, explicit commit execution, and future-facing architecture. Role packs
 and lane playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
@@ -42,6 +42,10 @@ richer orchestration remains future work.
   limits.
 - `outer-loop/README.md` - phase-two requirements, safety boundary docs, and
   the dry-run-default sequential runner MVP.
+- `outer-loop/resume-and-recovery.md` - run-ledger status, dry-run resume
+  planning, and recovery handoff behavior.
+- `outer-loop/failure-classification.md` - failure classes, repair needs, and
+  automatic-action limits.
 - `maintenance.md` - how to update prompts, registries, templates, skills,
   scripts, domain packs, and release checks.
 - `contributing.md` - scoped contribution guidance and validation
