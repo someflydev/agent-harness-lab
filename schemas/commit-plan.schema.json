@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Commit Plan",
+  "type": "object",
+  "required": ["ok", "schema", "plan_id", "mode", "prompt_ids", "groups", "git", "problems"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "schema": { "type": "string" },
+    "plan_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "mode": { "type": "string", "enum": ["plan-only"] },
+    "source": { "type": "object" },
+    "prompt_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^PROMPT_[0-9]{2}$" }
+    },
+    "prompt_context": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "grouping_policy": { "type": "object" },
+    "git": {
+      "type": "object",
+      "required": ["available", "unsafe", "status_lines", "modified", "untracked", "deleted", "staged"]
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["group_id", "prompt_ids", "subject", "changed_files", "validation_status"],
+        "properties": {
+          "group_id": { "type": "string" },
+          "prompt_ids": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^PROMPT_[0-9]{2}$" }
+          },
+          "subject": { "type": "string" },
+          "summary": { "type": "string" },
+          "changed_files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["path", "status"],
+              "properties": {
+                "path": { "type": "string" },
+                "status": { "type": "string" },
+                "git_status": { "type": "string" },
+                "status_line": { "type": "string" }
+              }
+            }
+          },
+          "validation_status": { "type": "string" },
+          "validation_evidence": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "follow_up_notes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "unrelated_changes": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "problems": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "artifact": { "type": "string" }
+  }
+}

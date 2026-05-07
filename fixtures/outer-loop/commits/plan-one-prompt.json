@@ -1,0 +1,50 @@
+{
+  "artifact": "fixtures/outer-loop/commits/plan-one-prompt.json",
+  "created_at": "2026-05-06T00:00:00Z",
+  "git": {
+    "available": true,
+    "deleted": [],
+    "modified": ["docs/outer-loop/commit-planning.md"],
+    "staged": [],
+    "status_lines": [" M docs/outer-loop/commit-planning.md"],
+    "unsafe": false,
+    "untracked": []
+  },
+  "groups": [
+    {
+      "changed_files": [
+        {
+          "git_status": " M",
+          "path": "docs/outer-loop/commit-planning.md",
+          "status": "modified",
+          "status_line": " M docs/outer-loop/commit-planning.md"
+        }
+      ],
+      "follow_up_notes": [],
+      "group_id": "commit-1",
+      "prompt_ids": ["PROMPT_38"],
+      "subject": "[PROMPT_38] Package prompt changes",
+      "summary": "Package prompt-scoped changes for review.",
+      "validation_evidence": [
+        {
+          "command": "python3 -m unittest tests/test_ahl.py",
+          "status": "passed"
+        }
+      ],
+      "validation_status": "passed"
+    }
+  ],
+  "mode": "plan-only",
+  "ok": true,
+  "plan_id": "commit-plan-PROMPT_38",
+  "problems": [],
+  "prompt_context": [],
+  "prompt_ids": ["PROMPT_38"],
+  "schema": "schemas/commit-plan.schema.json",
+  "source": {
+    "prompt": "PROMPT_38",
+    "run": null
+  },
+  "unrelated_changes": [],
+  "warnings": []
+}

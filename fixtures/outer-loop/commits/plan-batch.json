@@ -1,0 +1,59 @@
+{
+  "artifact": "fixtures/outer-loop/commits/plan-batch.json",
+  "created_at": "2026-05-06T00:00:00Z",
+  "git": {
+    "available": true,
+    "deleted": [],
+    "modified": ["docs/outer-loop/commit-planning.md", "docs/outer-loop/commit-execution.md"],
+    "staged": [],
+    "status_lines": [
+      " M docs/outer-loop/commit-planning.md",
+      " M docs/outer-loop/commit-execution.md"
+    ],
+    "unsafe": false,
+    "untracked": []
+  },
+  "groups": [
+    {
+      "changed_files": [
+        {
+          "git_status": " M",
+          "path": "docs/outer-loop/commit-planning.md",
+          "status": "modified",
+          "status_line": " M docs/outer-loop/commit-planning.md"
+        },
+        {
+          "git_status": " M",
+          "path": "docs/outer-loop/commit-execution.md",
+          "status": "modified",
+          "status_line": " M docs/outer-loop/commit-execution.md"
+        }
+      ],
+      "follow_up_notes": [],
+      "group_id": "commit-1",
+      "prompt_ids": ["PROMPT_38", "PROMPT_39"],
+      "subject": "[PROMPT_38-PROMPT_39] Package prompt changes",
+      "summary": "Package prompt-scoped changes for review.",
+      "validation_evidence": [
+        {
+          "command": "outer gate",
+          "status": "pass"
+        }
+      ],
+      "validation_status": "passed"
+    }
+  ],
+  "mode": "plan-only",
+  "ok": true,
+  "plan_id": "commit-plan-PROMPT_38-PROMPT_39",
+  "problems": [],
+  "prompt_context": [],
+  "prompt_ids": ["PROMPT_38", "PROMPT_39"],
+  "schema": "schemas/commit-plan.schema.json",
+  "source": {
+    "prompt": null,
+    "run": "runs/outer-loop/example/run-ledger.json"
+  },
+  "unrelated_changes": [],
+  "warnings": []
+}
