@@ -45,6 +45,10 @@ justifies more.
   defaults to dry-run, and invokes supported assistant CLIs only when
   `--execute` is passed. The `manual` driver records the expected operator
   action without invoking a model.
+- `outer status`, `outer resume`, and `outer recovery-handoff` read run
+  ledgers, report completed, failed, skipped, and pending steps, plan dry-run
+  resume points, refuse dirty or unsafe worktrees, and create recovery handoffs
+  from a template when needed.
 - `outer gate` collects post-prompt gate evidence from git status, prompt and
   next-prompt files, recorded validation commands, allowlisted AHL checks,
   completion-audit artifact presence, handoff state, and commit-plan policy.
@@ -122,6 +126,9 @@ python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dr
 python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --execute --max-prompts 1 --json
 python3 scripts/ahl.py outer gate PROMPT_36 --json
 python3 scripts/ahl.py outer gate PROMPT_36 --plan runs/outer-loop/<plan-id>/plan.json --json
+python3 scripts/ahl.py outer status --run <run-id> --json
+python3 scripts/ahl.py outer resume --run <run-id> --dry-run --json
+python3 scripts/ahl.py outer recovery-handoff --run <run-id>
 python3 scripts/ahl.py commit plan PROMPT_38 --json
 python3 scripts/ahl.py commit plan --run runs/outer-loop/<run-id>/run-ledger.json --json
 python3 scripts/ahl.py commit execute --plan runs/outer-loop/<run-id>/commit-plan.json --operator-approved
@@ -204,6 +211,14 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `dry_run`, `driver`, `steps`, `problems`, and `artifact` when a ledger is
   written; each step includes stable `prompt_id`, `status`,
   `payload_artifact`, `driver`, and `gate`
+- `outer status`: `ok`, `status`, `run_id`, `plan_id`, `artifact`, `steps`,
+  `next_prompt`, `resume_safe`, `stop_reason`, `recovery_recommendation`, and
+  `problems`
+- `outer resume`: `ok`, `status`, `run_id`, `plan_id`, `dry_run`, `execute`,
+  `rerun`, `next_prompt`, `completed_prompts`, `skipped_prompts`,
+  `failed_prompts`, `pending_prompts`, `git`, `problems`, and `notes`
+- `outer recovery-handoff`: `ok`, `created`, `artifact`, `run_id`, and
+  `problems`
 - `commit plan`: `ok`, `schema`, `plan_id`, `created_at`, `mode`, `source`,
   `prompt_ids`, `prompt_context`, `grouping_policy`, `git`, `groups`,
   `unrelated_changes`, `warnings`, `problems`, and `artifact`

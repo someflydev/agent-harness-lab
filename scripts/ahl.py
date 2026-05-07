@@ -199,6 +199,18 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": "schemas/outer-loop-run-ledger.schema.json",
         "required": ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems"),
     },
+    "fixtures/outer-loop/runs/interrupted-ledger.json": {
+        "schema": "schemas/outer-loop-run-ledger.schema.json",
+        "required": ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems", "resume_pointer", "stop_reason", "recovery_recommendation"),
+    },
+    "fixtures/outer-loop/runs/blocked-ledger.json": {
+        "schema": "schemas/outer-loop-run-ledger.schema.json",
+        "required": ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems", "resume_pointer", "stop_reason", "recovery_recommendation"),
+    },
+    "fixtures/outer-loop/runs/resumable-ledger.json": {
+        "schema": "schemas/outer-loop-run-ledger.schema.json",
+        "required": ("ok", "status", "run_id", "plan_id", "mode", "driver", "steps", "problems", "resume_pointer", "stop_reason", "recovery_recommendation"),
+    },
     "fixtures/outer-loop/commits/plan-one-prompt.json": {
         "schema": "schemas/commit-plan.schema.json",
         "required": ("ok", "schema", "plan_id", "mode", "prompt_ids", "groups", "git", "problems"),
@@ -376,6 +388,15 @@ OUTER_GATE_ALLOWED_AHL_CHECKS = (
     "python3 scripts/ahl.py promptset lint",
     "python3 scripts/ahl.py doctor",
 )
+OUTER_STEP_COMPLETED_STATUSES = ("completed", "dry-run", "skipped")
+OUTER_STEP_FAILED_STATUSES = (
+    "blocked",
+    "driver-failed",
+    "failed-validation",
+    "unsafe-git-state",
+    "unexpected-plan-mutation",
+)
+OUTER_RESUME_SAFE_STATUSES = ("interrupted", "driver-timeout", "driver-rate-limit", "user-interrupted")
 COMMAND_HELP: tuple[dict[str, str], ...] = (
     {
         "name": "help",
@@ -484,6 +505,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "command": "python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dry-run",
         "summary": "Build prompt payloads and, with explicit consent, run sequential assistant CLI steps.",
         "safety": "dry-run by default; live assistant invocation requires --execute",
+    },
+    {
+        "name": "outer-resume",
+        "command": "python3 scripts/ahl.py outer resume --run <run-id> --dry-run",
+        "summary": "Plan the next prompt to resume from a run ledger.",
+        "safety": "read-only; refuses dirty or unsafe worktrees",
     },
     {
         "name": "memory-check",
@@ -1922,6 +1949,67 @@ def write_outer_step_summary(root: Path, run_dir: Path, step: dict[str, Any]) ->
     return repo_relative_path(root, path)
 
 
+def ledger_step_rollup(ledger: dict[str, Any]) -> dict[str, Any]:
+    steps = ledger.get("steps") if isinstance(ledger.get("steps"), list) else []
+    completed: list[str] = []
+    failed: list[str] = []
+    skipped: list[str] = []
+    pending: list[str] = []
+    all_prompt_ids: list[str] = []
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        prompt_id = step.get("prompt_id")
+        if not isinstance(prompt_id, str):
+            continue
+        all_prompt_ids.append(prompt_id)
+        status = str(step.get("status", "pending"))
+        if status in {"completed", "dry-run"}:
+            completed.append(prompt_id)
+        elif status == "skipped":
+            skipped.append(prompt_id)
+        elif status in OUTER_STEP_FAILED_STATUSES:
+            failed.append(prompt_id)
+        else:
+            pending.append(prompt_id)
+    return {
+        "total": len(all_prompt_ids),
+        "completed": completed,
+        "failed": failed,
+        "skipped": skipped,
+        "pending": pending,
+    }
+
+
+def next_prompt_from_ledger(ledger: dict[str, Any], rerun: bool = False) -> str | None:
+    pointer = ledger.get("resume_pointer")
+    if not rerun and isinstance(pointer, dict):
+        prompt_id = pointer.get("next_prompt")
+        if isinstance(prompt_id, str) and prompt_id:
+            return prompt_id
+    steps = ledger.get("steps") if isinstance(ledger.get("steps"), list) else []
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        prompt_id = step.get("prompt_id")
+        if not isinstance(prompt_id, str):
+            continue
+        status = str(step.get("status", "pending"))
+        if rerun or status not in OUTER_STEP_COMPLETED_STATUSES:
+            return prompt_id
+    return None
+
+
+def ledger_recovery_recommendation(status: str, next_prompt: str | None) -> str:
+    if status == "completed":
+        return "Run is complete; do not resume unless an operator explicitly reruns a prompt."
+    if status in {"blocked", "failed-validation", "unsafe-git-state", "unexpected-plan-mutation"}:
+        return "Repair the recorded blocker before resuming."
+    if next_prompt:
+        return f"Resume from {next_prompt} after confirming the worktree is clean and the ledger still matches the plan."
+    return "Review the ledger manually before resuming."
+
+
 def outer_run_ledger(root: Path, args: argparse.Namespace) -> dict[str, Any]:
     plan_path, plan_path_problem = outer_plan_path(root, args.plan)
     if plan_path_problem:
@@ -1966,6 +2054,22 @@ def outer_run_ledger(root: Path, args: argparse.Namespace) -> dict[str, Any]:
             "driver_kind": driver.get("driver_kind") if driver else None,
             "display_name": driver.get("display_name") if driver else None,
         },
+        "model": plan.get("model"),
+        "reasoning": plan.get("reasoning"),
+        "permission_posture": plan.get("permission_posture"),
+        "command_metadata": {
+            "command": "outer run",
+            "driver_args": list(args.driver_arg or []),
+            "execute": bool(args.execute),
+            "dry_run": not args.execute,
+        },
+        "validation_results": [],
+        "gate_results": [],
+        "commit_plan": None,
+        "commit_hashes": [],
+        "resume_pointer": {"next_prompt": None, "completed_prompts": [], "notes": "Run has not processed any prompt steps yet."},
+        "stop_reason": None,
+        "recovery_recommendation": None,
         "max_prompts": args.max_prompts,
         "timeout_seconds": args.timeout_seconds,
         "transcript_capture_policy": plan.get("transcript_capture_policy", dict(OUTER_DEFAULT_TRANSCRIPT_POLICY)),
@@ -2042,6 +2146,8 @@ def outer_run_ledger(root: Path, args: argparse.Namespace) -> dict[str, Any]:
         gate_args = argparse.Namespace(prompt=prompt_id, plan=args.plan, audit_artifact=None)
         gate = outer_gate_report(root, gate_args)
         step["gate"] = {"status": gate["status"], "decision": gate["decision"], "ok": gate["ok"], "problems": gate["problems"], "warnings": gate["warnings"]}
+        ledger["gate_results"].append({"prompt_id": prompt_id, "status": gate["status"], "decision": gate["decision"], "ok": gate["ok"]})
+        ledger["validation_results"].extend({"prompt_id": prompt_id, **outcome} for outcome in gate.get("validation_outcomes", []))
         if file_sha256(plan_path) != plan_hash:
             step["status"] = "unexpected-plan-mutation"
             step["problems"].append("plan artifact changed during gate evaluation")
@@ -2067,6 +2173,18 @@ def outer_run_ledger(root: Path, args: argparse.Namespace) -> dict[str, Any]:
         ledger["status"] = "completed"
     ledger["ended_at"] = utc_timestamp()
     ledger["ok"] = ledger["status"] in {"completed"}
+    rollup = ledger_step_rollup(ledger)
+    next_prompt = next_prompt_from_ledger(ledger)
+    ledger["resume_pointer"] = {
+        "next_prompt": next_prompt,
+        "completed_prompts": rollup["completed"],
+        "failed_prompts": rollup["failed"],
+        "skipped_prompts": rollup["skipped"],
+        "pending_prompts": rollup["pending"],
+        "rerun_required": False,
+    }
+    ledger["stop_reason"] = None if ledger["status"] == "completed" else ledger["status"]
+    ledger["recovery_recommendation"] = ledger_recovery_recommendation(str(ledger["status"]), next_prompt)
     ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     ledger["artifact"] = repo_relative_path(root, ledger_path)
     return ledger
@@ -2326,6 +2444,152 @@ def outer_gate_report(root: Path, args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def resolve_outer_run_ledger_path(root: Path, run_value: str) -> tuple[Path | None, str | None]:
+    candidates: list[Path] = []
+    supplied = Path(run_value)
+    if supplied.suffix == ".json" or supplied.parts:
+        candidates.append(root / supplied)
+    candidates.append(root / "runs" / "outer-loop" / run_value / "run-ledger.json")
+    candidates.append(root / "runs" / "outer-loop" / f"{run_value}.json")
+    seen: set[Path] = set()
+    for candidate in candidates:
+        path = candidate.resolve()
+        if path in seen:
+            continue
+        seen.add(path)
+        try:
+            path.relative_to(root.resolve())
+        except ValueError:
+            return None, f"run ledger path escapes repository root: {run_value}"
+        if path.is_file():
+            return path, None
+    return None, f"missing run ledger artifact for run: {run_value}"
+
+
+def load_outer_run_ledger(root: Path, run_value: str) -> tuple[dict[str, Any] | None, Path | None, str | None]:
+    path, problem = resolve_outer_run_ledger_path(root, run_value)
+    if problem:
+        return None, path, problem
+    assert path is not None
+    data, load_problem = load_json_file(path)
+    if load_problem:
+        return None, path, load_problem
+    if not isinstance(data, dict):
+        return None, path, f"{repo_relative_path(root, path)}: run ledger must be a JSON object"
+    required = ("run_id", "plan_id", "status", "steps")
+    missing = [field for field in required if field not in data]
+    if missing:
+        return None, path, f"{repo_relative_path(root, path)}: malformed run ledger missing fields: {', '.join(missing)}"
+    if not isinstance(data.get("steps"), list):
+        return None, path, f"{repo_relative_path(root, path)}: malformed run ledger steps must be a list"
+    return data, path, None
+
+
+def outer_status_report(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    ledger, path, problem = load_outer_run_ledger(root, args.run)
+    if problem:
+        return {
+            "ok": False,
+            "status": "malformed" if path is not None else "missing",
+            "run_id": args.run,
+            "plan_id": None,
+            "artifact": repo_relative_path(root, path) if path else None,
+            "steps": {"total": 0, "completed": [], "failed": [], "skipped": [], "pending": []},
+            "next_prompt": None,
+            "resume_safe": False,
+            "recovery_recommendation": "Fix or recreate the run ledger before using resume commands.",
+            "problems": [problem],
+        }
+    assert ledger is not None and path is not None
+    rollup = ledger_step_rollup(ledger)
+    next_prompt = next_prompt_from_ledger(ledger)
+    status = str(ledger.get("status", "unknown"))
+    resume_safe = status in OUTER_RESUME_SAFE_STATUSES or (bool(next_prompt) and not rollup["failed"] and status not in {"completed"})
+    return {
+        "ok": True,
+        "status": status,
+        "run_id": ledger.get("run_id"),
+        "plan_id": ledger.get("plan_id"),
+        "artifact": repo_relative_path(root, path),
+        "steps": rollup,
+        "next_prompt": next_prompt,
+        "resume_safe": resume_safe,
+        "stop_reason": ledger.get("stop_reason"),
+        "recovery_recommendation": ledger.get("recovery_recommendation") or ledger_recovery_recommendation(status, next_prompt),
+        "problems": [],
+    }
+
+
+def outer_resume_plan(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    status = outer_status_report(root, argparse.Namespace(run=args.run))
+    problems = list(status["problems"])
+    git = git_status_report(root)
+    if git["unsafe"] or git["lines"]:
+        problems.append("worktree is not clean; refusing resume")
+    next_prompt = status["next_prompt"]
+    if args.rerun:
+        ledger, _path, problem = load_outer_run_ledger(root, args.run)
+        if problem:
+            problems.append(problem)
+        elif ledger is not None:
+            next_prompt = next_prompt_from_ledger(ledger, rerun=True)
+    if not next_prompt:
+        problems.append("no pending prompt step is available to resume")
+    if status["steps"]["failed"] and not args.rerun:
+        problems.append("failed prompt steps require repair or explicit --rerun")
+    ok = not problems
+    return {
+        "ok": ok,
+        "status": "ready" if ok else "refused",
+        "run_id": status["run_id"],
+        "plan_id": status["plan_id"],
+        "dry_run": bool(args.dry_run),
+        "execute": bool(getattr(args, "execute", False)),
+        "rerun": bool(args.rerun),
+        "next_prompt": next_prompt,
+        "completed_prompts": status["steps"]["completed"],
+        "skipped_prompts": status["steps"]["skipped"],
+        "failed_prompts": status["steps"]["failed"],
+        "pending_prompts": status["steps"]["pending"],
+        "git": git,
+        "problems": problems,
+        "notes": "Dry-run resume planning only; no assistant CLI is invoked." if args.dry_run else "Resume execution still requires an explicit runner execution path.",
+    }
+
+
+def fill_recovery_template(template: str, data: dict[str, Any]) -> str:
+    replacements = {
+        "{{RUN_ID}}": str(data.get("run_id") or "unknown"),
+        "{{PLAN_ID}}": str(data.get("plan_id") or "unknown"),
+        "{{STATUS}}": str(data.get("status") or "unknown"),
+        "{{NEXT_PROMPT}}": str(data.get("next_prompt") or "none"),
+        "{{STOP_REASON}}": str(data.get("stop_reason") or "not recorded"),
+        "{{RECOVERY_RECOMMENDATION}}": str(data.get("recovery_recommendation") or "Review the run ledger before resuming."),
+    }
+    for key, value in replacements.items():
+        template = template.replace(key, value)
+    return template
+
+
+def outer_recovery_handoff(root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    status = outer_status_report(root, argparse.Namespace(run=args.run))
+    problems = list(status["problems"])
+    template_path = root / "templates" / "outer-loop" / "recovery-handoff.md"
+    if not template_path.is_file():
+        problems.append("missing recovery handoff template: templates/outer-loop/recovery-handoff.md")
+    run_id = str(status.get("run_id") or args.run)
+    out_path = root / "runs" / "outer-loop" / run_id / "recovery-handoff.md"
+    if out_path.exists() and not args.force:
+        problems.append(f"recovery handoff already exists: {repo_relative_path(root, out_path)}")
+    if problems:
+        return {"ok": False, "created": False, "artifact": repo_relative_path(root, out_path), "run_id": status.get("run_id"), "problems": problems}
+    template = template_path.read_text(encoding="utf-8")
+    content = fill_recovery_template(template, status)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(content, encoding="utf-8")
+    return {"ok": True, "created": True, "artifact": repo_relative_path(root, out_path), "run_id": status.get("run_id"), "problems": []}
+
+
 def command_outer(args: argparse.Namespace) -> int:
     if args.action == "plan":
         return command_outer_plan(args)
@@ -2352,6 +2616,24 @@ def command_outer(args: argparse.Namespace) -> int:
             f"- changed files: {len(data['changed_files'])}",
         ]
         human.extend(f"- warning: {warning}" for warning in data["warnings"])
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+    if args.action == "status":
+        root = repo_root()
+        data = outer_status_report(root, args)
+        human = [f"outer status: {data['status']}", f"- run: {data['run_id'] or args.run}", f"- next prompt: {data['next_prompt'] or 'none'}"]
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+    if args.action == "resume":
+        root = repo_root()
+        data = outer_resume_plan(root, args)
+        human = [f"outer resume: {data['status']}", f"- run: {data['run_id'] or args.run}", f"- next prompt: {data['next_prompt'] or 'none'}"]
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+    if args.action == "recovery-handoff":
+        root = repo_root()
+        data = outer_recovery_handoff(root, args)
+        human = ["outer recovery handoff: created" if data["ok"] else "outer recovery handoff: refused", f"- artifact: {data['artifact']}"]
         human.extend(f"- problem: {problem}" for problem in data["problems"])
         return emit(data, args.json, human, 0 if data["ok"] else 1)
     root = repo_root()
@@ -4059,6 +4341,25 @@ def build_parser() -> argparse.ArgumentParser:
     outer_gate.add_argument("--audit-artifact", help="Path to an explicit completion audit artifact, when one exists.")
     outer_gate.add_argument("--json", action="store_true")
     outer_gate.set_defaults(func=command_outer)
+
+    outer_status = outer_subparsers.add_parser("status", help="Summarize an outer-loop run ledger.")
+    outer_status.add_argument("--run", required=True, help="Run id or run-ledger.json path.")
+    outer_status.add_argument("--json", action="store_true")
+    outer_status.set_defaults(func=command_outer)
+
+    outer_resume = outer_subparsers.add_parser("resume", help="Plan a safe resume from an outer-loop run ledger.")
+    outer_resume.add_argument("--run", required=True, help="Run id or run-ledger.json path.")
+    outer_resume.add_argument("--dry-run", action="store_true", help="Plan resume without invoking assistants.")
+    outer_resume.add_argument("--execute", action="store_true", help="Reserved explicit execution flag; uses runner path only in later work.")
+    outer_resume.add_argument("--rerun", action="store_true", help="Allow selecting an already-recorded step for explicit rerun.")
+    outer_resume.add_argument("--json", action="store_true")
+    outer_resume.set_defaults(func=command_outer)
+
+    outer_recovery = outer_subparsers.add_parser("recovery-handoff", help="Create a recovery handoff from a run ledger.")
+    outer_recovery.add_argument("--run", required=True, help="Run id or run-ledger.json path.")
+    outer_recovery.add_argument("--force", action="store_true", help="Overwrite an existing recovery handoff.")
+    outer_recovery.add_argument("--json", action="store_true")
+    outer_recovery.set_defaults(func=command_outer)
 
     commit = subparsers.add_parser("commit", help="Plan or explicitly execute prompt-scoped commits.")
     commit_subparsers = commit.add_subparsers(dest="action", required=True)

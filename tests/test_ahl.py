@@ -836,6 +836,103 @@ class AhlTest(unittest.TestCase):
         for key in ("prompt_id", "status", "payload_artifact", "driver", "gate"):
             self.assertIn(key, data["steps"][0])
 
+    def write_outer_ledger(self, run_id="fixture-run", status="interrupted", steps=None):
+        if steps is None:
+            steps = [
+                {"index": 1, "prompt_id": "PROMPT_01", "status": "completed"},
+                {"index": 2, "prompt_id": "PROMPT_02", "status": "pending"},
+            ]
+        ledger = {
+            "ok": status == "completed",
+            "status": status,
+            "run_id": run_id,
+            "plan_id": "fixture-plan",
+            "mode": "dry-run",
+            "driver": {"id": "manual"},
+            "steps": steps,
+            "resume_pointer": {"next_prompt": "PROMPT_02", "completed_prompts": ["PROMPT_01"], "pending_prompts": ["PROMPT_02"]},
+            "stop_reason": "user-interrupted" if status == "interrupted" else status,
+            "recovery_recommendation": "Resume from PROMPT_02.",
+            "problems": [],
+        }
+        self.write(f"runs/outer-loop/{run_id}/run-ledger.json", json.dumps(ledger))
+        return ledger
+
+    def test_outer_status_reports_completed_blocked_and_interrupted_ledgers(self):
+        self.write_outer_ledger("completed-run", "completed", [{"index": 1, "prompt_id": "PROMPT_01", "status": "completed"}])
+        self.write_outer_ledger("blocked-run", "blocked", [{"index": 1, "prompt_id": "PROMPT_01", "status": "blocked"}])
+        self.write_outer_ledger("interrupted-run", "interrupted")
+
+        for run_id, expected in (("completed-run", "completed"), ("blocked-run", "blocked"), ("interrupted-run", "interrupted")):
+            code, output = self.run_cli("outer", "status", "--run", run_id, "--json")
+            data = json.loads(output)
+            self.assertEqual(code, 0)
+            self.assertEqual(data["status"], expected)
+            self.assertIn("completed", data["steps"])
+            self.assertIn("failed", data["steps"])
+            self.assertIn("pending", data["steps"])
+
+    def test_outer_resume_dry_run_selects_correct_next_prompt(self):
+        self.write_outer_ledger("resume-run")
+        clean = subprocess.CompletedProcess(["git"], 0, stdout="", stderr="")
+
+        with mock.patch.object(ahl, "run_git", return_value=(clean, None)):
+            code, output = self.run_cli("outer", "resume", "--run", "resume-run", "--dry-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["next_prompt"], "PROMPT_02")
+        self.assertEqual(data["completed_prompts"], ["PROMPT_01"])
+
+    def test_outer_resume_refuses_unsafe_git_state(self):
+        self.write_outer_ledger("dirty-run")
+        dirty = subprocess.CompletedProcess(["git"], 0, stdout="?? scratch.md\n", stderr="")
+
+        with mock.patch.object(ahl, "run_git", return_value=(dirty, None)):
+            code, output = self.run_cli("outer", "resume", "--run", "dirty-run", "--dry-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "refused")
+        self.assertIn("worktree is not clean; refusing resume", data["problems"])
+
+    def test_outer_resume_refuses_malformed_ledger(self):
+        self.write("runs/outer-loop/bad-run/run-ledger.json", "{bad json")
+        clean = subprocess.CompletedProcess(["git"], 0, stdout="", stderr="")
+
+        with mock.patch.object(ahl, "run_git", return_value=(clean, None)):
+            code, output = self.run_cli("outer", "resume", "--run", "bad-run", "--dry-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(data["status"], "refused")
+        self.assertTrue(any("invalid JSON" in problem for problem in data["problems"]))
+
+    def test_outer_recovery_handoff_refuses_overwrite_by_default(self):
+        self.write_outer_ledger("handoff-run")
+        self.write("templates/outer-loop/recovery-handoff.md", "Run {{RUN_ID}} next {{NEXT_PROMPT}}\n")
+        self.write("runs/outer-loop/handoff-run/recovery-handoff.md", "existing\n")
+
+        code, output = self.run_cli("outer", "recovery-handoff", "--run", "handoff-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["created"])
+        self.assertIn("recovery handoff already exists: runs/outer-loop/handoff-run/recovery-handoff.md", data["problems"])
+
+    def test_outer_resume_json_has_stable_fields(self):
+        self.write_outer_ledger("stable-run")
+        clean = subprocess.CompletedProcess(["git"], 0, stdout="", stderr="")
+
+        with mock.patch.object(ahl, "run_git", return_value=(clean, None)):
+            code, output = self.run_cli("outer", "resume", "--run", "stable-run", "--dry-run", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "status", "run_id", "plan_id", "dry_run", "rerun", "next_prompt", "completed_prompts", "failed_prompts", "pending_prompts", "git", "problems"):
+            self.assertIn(key, data)
+
     def write_docs_index(self):
         for dirname in (
             "domain-packs",
@@ -1174,6 +1271,26 @@ class AhlTest(unittest.TestCase):
                 }
             ),
         )
+        ledger_fixture = {
+            "ok": False,
+            "status": "interrupted",
+            "run_id": "fixture-resumable-ledger",
+            "plan_id": "fixture-valid-next-three",
+            "mode": "dry-run",
+            "driver": {"id": "manual"},
+            "steps": [{"prompt_id": "PROMPT_01", "status": "completed"}, {"prompt_id": "PROMPT_02", "status": "pending"}],
+            "resume_pointer": {"next_prompt": "PROMPT_02"},
+            "stop_reason": "user-interrupted",
+            "recovery_recommendation": "Resume from PROMPT_02.",
+            "problems": [],
+        }
+        self.write("fixtures/outer-loop/runs/resumable-ledger.json", json.dumps(ledger_fixture))
+        interrupted_fixture = dict(ledger_fixture)
+        interrupted_fixture.update({"run_id": "fixture-interrupted-ledger", "status": "interrupted", "stop_reason": "driver-timeout"})
+        self.write("fixtures/outer-loop/runs/interrupted-ledger.json", json.dumps(interrupted_fixture))
+        blocked_fixture = dict(ledger_fixture)
+        blocked_fixture.update({"run_id": "fixture-blocked-ledger", "status": "blocked", "stop_reason": "next-prompt-readiness-blocked"})
+        self.write("fixtures/outer-loop/runs/blocked-ledger.json", json.dumps(blocked_fixture))
         commit_plan = {
             "ok": True,
             "schema": "schemas/commit-plan.schema.json",
