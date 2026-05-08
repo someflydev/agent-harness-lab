@@ -19,8 +19,8 @@ bounded local support, not a daemon or provider platform.
 
 The planned portable-operator extension is documented in
 `../docs/portable-operator/`. That work will add an explicit distinction
-between AHL home and a target project repo before any existing command is
-claimed to operate safely outside this checkout. Today, most commands still
+between AHL home and a target project repo. Today, `project locate` is the
+read-only discovery command for that distinction; most older commands still
 resolve paths from the current working directory and assume it is the AHL repo.
 
 ## What It Does
@@ -44,6 +44,9 @@ resolve paths from the current working directory and assume it is the AHL repo.
   capability probes without live model calls. The Pi record is an external
   harness candidate and is marked `manual-confirmation-required` for live use
   until the local command shape and output contract are verified.
+- `project locate` reports AHL home and target project root discovery from the
+  current directory or `--project` without editing files or invoking
+  assistants.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
@@ -88,11 +91,11 @@ resolve paths from the current working directory and assume it is the AHL repo.
   `templates/handoffs/handoff.md`.
 - `metadata-example` prints a skeleton run record for metadata-aware closeout.
 
-Planned portable commands should follow the documented namespace in
-`../docs/portable-operator/extension-plan.md`, such as `project locate`,
-`project status`, `lifecycle snippets`, `lifecycle context-check`,
-`lifecycle run-range`, and `commit check`. They are not implemented until a
-later prompt adds tested behavior.
+Planned portable commands should continue the documented namespace in
+`../docs/portable-operator/extension-plan.md`, such as `project status`,
+`lifecycle snippets`, `lifecycle context-check`, `lifecycle run-range`, and
+`commit check`. They are not implemented until a later prompt adds tested
+behavior.
 
 ## What It Does Not Do
 
@@ -109,7 +112,7 @@ later prompt adds tested behavior.
 - It does not replace human closeout, readiness, or promotion judgment.
 - It does not provide graph, vector, provider, plugin, or server
   infrastructure.
-- It does not yet provide a tested portable command surface for arbitrary
+- `project locate` does not make older AHL-root commands operate on arbitrary
   target project repos.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
@@ -136,6 +139,8 @@ python3 scripts/ahl.py driver list --json
 python3 scripts/ahl.py driver check
 python3 scripts/ahl.py driver probe codex --help-only --json
 python3 scripts/ahl.py driver probe pi --help-only --json
+python3 scripts/ahl.py project locate --json
+python3 /path/to/agent-harness-lab/scripts/ahl.py project locate --project /path/to/project --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
@@ -217,6 +222,11 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `driver list`: `ok`, `drivers`, `checks`, `problems`
 - `driver check`: `ok`, `drivers`, `checks`, `problems`
 - `driver probe`: `ok`, `drivers`, `checks`, `problems`, `probe`
+- `project locate`: `ok`, `ahl_home`, `project`, `warnings`, `problems`;
+  `ahl_home` includes `path`, `source`, `valid`, and `problems`; `project`
+  includes `requested`, `requested_exists`, `requested_is_dir`, `root`,
+  `source`, `git`, `prompt_dir`, `prompt_dir_exists`, `prompt_count`, and
+  `prompt_files`
 - `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
   `driver`, `model`, `reasoning`, `permission_posture`,
   `required_ahl_checks`, `stop_conditions`, `commit_policy`,

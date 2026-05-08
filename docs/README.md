@@ -52,6 +52,8 @@ heavier orchestration remains outside the baseline.
   using AHL from arbitrary project repos with their own `.prompts/` directory.
 - `portable-operator/extension-plan.md` - inventory of current AHL-root
   assumptions and prompt arc for later portable CLI and docs work.
+- `portable-operator/invocation.md` - supported `project locate` invocation
+  from AHL or another repo, including `AHL_HOME` and `--project` behavior.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
@@ -312,6 +314,8 @@ heavier orchestration remains outside the baseline.
   extension.
 - `portable-operator/extension-plan.md` - inventory and prompt arc for adding
   explicit AHL-home versus target-project behavior.
+- `portable-operator/invocation.md` - current portable invocation and
+  discovery behavior.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
   portable extension.
 

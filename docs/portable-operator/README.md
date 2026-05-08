@@ -6,14 +6,17 @@ directory. It keeps the same human-governed loop as the AHL promptset:
 one prompt, explicit context, validation, audit, next-prompt preflight, and a
 fresh-session reset.
 
-This section is design guidance for later prompts, not an implemented portable
-CLI claim. Current outer-loop helpers still primarily operate inside the AHL
-repository.
+Most of this section is design guidance for later prompts, not a claim that the
+full portable lifecycle exists. The implemented portable surface starts with
+the read-only `project locate` discovery command. Current outer-loop helpers
+still primarily operate inside the AHL repository.
 
 ## Start Here
 
 - `extension-plan.md` - inventory of existing AHL helper behavior, missing
   portable-project behavior, and the remaining prompt arc.
+- `invocation.md` - current supported `project locate` invocation forms,
+  `AHL_HOME` behavior, target-project detection, and failure reporting.
 - `non-goals.md` - explicit exclusions for the portable-operator extension.
 
 ## Operating Posture
