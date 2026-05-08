@@ -9,8 +9,8 @@ experiments, reports, findings, lab method, capstone audits, lane simulations,
 release-readiness, operating baseline, phase-two outer-loop requirements,
 capstone audit, smoke tests, gate reports, run-ledger recovery, maintenance,
 contributing guidance, known limitations, commit planning, explicit commit
-execution, Pi adapter comparison, and future-facing architecture. Role packs
-and lane playbooks now provide
+execution, Pi adapter comparison, the planned portable-operator extension, and
+future-facing architecture. Role packs and lane playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
 heavier orchestration remains outside the baseline.
@@ -48,6 +48,13 @@ heavier orchestration remains outside the baseline.
   commit-plan workflow.
 - `outer-loop/capstone-audit.md` - phase-two outer-loop implementation audit,
   validation evidence, gaps, and baseline decision.
+- `portable-operator/README.md` - planned portable workflow extension for
+  using AHL from arbitrary project repos with their own `.prompts/` directory.
+- `portable-operator/extension-plan.md` - inventory of current AHL-root
+  assumptions and prompt arc for later portable CLI and docs work.
+- `portable-operator/non-goals.md` - explicit exclusions for the portable
+  extension, including provider daemons, credentials, Pi-specific material,
+  and autonomous execution.
 - `outer-loop/smoke-test-plan.md` - offline-safe and opt-in real-assistant
   smoke tests for outer-loop helpers.
 - `outer-loop/known-limitations.md` - outer-loop execution, validation, data,
@@ -298,6 +305,15 @@ heavier orchestration remains outside the baseline.
 - `outer-loop/known-limitations.md` - limits specific to the outer-loop
   helper.
 - `outer-loop/future-work.md` - future backlog after the capstone baseline.
+
+## Portable Operator
+
+- `portable-operator/README.md` - index for the planned portable-operator
+  extension.
+- `portable-operator/extension-plan.md` - inventory and prompt arc for adding
+  explicit AHL-home versus target-project behavior.
+- `portable-operator/non-goals.md` - non-goals and safety boundaries for the
+  portable extension.
 
 ## Capstone
 

@@ -17,6 +17,12 @@ Future architecture docs may describe richer orchestration candidates, but
 this script remains a small helper layer. The phase-two outer-loop baseline is
 bounded local support, not a daemon or provider platform.
 
+The planned portable-operator extension is documented in
+`../docs/portable-operator/`. That work will add an explicit distinction
+between AHL home and a target project repo before any existing command is
+claimed to operate safely outside this checkout. Today, most commands still
+resolve paths from the current working directory and assume it is the AHL repo.
+
 ## What It Does
 
 - `help` lists common operator console commands and supports `--json`.
@@ -82,6 +88,12 @@ bounded local support, not a daemon or provider platform.
   `templates/handoffs/handoff.md`.
 - `metadata-example` prints a skeleton run record for metadata-aware closeout.
 
+Planned portable commands should follow the documented namespace in
+`../docs/portable-operator/extension-plan.md`, such as `project locate`,
+`project status`, `lifecycle snippets`, `lifecycle context-check`,
+`lifecycle run-range`, and `commit check`. They are not implemented until a
+later prompt adds tested behavior.
+
 ## What It Does Not Do
 
 - It does not run prompts or call model providers unless `outer run --execute`
@@ -97,6 +109,8 @@ bounded local support, not a daemon or provider platform.
 - It does not replace human closeout, readiness, or promotion judgment.
 - It does not provide graph, vector, provider, plugin, or server
   infrastructure.
+- It does not yet provide a tested portable command surface for arbitrary
+  target project repos.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
 

@@ -10,6 +10,11 @@ prompt at a time. The runner should make decisions visible through files,
 structured output, validation evidence, completion audits, and explicit
 operator approval points.
 
+The portable-operator extension starts from this baseline but adds a separate
+target project root. See `../portable-operator/README.md` for the planned
+AHL-home versus target-project design; current outer-loop commands still
+primarily operate on the AHL checkout.
+
 ## Start Here
 
 - `requirements.md` - target workflow, stop conditions, and the canonical
@@ -54,6 +59,8 @@ operator approval points.
 - `non-goals.md` - explicit exclusions for the outer-loop design.
 - `roadmap.md` - phase-two implementation sequence after this requirements
   layer.
+- `../portable-operator/README.md` - planned extension for applying the
+  one-prompt workflow from arbitrary project repositories.
 
 ## Current Status
 
