@@ -531,6 +531,145 @@ def repo_root() -> Path:
     return Path.cwd()
 
 
+def script_ahl_home() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def is_valid_ahl_home(path: Path) -> bool:
+    return (
+        path.is_dir()
+        and (path / "AGENT.md").is_file()
+        and (path / "scripts" / "ahl.py").is_file()
+        and (path / "docs").is_dir()
+        and (path / "templates").is_dir()
+    )
+
+
+def resolve_ahl_home(environ: dict[str, str] | None = None) -> dict[str, Any]:
+    env = environ if environ is not None else os.environ
+    override = env.get("AHL_HOME")
+    problems: list[str] = []
+    if override:
+        path = Path(override).expanduser().resolve()
+        valid = is_valid_ahl_home(path)
+        if not valid:
+            problems.append(f"AHL_HOME does not point to a valid AHL checkout: {override}")
+        return {
+            "path": str(path),
+            "source": "AHL_HOME",
+            "valid": valid,
+            "problems": problems,
+        }
+
+    path = script_ahl_home()
+    valid = is_valid_ahl_home(path)
+    if not valid:
+        problems.append(f"script location does not resolve to a valid AHL checkout: {path}")
+    return {
+        "path": str(path),
+        "source": "script",
+        "valid": valid,
+        "problems": problems,
+    }
+
+
+def nearest_git_root(path: Path) -> tuple[Path | None, bool, str | None]:
+    result, problem = run_git(path, ["rev-parse", "--show-toplevel"])
+    if problem:
+        return None, False, problem
+    if result is None:
+        return None, False, "git command did not return a result"
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        if "not a git repository" in stderr:
+            stderr = "not inside a git work tree"
+        return None, True, stderr or "not inside a git work tree"
+    text = result.stdout.strip()
+    if not text:
+        return None, True, "git returned an empty work tree path"
+    return Path(text).resolve(), True, None
+
+
+def prompt_files_in(path: Path) -> list[str]:
+    if not path.is_dir():
+        return []
+    return sorted(item.name for item in path.iterdir() if item.is_file() and PROMPT_RE.match(item.name))
+
+
+def project_locate_data(project_value: str | None = None, environ: dict[str, str] | None = None) -> dict[str, Any]:
+    problems: list[str] = []
+    warnings: list[str] = []
+    ahl_home = resolve_ahl_home(environ)
+    problems.extend(ahl_home["problems"])
+
+    requested_path = Path(project_value).expanduser() if project_value else Path.cwd()
+    requested_exists = requested_path.exists()
+    requested_is_dir = requested_path.is_dir()
+    requested_resolved = requested_path.resolve() if requested_exists else requested_path.absolute()
+    project_root = requested_resolved
+    git_root = None
+    git_available = False
+    inside_git_work_tree = False
+    git_problem = None
+
+    if not requested_exists:
+        problems.append(f"project path does not exist: {project_value}")
+    elif not requested_is_dir:
+        problems.append(f"project path is not a directory: {project_value}")
+    else:
+        detected_git_root, git_available, git_problem = nearest_git_root(requested_resolved)
+        if detected_git_root is not None:
+            git_root = str(detected_git_root)
+            project_root = detected_git_root
+            inside_git_work_tree = True
+        elif git_problem:
+            warnings.append(git_problem)
+
+    prompt_dir = project_root / ".prompts"
+    prompt_files = prompt_files_in(prompt_dir)
+    prompt_dir_exists = prompt_dir.is_dir()
+    if requested_exists and requested_is_dir and not prompt_dir_exists:
+        warnings.append("project root does not contain .prompts/")
+
+    data = {
+        "ok": not problems,
+        "ahl_home": ahl_home,
+        "project": {
+            "requested": str(requested_path),
+            "requested_exists": requested_exists,
+            "requested_is_dir": requested_is_dir,
+            "root": str(project_root),
+            "source": "git-root" if inside_git_work_tree else "path",
+            "git": {
+                "available": git_available,
+                "inside_work_tree": inside_git_work_tree,
+                "root": git_root,
+            },
+            "prompt_dir": str(prompt_dir),
+            "prompt_dir_exists": prompt_dir_exists,
+            "prompt_count": len(prompt_files),
+            "prompt_files": prompt_files,
+        },
+        "warnings": warnings,
+        "problems": problems,
+    }
+    return data
+
+
+def command_project(args: argparse.Namespace) -> int:
+    data = project_locate_data(args.project)
+    human = ["project locate: ok" if data["ok"] else "project locate: problems found"]
+    human.extend(
+        [
+            f"- AHL home: {data['ahl_home']['path']} ({data['ahl_home']['source']})",
+            f"- project root: {data['project']['root']}",
+            f"- .prompts: {'present' if data['project']['prompt_dir_exists'] else 'missing'}",
+        ]
+    )
+    human.extend(f"- warning: {warning}" for warning in data["warnings"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def read_gitignore(root: Path) -> set[str]:
     path = root / ".gitignore"
     if not path.exists():
@@ -4297,6 +4436,13 @@ def build_parser() -> argparse.ArgumentParser:
     driver.add_argument("--help-only", action="store_true", help="Run only the driver's configured help command.")
     driver.add_argument("--json", action="store_true")
     driver.set_defaults(func=command_driver)
+
+    project = subparsers.add_parser("project", help="Locate AHL home and the target project root.")
+    project_subparsers = project.add_subparsers(dest="action", required=True)
+    project_locate = project_subparsers.add_parser("locate", help="Report AHL home and target project discovery.")
+    project_locate.add_argument("--project", help="Target project path; defaults to the current working directory.")
+    project_locate.add_argument("--json", action="store_true")
+    project_locate.set_defaults(func=command_project)
 
     outer = subparsers.add_parser("outer", help="Plan, dry-run, and gate sequential outer-loop batches.")
     outer_subparsers = outer.add_subparsers(dest="action", required=True)

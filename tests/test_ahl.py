@@ -3,6 +3,7 @@ from datetime import datetime as RealDateTime
 import importlib.util
 import io
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -104,6 +105,92 @@ class AhlTest(unittest.TestCase):
         self.assertTrue(data["ok"])
         self.assertIn("doctor", data["makefile_targets"])
         self.assertTrue(any(item["name"] == "check-docs" for item in data["commands"]))
+
+    def test_project_locate_discovers_ahl_home_from_script_location(self):
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AHL_HOME", None)
+            code, output = self.run_cli("project", "locate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["ahl_home"]["source"], "script")
+        self.assertEqual(Path(data["ahl_home"]["path"]), ROOT)
+        self.assertTrue(data["ahl_home"]["valid"])
+
+    def test_project_locate_rejects_invalid_ahl_home_override(self):
+        with mock.patch.dict(os.environ, {"AHL_HOME": str(self.root)}, clear=False):
+            code, output = self.run_cli("project", "locate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(data["ahl_home"]["source"], "AHL_HOME")
+        self.assertFalse(data["ahl_home"]["valid"])
+        self.assertTrue(any("AHL_HOME" in problem for problem in data["problems"]))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_project_locate_detects_project_root_inside_git_repo(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_01.txt", "# Prompt\n")
+        nested = self.root / "src" / "pkg"
+        nested.mkdir(parents=True)
+
+        code, output = self.run_cli("project", "locate", "--project", str(nested), "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(Path(data["project"]["root"]).resolve(), self.root.resolve())
+        self.assertEqual(data["project"]["source"], "git-root")
+        self.assertTrue(data["project"]["git"]["inside_work_tree"])
+        self.assertTrue(data["project"]["prompt_dir_exists"])
+        self.assertEqual(data["project"]["prompt_count"], 1)
+
+    def test_project_locate_falls_back_without_git_root(self):
+        self.write(".prompts/PROMPT_01.txt", "# Prompt\n")
+
+        code, output = self.run_cli("project", "locate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(Path(data["project"]["root"]).resolve(), self.root.resolve())
+        self.assertEqual(data["project"]["source"], "path")
+        self.assertIn("PROMPT_01.txt", data["project"]["prompt_files"])
+
+    def test_project_locate_reports_missing_prompts_without_crashing(self):
+        code, output = self.run_cli("project", "locate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertFalse(data["project"]["prompt_dir_exists"])
+        self.assertEqual(data["project"]["prompt_count"], 0)
+        self.assertTrue(any(".prompts" in warning for warning in data["warnings"]))
+
+    def test_project_locate_json_has_stable_fields(self):
+        code, output = self.run_cli("project", "locate", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "ahl_home", "project", "warnings", "problems"):
+            self.assertIn(key, data)
+        for key in ("path", "source", "valid", "problems"):
+            self.assertIn(key, data["ahl_home"])
+        for key in (
+            "requested",
+            "requested_exists",
+            "requested_is_dir",
+            "root",
+            "source",
+            "git",
+            "prompt_dir",
+            "prompt_dir_exists",
+            "prompt_count",
+            "prompt_files",
+        ):
+            self.assertIn(key, data["project"])
 
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
