@@ -1,0 +1,180 @@
+# PROMPT_53 - Portable Operator Capstone And Safety Audit
+
+You are completing the portable operator promptset extension for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompt
+52 has been attempted.
+
+## Project Brief
+
+Prompts 42 through 52 should leave AHL with a practical, local,
+human-governed operator workflow for arbitrary project repos that have
+`.prompts/`. This capstone should audit the implementation honestly, harden
+documentation around safety boundaries, update navigation, and record what is
+usable versus still manual.
+
+This prompt should not add a new major feature area.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read all docs under `docs/portable-operator/`.
+4. Read `runbooks/one-prompt-autopilot.md`,
+   `examples/portable-operator/README.md`,
+   `fixtures/portable-operator/README.md`,
+   `reports/portable-operator/rehearsal.md`,
+   `docs/outer-loop/operating-baseline.md`,
+   `docs/outer-loop/known-limitations.md`,
+   `docs/known-limitations.md`, `docs/release-readiness.md`,
+   `scripts/README.md`, `Makefile`, `CHANGELOG.md`, and `tests/test_ahl.py`.
+5. Run the available local check suite before editing when feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Audit the portable operator implementation, repair small inconsistencies, and
+record the operating baseline without overstating automation.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/portable-operator/capstone-audit.md`
+- `docs/portable-operator/operating-baseline.md`
+- `docs/portable-operator/known-limitations.md`
+- `docs/portable-operator/future-work.md`
+- `docs/portable-operator/README.md`
+- `docs/release-readiness.md`
+- `docs/known-limitations.md`
+- `README.md`
+- `AGENT.md`
+- `docs/README.md`
+- `scripts/README.md`
+- `Makefile` if stable portable targets were added earlier
+- `CHANGELOG.md`
+
+Update other docs only to fix stale claims or broken navigation. Do not add
+new prompt files.
+
+## Capstone Audit Requirements
+
+`docs/portable-operator/capstone-audit.md` must audit:
+
+- portable invocation and AHL home/project root discovery;
+- project status and promptset diagnostics;
+- lifecycle snippet generation;
+- context-update policy and helper support;
+- commit-check helper;
+- one-prompt autopilot runbook;
+- run-range dry-run orchestration;
+- assistant-surface boundaries;
+- fixtures and examples;
+- rehearsal evidence;
+- docs navigation;
+- tests and validation;
+- known limitations and safety boundaries.
+
+For each area, record:
+
+- status;
+- evidence files;
+- checks performed;
+- gaps;
+- whether the gap blocks portable operator baseline use.
+
+## Operating Baseline Requirements
+
+`docs/portable-operator/operating-baseline.md` must explain how an operator:
+
+- installs or invokes AHL from another project repo;
+- checks project status;
+- generates snippets for one prompt;
+- runs the prompt manually in a chosen assistant surface;
+- performs audit and next-prompt readiness checks;
+- handles inline repair when context is fresh;
+- checks context-update candidates;
+- requests commit suggestions separately from making commits;
+- runs commit-check after commits;
+- dry-runs a prompt range;
+- stops cleanly at the next prompt boundary.
+
+Include command examples using the actual implemented command names.
+The expected portable namespace is `project locate/status`, `lifecycle
+snippets/context-check/run-range`, and `commit check`.
+
+## Safety Audit Requirements
+
+The capstone and limitations docs must state:
+
+- every live action that can change files, run assistant commands, or commit
+  remains explicit and inspectable;
+- no background daemon exists;
+- no provider secrets are required;
+- no network access is required for portable helpers;
+- no expensive APIs are required;
+- Claude Code is manual/terminal workflow only, not external subscription API
+  automation;
+- AHL does not query subscription usage limits programmatically;
+- `human-notes.md` is informational and never machine-authoritative;
+- commit inspection never rewrites history automatically;
+- run-range orchestration is one prompt at a time and dry-run/read-only by
+  default.
+
+## Release And Navigation Requirements
+
+Update `README.md`, `AGENT.md`, `docs/README.md`, `scripts/README.md`,
+`docs/release-readiness.md`, `docs/known-limitations.md`, and `CHANGELOG.md`
+surgically so they describe the actual implemented state. Do not claim full
+autonomous coding-agent platform behavior.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run `python3 scripts/ahl.py doctor`.
+3. Run `python3 scripts/ahl.py promptset lint`.
+4. Run `python3 scripts/ahl.py docs check`.
+5. Run `python3 scripts/ahl.py registry check`.
+6. Run `project status`, `lifecycle snippets`, `lifecycle run-range`, and
+   `commit check` commands against fixtures or temporary repos.
+7. Run the portable rehearsal command or dry-run scenario.
+8. Run `make help` and any stable Makefile target added by this extension.
+9. Record failed, skipped, or unavailable checks honestly in the capstone docs.
+
+## Constraints
+
+- Do not add new major feature areas.
+- Do not generate additional prompt files.
+- Do not introduce dependencies.
+- Do not run real assistant CLI calls unless the operator explicitly approves
+  them during this prompt.
+- Do not stage, commit, push, tag, publish, amend, rebase, or reset unless the
+  operator explicitly asks.
+- Do not hide failed or unavailable checks.
+- Do not create Pi-specific extension material.
+- Do not modify `human-notes.md`.
+
+## Acceptance Criteria
+
+- The portable operator baseline is honestly documented as usable, incomplete,
+  or blocked.
+- All docs navigation and helper-command examples match implemented behavior.
+- Safety boundaries are clear and consistent.
+- Validation evidence is recorded.
+- No further prompt is required for this extension unless the operator creates
+  a new follow-up promptset.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit portable operator capstone deliverables against this prompt.
+2. Confirm whether the portable operator baseline is usable, incomplete, or
+   blocked.
+3. Confirm no further prompt is required for this extension unless the
+   operator explicitly creates more work.
+4. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

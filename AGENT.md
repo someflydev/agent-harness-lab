@@ -49,7 +49,7 @@ guidance tool-agnostic unless the current environment proves a capability.
 The initial promptset baseline is recorded in
 `docs/capstone/operating-baseline.md`, with final audit evidence in
 `docs/capstone/final-audit.md`. Treat `PROMPT_33+` files, when present, as
-phase-two work unless the operator explicitly asks to run one of them.
+planned extension work unless the operator explicitly asks to run one of them.
 Phase-two outer-loop docs live in `docs/outer-loop/` when present. The current
 baseline includes design, safety boundaries, driver contracts, dry-run plans,
 gate reports, prompt payloads, run ledgers, manual-driver rehearsal, resume
@@ -97,9 +97,9 @@ Use this closeout loop for prompt-execution sessions:
 5. Reset by leaving the repo ready for the next fresh session.
 
 For the completed initial baseline, no prompt after Prompt 32 is required.
-Prompt 33 through Prompt 41 are the phase-two outer-loop promptset. Prompt 41
-is the phase-two capstone; no further phase-two prompt is required after it
-unless an operator explicitly creates more work.
+Prompt 33 through Prompt 41 are the phase-two outer-loop promptset. Prompt 42
+through Prompt 53 are the planned portable operator extension for
+human-governed one-prompt workflows in arbitrary project repos.
 
 Create `tmp/HANDOFF.md` only when it materially helps the next session. Do not
 create or update it for routine completion notes that fit in the final answer.

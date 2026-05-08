@@ -1,0 +1,143 @@
+# PROMPT_44 - External Project Status And Promptset Diagnostics
+
+You are implementing portable project status reporting for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompt 43 has been
+attempted.
+
+## Project Brief
+
+The operator needs a quick, local, read-only view of an arbitrary project repo
+before asking an assistant to run a prompt. AHL should report the promptset,
+git state, bootstrap files, context docs, and likely next prompt number without
+changing the target project.
+
+This prompt builds on the discovery layer. It should not run assistants, edit
+project files, stage changes, or decide completion.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/portable-operator/invocation.md`,
+   `docs/portable-operator/extension-plan.md`, `scripts/ahl.py`,
+   `scripts/README.md`, `docs/quality/promptset-quality.md`,
+   `docs/outer-loop/batch-planning.md`, and `tests/test_ahl.py`.
+4. Inspect current `promptset` command behavior before extending or reusing it.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a portable, read-only project status command that inspects the target
+project root and reports promptset and git state for human review.
+
+## Required Deliverables
+
+Create or update:
+
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/portable-operator/status.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+## Status Command Requirements
+
+Add a command following existing CLI conventions, such as:
+
+```sh
+python3 /path/to/agent-harness-lab/scripts/ahl.py project status --project <path> --json
+```
+
+The command must report:
+
+- AHL home;
+- target project root;
+- whether `.git/` exists or a git root was found;
+- current branch when available;
+- short dirty/untracked status summary;
+- whether `.prompts/` exists;
+- lowest and highest prompt numbers;
+- gaps, duplicates, malformed prompt filenames, and strict naming status;
+- next prompt inference fields:
+  - `next_after_highest_prompt_file`;
+  - prompt-prefixed commit summary;
+  - `likely_next_prompt`;
+  - confidence and reason when prompt files and commit history disagree;
+- presence of `AGENT.md`;
+- presence of `CLAUDE.md`;
+- presence of `.context/`;
+- presence of `human-notes.md`;
+- last few commits with `[PROMPT_XX]` prefixes when available;
+- problems and warnings without treating ordinary missing optional files as
+  crashes.
+
+Support human-readable default output and JSON output if consistent with the
+current CLI style.
+
+## Promptset Diagnostics Requirements
+
+Reuse existing prompt filename parsing where possible. Do not fork a second
+incompatible parser unless the existing one is insufficient. The project
+status output should distinguish:
+
+- no `.prompts/` directory;
+- empty `.prompts/`;
+- valid sequential promptset;
+- promptset with gaps;
+- malformed prompt filenames;
+- duplicate numeric prompt ids.
+
+## Constraints
+
+- The command is read-only.
+- It must not edit `human-notes.md` or treat it as authoritative machine state.
+- It must not run prompt-required validation commands.
+- It must not call assistant CLIs.
+- It must not fetch network resources.
+- It must not require credentials.
+
+## Test Requirements
+
+Add tests using temporary project roots for:
+
+- repo with valid `.prompts/`, `AGENT.md`, `.context/`, and `human-notes.md`;
+- repo with `CLAUDE.md` but no `AGENT.md`;
+- repo without `.prompts/`;
+- prompt gaps and malformed filenames;
+- dirty and untracked git summaries when git is available;
+- prompt-prefixed commit detection when git is available;
+- JSON output stable fields.
+
+## Acceptance Criteria
+
+- AHL can be invoked from the AHL repo and inspect an external project root.
+- Project status is useful before a one-prompt run.
+- Existing `promptset` checks still pass for the AHL promptset.
+- Missing optional project files produce clear diagnostics, not tracebacks.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run the new project status command against the AHL repo with `--json`.
+3. Run a temp external-project status smoke test if not covered by unit tests.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+6. Update the JSON Stability section in `scripts/README.md` for `project
+   status`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_45.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if lifecycle snippet generation is blocked by
+   status or prompt parsing gaps.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

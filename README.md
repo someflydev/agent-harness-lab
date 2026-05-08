@@ -114,6 +114,11 @@ ledgers, rehearse manual-driver runs, plan resumes, generate commit plans, and
 perform explicit one-step live CLI invocation only through `outer run --execute`
 for supported local driver contracts.
 
+Prompts 42 through 53 are a planned portable-operator extension. They are
+intended to make the one-prompt-at-a-time workflow callable from arbitrary
+project repos while keeping the human operator as scheduler, reviewer, and
+final authority.
+
 Release-readiness guidance lives in `docs/release-readiness.md`, with current
 limitations in `docs/known-limitations.md`, maintenance guidance in
 `docs/maintenance.md`, and contribution guidance in `docs/contributing.md`.

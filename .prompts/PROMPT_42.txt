@@ -1,0 +1,134 @@
+# PROMPT_42 - Portable Operator Extension Inventory And Plan
+
+You are starting the portable operator extension for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompt 41 has been attempted.
+
+## Project Brief
+
+The phase-two outer-loop baseline made AHL inspectable inside this repo. The
+next extension should make the same human-governed, one-prompt-at-a-time
+workflow usable from inside arbitrary project repos that have a `.prompts/`
+directory.
+
+This prompt is an inventory and plan prompt. It should not implement the
+portable CLI features yet. It should create the design map that later prompts
+will execute.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `scripts/ahl.py`, `scripts/README.md`, `Makefile`,
+   `docs/outer-loop/README.md`, `docs/outer-loop/operating-baseline.md`,
+   `docs/outer-loop/capstone-audit.md`, `docs/outer-loop/safety-boundary.md`,
+   `docs/assistants/README.md`, `docs/quality/promptset-quality.md`,
+   `docs/runtime/prompt-authoring-vs-execution.md`, `runbooks/README.md`, and
+   `templates/`.
+4. Inspect `tests/test_ahl.py` for current CLI test style.
+5. Run cheap existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Create a concise portable-operator extension plan that records what AHL
+already supports, what is missing for arbitrary project repos, and how the
+remaining prompts should extend the existing CLI and docs without building an
+autonomous provider-specific platform.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/portable-operator/README.md`
+- `docs/portable-operator/extension-plan.md`
+- `docs/portable-operator/non-goals.md`
+- `docs/README.md`
+- `scripts/README.md`
+- `docs/outer-loop/README.md`
+
+Update other docs only when needed for navigation or to avoid stale claims.
+Do not modify existing `.prompts/PROMPT_XX.txt` files.
+
+## Inventory Requirements
+
+`docs/portable-operator/extension-plan.md` must inventory:
+
+- existing `scripts/ahl.py` commands and which are AHL-repo-specific;
+- existing outer-loop plan, dry-run, run, gate, resume, and commit helpers;
+- existing promptset parsing behavior and registry checks;
+- existing assistant usage docs for Codex, Claude Code, Gemini, generic chat,
+  and any other documented surfaces;
+- current assumptions that `repo_root()` equals the AHL repo root;
+- which behavior must distinguish AHL home from the target project repo;
+- current safety boundaries around commits, driver invocation, transcripts,
+  credentials, and destructive actions.
+
+## Extension Plan Requirements
+
+The plan must define the intended prompt arc for:
+
+- portable invocation from arbitrary project repos;
+- target project detection and status reporting;
+- lifecycle snippet generation;
+- context-update doctrine and report support;
+- commit-message inspection after commits;
+- one-prompt autopilot runbooks;
+- run-range dry-run orchestration;
+- assistant-surface boundaries without provider lock-in;
+- external-project fixtures and smoke rehearsal;
+- final capstone and docs navigation.
+
+For each area, record:
+
+- likely command shape, following existing CLI conventions;
+- likely files to modify later;
+- safety boundary;
+- validation approach;
+- dependency posture.
+
+## Constraints
+
+- Do not build or implement the portable features in this prompt.
+- Do not add a provider daemon, API dependency, network call, or credential
+  requirement.
+- Do not create Pi-specific extension material or a Pi-specific context blob.
+- Do not assume Claude can be automated through subscription APIs outside
+  Claude Code/manual use.
+- Treat `human-notes.md` as operator-owned, informational, and never
+  automatically edited.
+- Keep fresh-session compatibility as the source of truth.
+
+## Acceptance Criteria
+
+- The new docs make clear that this extension is a plan for a local,
+  inspectable, human-governed operator workflow.
+- The plan distinguishes AHL home files from arbitrary target project files.
+- The plan avoids duplicating existing outer-loop capabilities under unrelated
+  names.
+- Docs navigation points to the portable-operator plan without overstating
+  implemented capability.
+- Existing phase-two claims remain accurate.
+
+## Validation
+
+After editing:
+
+1. Run `python3 scripts/ahl.py docs check`.
+2. Run `python3 scripts/ahl.py promptset lint`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run `python3 -m unittest tests/test_ahl.py` if docs changes touch command
+   examples or test-relevant files.
+5. State any skipped checks and why.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_43.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if portable CLI readiness is blocked by the
+   plan or navigation docs.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

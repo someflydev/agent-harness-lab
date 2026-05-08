@@ -1,0 +1,154 @@
+# PROMPT_49 - Prompt Range Dry-Run Orchestration
+
+You are adding portable prompt-range dry-run orchestration to
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompt
+48 has been attempted.
+
+## Project Brief
+
+The operator wants to say something like "run prompts 18 through 27" while AHL
+keeps the workflow one prompt at a time, explicit, inspectable, and safe. This
+must not become a hidden daemon or provider-specific autonomous runner.
+
+This prompt should implement dry-run planning and explicit phase artifacts for
+an arbitrary project repo. Live assistant invocation, file edits, and commits
+remain outside the default behavior.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `runbooks/one-prompt-autopilot.md`,
+   `docs/portable-operator/one-prompt-loop.md`,
+   `docs/portable-operator/status.md`,
+   `docs/portable-operator/lifecycle-snippets.md`,
+   `docs/portable-operator/human-notes-boundary.md`,
+   `docs/outer-loop/batch-planning.md`, `docs/outer-loop/dry-run-runner.md`,
+   `docs/outer-loop/live-runner.md`, `docs/outer-loop/run-ledger.md`,
+   `scripts/ahl.py`, `scripts/README.md`, and `tests/test_ahl.py`.
+4. Inspect existing `outer plan`, `outer dry-run`, and `outer run` code before
+   adding new range behavior.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a portable dry-run range workflow that resolves prompt numbers in the
+target project, generates inspectable lifecycle phase plans, and stops at
+review boundaries without invoking assistants by default.
+
+## Required Deliverables
+
+Create or update:
+
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/portable-operator/run-range.md`
+- `docs/portable-operator/one-prompt-loop.md`
+- `docs/portable-operator/README.md`
+- `schemas/portable-operator-run-plan.schema.json`
+- `templates/portable-operator/run-range-plan.md`
+- `fixtures/portable-operator/run-range/valid-plan.json`
+- `docs/README.md`
+
+Reuse existing outer-loop schemas and templates when that produces less
+duplication. Add new schema/template files only when the external-project
+boundary requires a distinct shape.
+
+## Command Requirements
+
+Add a command following existing CLI conventions, such as:
+
+```sh
+python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle run-range 18 27 --project <path> --dry-run --json
+```
+
+The command must:
+
+- resolve the target project root;
+- validate the requested prompt range exists;
+- preserve strictly sequential order;
+- create or print a plan for one prompt at a time;
+- include lifecycle phases for run, audit, optional repair, commit plan,
+  make commits only when explicit, commit check, and stop boundary;
+- include fresh-session boundary language between prompts;
+- include expected snippet payloads or references to snippet generation;
+- default to dry-run/read-only behavior;
+- write artifacts only when an explicit artifact flag or existing convention
+  justifies it;
+- avoid assistant CLI invocation;
+- avoid staging, committing, amending, rebasing, pushing, or tagging.
+
+## Recovery Requirements
+
+The plan should include enough state for safe operator restart:
+
+- project root;
+- prompt ids;
+- generated phase order;
+- planned artifact location if any;
+- stop reason when validation fails;
+- next prompt pointer;
+- safety notes for dirty worktree and missing prompts.
+
+Do not build a background scheduler. Do not attempt automatic continuation
+after a failed phase.
+
+## Test Requirements
+
+Add tests for:
+
+- valid range resolution in a temporary external project;
+- missing prompt in requested range;
+- reversed range rejection;
+- malformed prompt filenames;
+- dry-run default with no target-project writes;
+- explicit artifact write path if implemented;
+- generated phases include commit-check and fresh-session boundary;
+- JSON output stable fields.
+
+## Constraints
+
+- No live assistant invocation.
+- No provider-specific automation.
+- No network calls or credentials.
+- No automatic target-project edits.
+- No automatic commits or history rewriting.
+- No Pi-specific extension behavior.
+- Do not edit `human-notes.md`.
+- Do not add `outer run-range`; keep portable prompt-range planning under the
+  `lifecycle run-range` namespace.
+
+## Acceptance Criteria
+
+- The operator can dry-run a prompt range from an arbitrary project repo.
+- The plan remains one-prompt-at-a-time and human-governed.
+- The command integrates with project status and snippet generation.
+- Existing `outer` behavior remains compatible.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run the range dry-run command against a temporary external project.
+3. Run project status and lifecycle snippets against the same fixture if
+   available.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+6. Update the JSON Stability section in `scripts/README.md` for `lifecycle
+   run-range`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_50.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if assistant-surface boundary work is blocked
+   by range command names, docs, or safety notes.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

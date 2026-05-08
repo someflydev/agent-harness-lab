@@ -1,0 +1,144 @@
+# PROMPT_50 - Assistant Surface Boundary Refresh
+
+You are refreshing assistant-surface boundaries for the portable operator
+workflow. Run this in a fresh coding assistant session after Prompt 49 has
+been attempted.
+
+## Project Brief
+
+AHL should work with Codex CLI/manual sessions, Claude Code manual sessions,
+Gemini manual sessions, and generic copy/paste workflows. It should produce
+prompt payloads, lifecycle snippets, status reports, and validation helpers.
+The human or assistant CLI executes the actual prompt work.
+
+This prompt updates docs and any lightweight adapter metadata needed to keep
+the portable workflow provider-agnostic. It must not add Claude subscription
+API automation, expensive APIs, network requirements, secrets, or Pi-specific
+extension work.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/assistants/README.md`, `docs/assistants/codex.md`,
+   `docs/assistants/claude-code.md`, `docs/assistants/gemini.md`,
+   `docs/assistants/generic-chat.md`, `docs/assistants/subscription-workflow.md`,
+   `docs/portable-operator/README.md`,
+   `docs/portable-operator/lifecycle-snippets.md`,
+   `docs/portable-operator/run-range.md`,
+   `docs/outer-loop/assistant-driver-boundary.md`,
+   `docs/outer-loop/provider-harness-comparison.md`,
+   `registry/assistant-drivers.json`, `scripts/ahl.py`, `scripts/README.md`,
+   and `tests/test_ahl.py`.
+4. Read existing Pi docs only to avoid contradictory navigation claims. Do not
+   create new Pi-specific extension material.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Align assistant docs and portable operator boundaries around provider-agnostic
+manual or CLI-assisted operation.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/portable-operator/assistant-surfaces.md`
+- `docs/assistants/README.md`
+- `docs/assistants/codex.md`
+- `docs/assistants/claude-code.md`
+- `docs/assistants/gemini.md`
+- `docs/assistants/generic-chat.md`
+- `docs/assistants/subscription-workflow.md`
+- `docs/outer-loop/assistant-driver-boundary.md`
+- `docs/outer-loop/provider-harness-comparison.md`
+- `scripts/README.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+Update `registry/assistant-drivers.json` and `scripts/ahl.py` only if a small
+metadata clarification is needed and can be tested without provider calls.
+
+## Boundary Requirements
+
+The docs must state:
+
+- AHL produces snippets, payloads, plans, reports, and validation helpers;
+- the human or chosen assistant CLI executes the prompt work;
+- Codex can be used through local/manual subscription workflows when available;
+- Claude Code can be used as a manual/terminal assistant surface;
+- AHL must not assume Claude subscription usage can be automated through
+  external APIs;
+- Gemini can be used manually or through local CLI behavior only where locally
+  verified;
+- generic chat workflows rely on copy/paste and committed repo files;
+- no provider is mandatory;
+- AHL does not query subscription usage limits programmatically;
+- AHL does not require network access, secrets, or paid APIs for portable
+  operator helpers.
+
+## Adapter Metadata Requirements
+
+If driver metadata is touched, keep it conservative:
+
+- help-only probes remain safe and local;
+- auth and quota are out of scope;
+- live invocation remains explicit and bounded by existing `outer run`
+  safeguards;
+- manual surfaces are first-class and acceptable.
+
+Do not add API-backed Claude orchestration. Do not add Pi-specific extension
+commands, templates, or context blobs.
+
+## Test Requirements
+
+Add or update tests only when code or metadata changes. Relevant tests may
+cover:
+
+- driver registry validation still passes;
+- help-only probes do not call providers;
+- lifecycle snippets remain provider-agnostic;
+- docs check covers assistant-surface navigation.
+
+## Constraints
+
+- Do not add new provider dependencies.
+- Do not make network calls.
+- Do not store or request credentials.
+- Do not assume assistant subscription limits are machine-readable.
+- Do not implement a provider-specific daemon.
+- Do not edit `human-notes.md`.
+- Do not commit unless asked.
+
+## Acceptance Criteria
+
+- Assistant docs accurately support Codex, Claude Code, Gemini, and generic
+  manual workflows.
+- The portable operator boundary is provider-agnostic and local-first.
+- The docs explicitly rule out Claude subscription API automation.
+- Existing outer-loop driver docs remain accurate.
+
+## Validation
+
+After editing:
+
+1. Run `python3 scripts/ahl.py docs check`.
+2. Run `python3 scripts/ahl.py driver check --json` if driver metadata changed.
+3. Run `python3 -m unittest tests/test_ahl.py` if code or registry behavior
+   changed.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_51.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if external fixture work is blocked by
+   assistant-surface docs or command naming.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

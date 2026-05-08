@@ -187,6 +187,8 @@ Before ending the session:
 1. Audit outer-loop capstone deliverables against this prompt.
 2. Confirm whether the phase-two outer-loop baseline is usable, incomplete, or
    blocked.
-3. Confirm no further prompt is required for this phase-two baseline.
+3. Inspect `.prompts/PROMPT_42.txt` and state whether the repo is ready for
+   the portable operator extension, while confirming Prompt 42 is not required
+   for the phase-two baseline itself.
 4. Create `tmp/HANDOFF.md` only if a real unresolved blocker remains.
 5. Do not commit unless the operator explicitly asks.

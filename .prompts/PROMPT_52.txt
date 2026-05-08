@@ -1,0 +1,151 @@
+# PROMPT_52 - Portable Workflow End-To-End Rehearsal
+
+You are adding an end-to-end rehearsal for the portable operator workflow. Run
+this in a fresh coding assistant session after Prompt 51 has been attempted.
+
+## Project Brief
+
+Before the capstone, AHL should prove that the portable workflow works against
+fixtures: locate project, report status, generate snippets, produce a
+context-update check, dry-run a prompt range, and inspect commits in a
+temporary repo. This should be deterministic, offline, and safe by default.
+
+This prompt adds a rehearsal script, command, or report using the repo's
+existing style. It should not call real assistants.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `fixtures/portable-operator/README.md`,
+   `examples/portable-operator/README.md`,
+   `docs/portable-operator/README.md`,
+   `docs/portable-operator/status.md`,
+   `docs/portable-operator/lifecycle-snippets.md`,
+   `docs/portable-operator/context-update-policy.md`,
+   `docs/portable-operator/commit-check.md`,
+   `docs/portable-operator/run-range.md`,
+   `scripts/ahl.py`, `scripts/README.md`, `Makefile`, and
+   `tests/test_ahl.py`.
+4. Inspect existing `dry-run` and fixture-check patterns before adding another
+   validation surface.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a deterministic end-to-end rehearsal that proves the portable operator
+helpers work together against fixture or temporary projects.
+
+## Required Deliverables
+
+Create or update:
+
+- `reports/portable-operator/rehearsal.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `Makefile` if adding a stable common target is justified
+- `docs/portable-operator/rehearsal.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+If the existing dry-run framework is the better fit, add a portable-operator
+dry-run scenario instead of a new command. Do not create duplicate validation
+surfaces without a reason.
+
+## Rehearsal Requirements
+
+The rehearsal must exercise:
+
+- AHL home and project root discovery;
+- project status against a fixture with `.prompts/`;
+- project status against a fixture with a prompt gap;
+- lifecycle snippet generation for a fixture prompt;
+- context-update check if implemented, or documented manual equivalent;
+- run-range dry-run for a small range;
+- commit-check against a temporary git repo with at least one good and one bad
+  commit message;
+- JSON output for machine-checkable commands where available;
+- human-readable summary suitable for a report.
+
+The rehearsal must not:
+
+- call assistant CLIs;
+- edit `human-notes.md`;
+- use private context blobs;
+- require network access;
+- require provider credentials;
+- commit to the AHL repo;
+- rewrite git history.
+
+Temporary commits inside temporary git repositories are allowed only as
+isolated rehearsal or test fixture data for `commit check`.
+
+## Report Requirements
+
+`reports/portable-operator/rehearsal.md` must record:
+
+- date or command-generated timestamp;
+- fixture projects used;
+- commands run;
+- pass/fail/skip results;
+- known limitations;
+- residual manual steps;
+- whether the workflow is ready for capstone review.
+
+Generated timestamps are acceptable if the repo already uses generated reports.
+If the report is static, make clear how to regenerate or verify it.
+
+## Test Requirements
+
+Add tests for:
+
+- rehearsal command or dry-run scenario succeeds offline;
+- failure output is clear when a fixture is missing;
+- commit-check portion uses temporary git data and cleans up;
+- JSON output stable fields if a command is added.
+
+Skip git-specific rehearsal parts cleanly when git is unavailable.
+
+## Constraints
+
+- Keep the rehearsal local and deterministic.
+- Do not introduce shell scripts if a Python command fits the repo better.
+- Do not add dependencies.
+- Do not make the rehearsal a hidden daemon or scheduler.
+- Do not stage or commit AHL repo changes.
+
+## Acceptance Criteria
+
+- A single documented rehearsal path demonstrates the portable workflow.
+- The rehearsal is safe to run in CI-like offline environments.
+- The report distinguishes implemented helper behavior from manual assistant
+  work.
+- The capstone prompt has concrete evidence to audit.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run the rehearsal command or dry-run scenario.
+3. Run `python3 scripts/ahl.py docs check`.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+6. Run `make help` if Makefile targets changed.
+7. If a rehearsal command or dry-run scenario emits JSON, update the JSON
+   Stability section in `scripts/README.md`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_53.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if capstone readiness is blocked by rehearsal
+   gaps, docs, or tests.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

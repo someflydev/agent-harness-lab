@@ -1,0 +1,142 @@
+# PROMPT_51 - External Project Fixtures And Dry-Run Examples
+
+You are adding external-project fixtures and examples for the portable operator
+workflow. Run this in a fresh coding assistant session after Prompt 50 has
+been attempted.
+
+## Project Brief
+
+The portable workflow should be provable without requiring a real private
+project, network access, provider credentials, or assistant quota. AHL needs
+small fixture projects and examples that exercise project status, lifecycle
+snippets, context-check behavior, commit-check behavior, and range dry-runs.
+
+This prompt adds fixtures and example docs. It should not make the examples
+depend on the user's private gists or notes.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/portable-operator/README.md`,
+   `docs/portable-operator/status.md`,
+   `docs/portable-operator/lifecycle-snippets.md`,
+   `docs/portable-operator/context-update-policy.md`,
+   `docs/portable-operator/commit-check.md`,
+   `docs/portable-operator/run-range.md`,
+   `docs/portable-operator/assistant-surfaces.md`,
+   `examples/README.md`, `fixtures/README.md` if present,
+   `scripts/ahl.py`, `scripts/README.md`, and `tests/test_ahl.py`.
+4. Inspect existing fixture style before adding new fixtures.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add minimal, artificial external-project fixtures and dry-run examples that
+make the portable operator workflow testable and easy to inspect.
+
+## Required Deliverables
+
+Create or update:
+
+- `fixtures/portable-operator/README.md`
+- `fixtures/portable-operator/projects/basic/.prompts/PROMPT_01.txt`
+- `fixtures/portable-operator/projects/basic/.prompts/PROMPT_02.txt`
+- `fixtures/portable-operator/projects/basic/AGENT.md`
+- `fixtures/portable-operator/projects/basic/.context/README.md`
+- `fixtures/portable-operator/projects/claude-bootstrap/.prompts/PROMPT_01.txt`
+- `fixtures/portable-operator/projects/claude-bootstrap/CLAUDE.md`
+- `fixtures/portable-operator/projects/gapped/.prompts/PROMPT_01.txt`
+- `fixtures/portable-operator/projects/gapped/.prompts/PROMPT_03.txt`
+- `examples/portable-operator/README.md`
+- `examples/portable-operator/one-prompt-cycle.md`
+- `examples/portable-operator/run-range-dry-run.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+Adjust paths if the repo already has a stronger fixture convention, but keep
+fixtures small and artificial.
+
+## Fixture Requirements
+
+Fixtures must:
+
+- be clearly fake and safe for public repo use;
+- include no secrets, tokens, private gist content, or personal context blobs;
+- include prompt files that are structurally valid enough for tests;
+- include one project with `AGENT.md`;
+- include one project with `CLAUDE.md` but no `AGENT.md`;
+- include one project with a prompt gap;
+- include a `.context/` example that is small and generic;
+- avoid checked-in `.git/` directories.
+
+## Example Requirements
+
+Examples must demonstrate:
+
+- running project status against a fixture;
+- generating lifecycle snippets for one prompt;
+- using the audit/context-update check;
+- keeping commit-plan and make-commits separate;
+- running commit-check after commits are made;
+- dry-running a prompt range;
+- stopping at fresh-session boundaries;
+- treating `human-notes.md` as operator-owned if present.
+
+## Test Requirements
+
+Add or update tests so fixture projects exercise:
+
+- project status;
+- lifecycle snippets;
+- context-check helper if implemented;
+- run-range dry-run;
+- gapped promptset diagnostics;
+- `CLAUDE.md` bootstrap selection.
+
+Keep tests deterministic and offline.
+
+## Constraints
+
+- Do not include real private context blobs or gist URLs.
+- Do not check in `.git/` directories.
+- Do not run provider CLIs.
+- Do not require network access.
+- Do not edit `human-notes.md`.
+- Do not add dependencies.
+- Do not commit unless asked.
+
+## Acceptance Criteria
+
+- The fixtures support reliable offline tests.
+- The examples show the portable workflow without overstating automation.
+- The fixture docs make clear these are artificial projects.
+- All new examples are linked from navigation docs.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run project status against the basic fixture.
+3. Run lifecycle snippets against the basic fixture.
+4. Run run-range dry-run against the basic fixture.
+5. Run `python3 scripts/ahl.py docs check`.
+6. Run `python3 scripts/ahl.py doctor`.
+7. Run `python3 scripts/ahl.py promptset lint`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_52.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if end-to-end rehearsal is blocked by fixture
+   gaps or unclear examples.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

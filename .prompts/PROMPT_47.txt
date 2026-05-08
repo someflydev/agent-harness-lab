@@ -1,0 +1,154 @@
+# PROMPT_47 - Commit Message Inspection Helper
+
+You are implementing post-commit inspection for the portable one-prompt
+workflow. Run this in a fresh coding assistant session after Prompt 46 has
+been attempted.
+
+## Project Brief
+
+The operator keeps "Suggest commits" and "Make the commits" as separate
+assistant steps. After commits are made, AHL should help inspect recent commit
+messages and grouping evidence without rewriting history automatically.
+
+This prompt adds a local commit-check helper. It should report issues and
+guidance only.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/outer-loop/commit-planning.md`,
+   `docs/outer-loop/commit-execution.md`, `runbooks/commit-packaging.md`,
+   `templates/outer-loop/commit-message.md`,
+   `docs/portable-operator/lifecycle-snippets.md`, `scripts/ahl.py`,
+   `scripts/README.md`, and `tests/test_ahl.py`.
+4. Inspect existing commit planning and execution tests before adding new
+   commit-inspection tests.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a read-only command that inspects recent commits for prompt-prefix and
+message-format hygiene, then reports whether amend or rebase guidance is
+needed.
+
+## Required Deliverables
+
+Create or update:
+
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/portable-operator/commit-check.md`
+- `docs/portable-operator/lifecycle-snippets.md`
+- `docs/outer-loop/commit-planning.md`
+- `runbooks/commit-packaging.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+Create fixtures under `fixtures/portable-operator/commits/` only if static
+fixtures make the tests clearer than temporary git repositories.
+
+## Command Requirements
+
+Add a command following existing CLI conventions, such as:
+
+```sh
+python3 scripts/ahl.py commit check --project <path> --prompt PROMPT_84 --json
+python3 scripts/ahl.py commit check --project <path> --prompt PROMPT_84 --range HEAD~10..HEAD --json
+python3 scripts/ahl.py commit check --project <path> --last 7 --json
+```
+
+The command must inspect commit messages for:
+
+- prompt prefix such as `[PROMPT_84]` in the subject;
+- Tim Pope-style short subject, blank line, then body when a body exists;
+- subject line length guidance;
+- wrapped secondary/body lines;
+- no literal `\n` sequences;
+- no co-author trailer;
+- no accidental generated boilerplate;
+- commit count and grouping summary;
+- whether changed files in the commit range look plausibly grouped by prompt.
+
+The command may print suggested amend or interactive rebase commands only as
+guidance, and only when a clear issue is detected.
+
+## Range Requirements
+
+Support prompt-prefix selection and safe range selectors:
+
+- `--prompt PROMPT_84`, which selects commits with the `[PROMPT_84]` prefix
+  without requiring the operator to know how many commits that prompt produced;
+- `--last N`, or
+- `--range <git-rev-range>`.
+
+Prefer supporting both `--last` and `--range` when it is straightforward. If
+`--prompt` is supplied without `--last` or `--range`, inspect prompt-prefixed
+commits across the most recent 10 commits by default, and clearly report when
+the search may have been truncated. Handle missing git, non-repo directories,
+empty history, invalid ranges, and merge commits with clear diagnostics.
+
+## Test Requirements
+
+Add tests using temporary git repositories for:
+
+- passing prompt-prefixed commit with subject/body formatting;
+- missing prompt prefix;
+- literal `\n` in commit message;
+- co-author trailer detection;
+- overlong subject or unwrapped body guidance;
+- range or last-N selection;
+- prompt-prefix selection that finds more than three commits for one prompt;
+- no automatic amend, rebase, staging, or commit execution;
+- JSON output stable fields.
+
+Skip git-specific tests cleanly if git is unavailable.
+
+## Constraints
+
+- Do not rewrite history.
+- Do not run `git commit`, `git commit --amend`, `git rebase`, `git reset`, or
+  destructive git commands against the target project or AHL repo.
+- Tests may create temporary git repositories and temporary commits solely as
+  isolated fixture data for commit-check validation.
+- Do not stage files.
+- Do not call assistant CLIs.
+- Do not require network access or credentials.
+- Do not modify `human-notes.md`.
+- Do not add external dependencies.
+
+## Acceptance Criteria
+
+- The helper provides a useful post-commit inspection gate.
+- It is safe to run from an arbitrary project repo.
+- It reports clear issues without taking corrective action.
+- The lifecycle snippets include a commit-check step that matches the helper's
+  checks.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run the commit-check helper against a temporary repo or safe local range.
+3. Run lifecycle snippets and confirm the commit-check snippet matches the
+   helper docs.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+6. Update the JSON Stability section in `scripts/README.md` for `commit
+   check`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_48.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if the one-prompt autopilot runbook is blocked
+   by missing commit-check docs or CLI output.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

@@ -1,0 +1,160 @@
+# PROMPT_43 - Portable CLI Invocation And Workspace Discovery
+
+You are implementing the first portable CLI layer for `agent-harness-lab`. Run
+this in a fresh coding assistant session after Prompt 42 has been attempted.
+
+## Project Brief
+
+AHL should be callable from inside arbitrary project repos, not only from the
+AHL repository itself. The script needs a clear distinction between:
+
+- AHL home: where `scripts/ahl.py`, templates, registries, and AHL docs live.
+- Project root: the operator's current target repo that may contain
+  `.prompts/`, `AGENT.md`, `CLAUDE.md`, `.context/`, and `human-notes.md`.
+
+This prompt adds the discovery foundation. It should remain standard-library
+only and should not implement the full lifecycle.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/portable-operator/README.md`,
+   `docs/portable-operator/extension-plan.md`,
+   `docs/portable-operator/non-goals.md`, `scripts/ahl.py`,
+   `scripts/README.md`, `Makefile`, and `tests/test_ahl.py`.
+4. Read `docs/outer-loop/safety-boundary.md` and
+   `docs/outer-loop/operating-baseline.md` for existing safety posture.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add dependency-free discovery helpers and documentation so `scripts/ahl.py` can
+be run from inside this repo or another project repo while still finding AHL
+assets reliably.
+
+## Required Deliverables
+
+Create or update:
+
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/portable-operator/invocation.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+Do not add a repo-local wrapper such as `bin/ahl` in this prompt. Document the
+supported `python3 /path/to/agent-harness-lab/scripts/ahl.py ...` invocation
+form instead.
+
+## Discovery Requirements
+
+Implement helpers that can determine:
+
+- AHL home from the script location by default;
+- an override such as `AHL_HOME` only when it points to a valid AHL checkout;
+- project root from the current working directory or an explicit `--project`
+  option;
+- nearest containing git root when available;
+- project root behavior when no `.git/` exists;
+- project root behavior when `.prompts/` is missing.
+
+The command surface should follow existing `scripts/ahl.py` conventions. If
+global options would be invasive, add a narrow read-only command such as:
+
+```sh
+python3 /path/to/agent-harness-lab/scripts/ahl.py project locate --json
+python3 /path/to/agent-harness-lab/scripts/ahl.py project locate --project <path> --json
+```
+
+Prefer a command shape that later prompts can extend for `project status`,
+`lifecycle snippets`, and portable run-range planning.
+
+Use this canonical portable command namespace unless a later prompt explicitly
+justifies a different shape:
+
+- `project locate` and `project status` for target-repo discovery and status;
+- `lifecycle snippets`, `lifecycle context-check`, and
+  `lifecycle run-range` for one-prompt operator workflow artifacts;
+- existing `commit` namespace extended with `commit check` for post-commit
+  inspection.
+
+Unless a tested global option is introduced, each portable command should
+accept `--project` and reuse the same shared discovery helper.
+
+## Invocation Documentation Requirements
+
+`docs/portable-operator/invocation.md` must document:
+
+- running from inside AHL itself;
+- running from another repo with
+  `python3 /path/to/agent-harness-lab/scripts/ahl.py ...`;
+- optional operator-local shell alias or symlink setup, if documented as
+  outside the repo;
+- `AHL_HOME` behavior, if implemented;
+- explicit per-command `--project` or cwd behavior;
+- how failures are reported when AHL home or project root cannot be resolved;
+- why no network, secrets, provider auth, or expensive APIs are required.
+Do not document a checked-in wrapper script. If operator-local shell aliases or
+symlinks are mentioned, make clear they are outside the repo and optional.
+
+## Test Requirements
+
+Add standard-library tests for:
+
+- AHL home discovery from script location;
+- rejected invalid `AHL_HOME` values;
+- project root detection inside a temporary git repo;
+- project root fallback without git;
+- `.prompts/` detection without treating missing prompts as a crash;
+- JSON output stability for the new locate command or equivalent helper.
+
+Skip git-dependent cases cleanly when `git` is unavailable.
+
+## Constraints
+
+- Do not rewrite existing AHL-repo commands wholesale.
+- Do not make existing commands operate on arbitrary repos until the behavior
+  is explicitly covered by tests.
+- Do not edit files outside the AHL repo.
+- Do not add `bin/ahl` or another checked-in wrapper script.
+- Do not modify `human-notes.md`.
+- Do not add external dependencies, packaging services, network calls, or
+  provider-specific automation.
+- Do not commit unless asked.
+
+## Acceptance Criteria
+
+- Existing AHL commands still work from the AHL repo.
+- The new discovery layer can report both AHL home and target project root.
+- Diagnostics are useful in repos with and without `.prompts/`.
+- The implementation is ready for project status and lifecycle commands.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run the new locate/discovery command from the AHL repo with `--json`.
+3. Run a temporary external-project discovery smoke test if the command does
+   not already cover it through tests.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+6. If the command emits JSON, update the JSON Stability section in
+   `scripts/README.md` or explicitly document why no new stable JSON surface
+   was added.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_44.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if project status work is blocked by discovery
+   helpers or docs.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

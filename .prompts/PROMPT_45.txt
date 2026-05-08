@@ -1,0 +1,175 @@
+# PROMPT_45 - Lifecycle Snippet Generator
+
+You are implementing lifecycle snippet generation for `agent-harness-lab`.
+Run this in a fresh coding assistant session after Prompt 44 has been
+attempted.
+
+## Project Brief
+
+The operator has a stable manual loop for one prompt at a time. AHL should
+generate the exact reusable assistant snippets for a given prompt number so the
+operator can paste them into Codex, Claude Code, Gemini, or a generic chat
+workflow without editing `human-notes.md`.
+
+This prompt adds snippet generation only. It should not run the snippets, call
+assistant CLIs, commit changes, or modify the target project.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/portable-operator/status.md`,
+   `docs/portable-operator/invocation.md`,
+   `docs/portable-operator/extension-plan.md`,
+   `docs/assistants/README.md`, `docs/assistants/codex.md`,
+   `docs/assistants/claude-code.md`, `docs/assistants/generic-chat.md`,
+   `runbooks/commit-packaging.md`, `scripts/ahl.py`, `scripts/README.md`,
+   and `tests/test_ahl.py`.
+4. Inspect existing prompt templates before adding new templates.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add a portable command that prints the reusable lifecycle snippets for a single
+prompt id or number in the target project.
+
+## Required Deliverables
+
+Create or update:
+
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/portable-operator/lifecycle-snippets.md`
+- `templates/portable-operator/lifecycle-snippets.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+## Command Requirements
+
+Add a command following existing CLI conventions, such as:
+
+```sh
+python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle snippets 84 --project <path>
+python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle snippets PROMPT_84 --project <path> --json
+```
+
+The command must generate at least these five snippets for prompt `N`:
+
+1. Run snippet:
+
+```text
+Load AGENT.md, then run .prompts/PROMPT_NN.txt
+```
+
+2. Audit, next-readiness, and context-update snippet:
+
+```text
+Does everything look appropriately implemented for PROMPT_NN? Do not run
+PROMPT_NN+1, but look at it to make sure it is setup for success. Also check
+whether AGENT.md or .context/ should be updated to reflect anything introduced
+(or changed) by this prompt. Do not update them just because they ran.
+```
+
+3. Commit-plan snippet:
+
+```text
+Suggest grouped Tim Pope style multi-line commits for the changes (grouping
+hunks appropriately with `git add -p` if needed). The commits should be easy
+to review, use heredoc EOF so no \n end up in the commit string, be prefixed
+with [PROMPT_NN], and should not have a co-author section
+```
+
+4. Make-commits snippet:
+
+```text
+Make the commits
+```
+
+5. Commit-check snippet asking the assistant to inspect the just-created
+commits and verify:
+
+- Tim Pope-style subject/body formatting;
+- wrapped secondary/body lines;
+- no literal `\n` sequences;
+- no co-author trailer;
+- prefix such as `[PROMPT_NN]` is present;
+- commit grouping matches the implemented changes;
+- amend or rebase guidance is suggested only when there is a clear issue.
+
+Also support an optional repair snippet, but keep it separate from the default
+reusable cluster unless explicitly requested.
+
+## Configuration Requirements
+
+Support enough configuration for:
+
+- `AGENT.md` bootstrap by default when present;
+- `CLAUDE.md` bootstrap when requested;
+- no bootstrap doc when explicitly requested;
+- `.context/` mention when requested or detected;
+- target project root from cwd or `--project`;
+- human-readable output and JSON output with stable keys.
+
+Do not make the command edit `human-notes.md`. The output is copy/paste
+material for the operator.
+
+## Test Requirements
+
+Add tests for:
+
+- prompt number normalization from `84`, `PROMPT_84`, and `PROMPT_84.txt`;
+- generated run snippet path;
+- audit snippet includes the AGENT/context update sentence exactly enough to
+  preserve the doctrine;
+- commit-plan snippet includes heredoc guidance and no generated raw newline
+  escaping in the commit message itself;
+- commit-check snippet includes all required checks;
+- `CLAUDE.md` bootstrap selection;
+- no-bootstrap selection;
+- JSON output stable fields.
+
+## Constraints
+
+- Do not run any assistant.
+- Do not invoke `git commit`.
+- Do not require network access or provider credentials.
+- Do not create a background runner.
+- Do not modify the target project.
+- Do not add external dependencies.
+
+## Acceptance Criteria
+
+- The operator can generate the reusable one-prompt snippet cluster for any
+  prompt id.
+- Generated text is suitable for manual paste into multiple assistant
+  surfaces.
+- The snippet generator is provider-agnostic and local-only.
+- Existing promptset and project status behavior remains intact.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run the lifecycle snippets command for a current AHL prompt and inspect the
+   human-readable output.
+3. Run the lifecycle snippets command with `--json`.
+4. Run `python3 scripts/ahl.py doctor`.
+5. Run `python3 scripts/ahl.py promptset lint`.
+6. Update the JSON Stability section in `scripts/README.md` for `lifecycle
+   snippets`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_46.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if context-update support is blocked by
+   snippet shape or docs.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

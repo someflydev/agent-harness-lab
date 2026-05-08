@@ -1,0 +1,141 @@
+# PROMPT_48 - One-Prompt Autopilot Runbook And Notes Boundary
+
+You are documenting the human-governed one-prompt autopilot loop for
+`agent-harness-lab`. Run this in a fresh coding assistant session after Prompt
+47 has been attempted.
+
+## Project Brief
+
+AHL should support the operator's already-proven manual process without taking
+over as an autonomous repo builder. The durable workflow is one prompt file at
+a time, with explicit audit, optional repair, separated commit planning and
+commit execution, post-commit inspection, and a clean fresh-session boundary.
+
+This prompt creates the runbook and examples for that operator loop.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/portable-operator/README.md`,
+   `docs/portable-operator/lifecycle-snippets.md`,
+   `docs/portable-operator/status.md`,
+   `docs/portable-operator/context-update-policy.md`,
+   `docs/portable-operator/commit-check.md`,
+   `runbooks/fresh-session-prompt-run.md`, `runbooks/completion-audit.md`,
+   `runbooks/next-prompt-preflight.md`, `runbooks/repair-session.md`,
+   `runbooks/commit-packaging.md`, `runbooks/run-closeout.md`,
+   `docs/assistants/generic-chat.md`, `docs/assistants/subscription-workflow.md`,
+   `scripts/README.md`, and `tests/test_ahl.py`.
+4. Inspect existing runbook style before adding new runbooks.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Add operator-facing docs that explain how AHL supports a portable,
+human-governed one-prompt autopilot workflow from initial project generation
+through post-commit inspection and session reset.
+
+## Required Deliverables
+
+Create or update:
+
+- `runbooks/one-prompt-autopilot.md`
+- `docs/portable-operator/one-prompt-loop.md`
+- `docs/portable-operator/human-notes-boundary.md`
+- `docs/portable-operator/README.md`
+- `runbooks/README.md`
+- `docs/assistants/generic-chat.md`
+- `docs/assistants/subscription-workflow.md`
+- `docs/README.md`
+- `README.md` only if a concise status note is needed
+
+Do not implement new CLI behavior in this prompt unless a tiny docs-link check
+fix is required.
+
+## Runbook Requirements
+
+`runbooks/one-prompt-autopilot.md` must cover:
+
+- discussing a new project in ChatGPT or another planning assistant;
+- generating an initial context blob and promptset instructions;
+- storing the private initial context blob outside the repo, such as in a
+  private gist;
+- creating the local project repo and configuring git identity;
+- generating initial `.prompts/PROMPT_XX.txt` files and baseline docs;
+- preflighting the generated promptset before committing it;
+- committing the preflighted promptset;
+- running implementation one prompt at a time;
+- using lifecycle snippets for run, audit, commit-plan, make-commits, and
+  commit-check steps;
+- running inline repair when context is still fresh and the issue is bounded;
+- creating a handoff only when it is materially useful;
+- checking whether `AGENT.md`, `CLAUDE.md`, `.context/`, or `context/` needs
+  durable updates;
+- preserving a fresh-session reset boundary after each prompt.
+
+## Human Notes Boundary Requirements
+
+`docs/portable-operator/human-notes-boundary.md` must state:
+
+- `human-notes.md` is operator-owned scratch/control-zone content;
+- AHL must never automatically edit it;
+- AHL must never treat it as authoritative machine state;
+- AHL may mention its presence in status output;
+- the operator may manually note intentions such as "told AHL to run prompts
+  18 through 27";
+- reusable snippets may be copied by the operator, but AHL should generate
+  snippets directly rather than rewriting notes.
+
+## Assistant Workflow Requirements
+
+Update assistant docs only to the extent needed to show that Codex, Claude
+Code, Gemini, and generic chat surfaces all use the same file-backed workflow.
+Do not imply Claude subscription automation through external APIs. Claude Code
+can be documented as a manual/terminal assistant surface.
+
+## Constraints
+
+- Do not implement new CLI behavior in this prompt unless a tiny docs-link
+  check fix is required.
+- Do not modify `human-notes.md`.
+- Do not include private gist content or initial context blobs.
+- Do not add provider-specific automation, network calls, credentials, or
+  dependencies.
+- Do not create Pi-specific extension material.
+- Do not commit unless asked.
+
+## Acceptance Criteria
+
+- The runbook captures the real operator process without making AHL
+  autonomous.
+- The docs clearly separate planning blobs, committed promptsets, prompt
+  execution, repair, commit packaging, and fresh-session reset.
+- The human-notes boundary is explicit and consistent with project status and
+  lifecycle docs.
+- Docs navigation points to the new runbook.
+
+## Validation
+
+After editing:
+
+1. Run `python3 scripts/ahl.py docs check`.
+2. Run `python3 scripts/ahl.py promptset lint`.
+3. Run `python3 scripts/ahl.py doctor`.
+4. Run `python3 -m unittest tests/test_ahl.py` if docs examples or command
+   names changed in a way tests cover.
+5. State any skipped checks and why.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_49.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if run-range dry-run orchestration is blocked
+   by unclear runbook or notes-boundary docs.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.

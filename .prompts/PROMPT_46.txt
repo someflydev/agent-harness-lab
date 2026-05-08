@@ -1,0 +1,153 @@
+# PROMPT_46 - Context Update Doctrine And Audit Support
+
+You are implementing context-update doctrine and lightweight audit support for
+the portable one-prompt workflow. Run this in a fresh coding assistant session
+after Prompt 45 has been attempted.
+
+## Project Brief
+
+After each prompt, the operator wants the assistant to check whether durable
+context files should be updated. This must not become noisy churn. Context
+updates are justified only when a prompt introduces or changes durable
+workflow, architecture, command, convention, or repo-navigation knowledge that
+future fresh sessions need.
+
+This prompt adds doctrine, templates, and optional helper support around that
+check. It should not auto-edit context files.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+2. Read `AGENT.md`, `README.md`, and this prompt.
+3. Read `docs/portable-operator/lifecycle-snippets.md`,
+   `templates/portable-operator/lifecycle-snippets.md`,
+   `docs/runtime/README.md`, `docs/runtime/session-lifecycle.md`,
+   `docs/memory/README.md`, `docs/quality/audit-protocol.md`,
+   `runbooks/completion-audit.md`, `prompt-templates/completion-audit.md`,
+   `scripts/ahl.py`, `scripts/README.md`, and `tests/test_ahl.py`.
+4. Inspect any existing `context/` docs and examples.
+5. Run existing checks if feasible.
+6. Check `git status --short` and preserve unrelated changes.
+
+## Goal
+
+Document and support the context-update check used during lifecycle audit while
+keeping actual edits under human or assistant review.
+
+## Required Deliverables
+
+Create or update:
+
+- `docs/portable-operator/context-update-policy.md`
+- `templates/portable-operator/context-update-candidate-report.md`
+- `prompt-templates/completion-audit.md`
+- `runbooks/completion-audit.md`
+- `scripts/ahl.py`
+- `tests/test_ahl.py`
+- `scripts/README.md`
+- `docs/portable-operator/lifecycle-snippets.md`
+- `docs/portable-operator/README.md`
+- `docs/README.md`
+
+Update `AGENT.md` only if the bootstrap guidance would otherwise become stale,
+and keep any change concise.
+
+## Doctrine Requirements
+
+The policy must state:
+
+- update context files when durable workflow, architecture, command,
+  convention, or repo-navigation knowledge changes;
+- do not update context files merely because a prompt ran;
+- avoid noisy context churn;
+- keep context concise and useful for future fresh sessions;
+- prefer checked-in docs or templates for broad guidance;
+- record "no context update needed" as an audit conclusion, not as a file edit;
+- treat `human-notes.md` as operator-owned and informational only.
+
+## Helper Requirements
+
+If implementation is justified by the existing CLI shape, add a read-only
+helper such as:
+
+```sh
+python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project <path> --json
+```
+
+The helper may inspect changed paths and suggest candidate context-update
+questions, but it must not edit `AGENT.md`, `.context/`, `context/`, or any
+target-project file.
+
+It should distinguish likely durable context candidates from ordinary code,
+test, fixture, generated artifact, and transient-run changes. Keep the
+heuristics conservative and explain uncertainty in output.
+
+If the command is too much for this prompt, document the manual template and
+leave the command as future work with a clear reason.
+
+## Snippet Integration Requirements
+
+Ensure lifecycle snippet documentation explains:
+
+- why the audit snippet includes the context-update sentence;
+- how the assistant should produce a context-update candidate report;
+- when to make no edits;
+- how to handle `AGENT.md`, `CLAUDE.md`, `.context/`, and `context/` across
+  arbitrary projects.
+
+## Test Requirements
+
+Add tests for implemented helper behavior, including:
+
+- no changed files produces no candidate updates;
+- docs or command-surface changes produce review questions;
+- ordinary test-only changes do not force context updates;
+- helper output is read-only and stable in JSON;
+- snippet output still includes the context-update sentence.
+
+If no helper command is implemented, add docs-oriented tests only if the repo
+already has a suitable pattern; otherwise document why validation is manual.
+
+## Constraints
+
+- Do not automatically edit context files.
+- Do not edit `human-notes.md`.
+- Do not require a `.context/` directory to exist.
+- Do not add external dependencies.
+- Do not call assistant CLIs.
+- Do not commit unless asked.
+
+## Acceptance Criteria
+
+- The context-update policy is clear enough for a fresh assistant session.
+- Snippet generation and audit docs reinforce the "not just because it ran"
+  rule.
+- Any helper command is conservative, read-only, and tested.
+- Existing lifecycle snippet tests still pass.
+
+## Validation
+
+After editing:
+
+1. Run `python3 -m unittest tests/test_ahl.py`.
+2. Run lifecycle snippets for a prompt and confirm the context-update sentence
+   is present.
+3. Run the context-check helper if implemented.
+4. Run `python3 scripts/ahl.py docs check`.
+5. Run `python3 scripts/ahl.py doctor`.
+6. Run `python3 scripts/ahl.py promptset lint`.
+7. If the context-check helper is implemented, update the JSON Stability
+   section in `scripts/README.md` for `lifecycle context-check`.
+
+## Endcap
+
+Before ending the session:
+
+1. Audit deliverables against this prompt.
+2. Inspect `.prompts/PROMPT_47.txt` and state whether the repo is ready for it.
+3. Perform cheap bridging fixes if commit inspection work is blocked by docs,
+   helper output, or tests.
+4. Create `tmp/HANDOFF.md` only if a real blocker remains.
+5. Provide a concise completion summary with changed files, validation, and
+   residual risks.
+6. Do not commit unless the operator explicitly asks.
