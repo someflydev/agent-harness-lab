@@ -331,6 +331,111 @@ class AhlTest(unittest.TestCase):
         ):
             self.assertIn(key, data["project"]["next_prompt"])
 
+    def test_lifecycle_snippets_normalizes_prompt_numbers(self):
+        self.assertEqual(ahl.normalize_prompt_id("84"), "PROMPT_84")
+        self.assertEqual(ahl.normalize_prompt_id("PROMPT_84"), "PROMPT_84")
+        self.assertEqual(ahl.normalize_prompt_id("PROMPT_84.txt"), "PROMPT_84")
+
+    def test_lifecycle_snippets_generates_run_snippet_path(self):
+        self.write("AGENT.md", "# Agent\n")
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["snippets"]["run"], "Load AGENT.md, then run .prompts/PROMPT_84.txt")
+        self.assertEqual(data["prompt"]["path"], ".prompts/PROMPT_84.txt")
+
+    def test_lifecycle_audit_snippet_preserves_agent_context_update_doctrine(self):
+        self.write("AGENT.md", "# Agent\n")
+        (self.root / ".context").mkdir()
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "PROMPT_84", "--json")
+        data = json.loads(output)
+        snippet = data["snippets"]["audit_next_readiness_context_update"]
+
+        self.assertEqual(code, 0)
+        self.assertIn("Does everything look appropriately implemented for PROMPT_84?", snippet)
+        self.assertIn("Do not run\nPROMPT_85", snippet)
+        self.assertIn("whether AGENT.md or .context/ should be updated", snippet)
+        self.assertIn("Do not update them just because they ran.", snippet)
+
+    def test_lifecycle_commit_plan_snippet_includes_heredoc_guidance(self):
+        self.write("AGENT.md", "# Agent\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "PROMPT_84.txt", "--json")
+        data = json.loads(output)
+        snippet = data["snippets"]["commit_plan"]
+
+        self.assertEqual(code, 0)
+        self.assertIn("heredoc EOF", snippet)
+        self.assertIn("no \\n end up in the commit string", snippet)
+        self.assertIn("with [PROMPT_84]", snippet)
+        self.assertNotIn("Co-authored-by", snippet)
+
+    def test_lifecycle_commit_check_snippet_includes_required_checks(self):
+        self.write("AGENT.md", "# Agent\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "84", "--json")
+        data = json.loads(output)
+        snippet = data["snippets"]["commit_check"]
+
+        self.assertEqual(code, 0)
+        for expected in (
+            "Tim Pope-style subject/body formatting",
+            "wrapped secondary/body lines",
+            "no literal `\\n` sequences",
+            "no co-author trailer",
+            "prefix such as `[PROMPT_84]` is present",
+            "commit grouping matches the implemented changes",
+            "amend or rebase guidance is suggested only when there is a clear issue",
+        ):
+            self.assertIn(expected, snippet)
+
+    def test_lifecycle_snippets_selects_claude_bootstrap(self):
+        self.write("CLAUDE.md", "# Claude\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "84", "--bootstrap", "CLAUDE.md", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["configuration"]["bootstrap_doc"], "CLAUDE.md")
+        self.assertEqual(data["snippets"]["run"], "Load CLAUDE.md, then run .prompts/PROMPT_84.txt")
+
+    def test_lifecycle_snippets_supports_no_bootstrap(self):
+        self.write("AGENT.md", "# Agent\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "84", "--bootstrap", "none", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertIsNone(data["configuration"]["bootstrap_doc"])
+        self.assertEqual(data["snippets"]["run"], "Run .prompts/PROMPT_84.txt")
+
+    def test_lifecycle_snippets_json_has_stable_fields(self):
+        self.write("AGENT.md", "# Agent\n")
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+
+        code, output = self.run_cli("lifecycle", "snippets", "PROMPT_84", "--include-repair", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "ahl_home", "project", "prompt", "configuration", "snippets", "warnings", "problems"):
+            self.assertIn(key, data)
+        for key in ("input", "id", "number", "path", "exists"):
+            self.assertIn(key, data["prompt"])
+        for key in (
+            "run",
+            "audit_next_readiness_context_update",
+            "commit_plan",
+            "make_commits",
+            "commit_check",
+            "repair",
+        ):
+            self.assertIn(key, data["snippets"])
+
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
         self.write(".prompts/PROMPT_03.txt")

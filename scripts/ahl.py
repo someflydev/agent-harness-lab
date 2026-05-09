@@ -496,6 +496,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "safety": "read-only",
     },
     {
+        "name": "lifecycle-snippets",
+        "command": "python3 scripts/ahl.py lifecycle snippets PROMPT_45 --json",
+        "summary": "Print reusable one-prompt lifecycle snippets for a target project.",
+        "safety": "read-only",
+    },
+    {
         "name": "outer-dry-run",
         "command": "python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json",
         "summary": "Validate a batch plan without invoking assistant CLIs.",
@@ -889,6 +895,185 @@ def project_status_data(project_value: str | None = None, environ: dict[str, str
         "warnings": warnings,
         "problems": problems,
     }
+
+
+def normalize_bootstrap_choice(value: str | None) -> str:
+    if value is None:
+        return "auto"
+    normalized = value.strip().lower()
+    aliases = {
+        "auto": "auto",
+        "default": "auto",
+        "agent": "AGENT.md",
+        "agent.md": "AGENT.md",
+        "AGENT.md": "AGENT.md",
+        "claude": "CLAUDE.md",
+        "claude.md": "CLAUDE.md",
+        "CLAUDE.md": "CLAUDE.md",
+        "none": "none",
+        "no": "none",
+    }
+    if normalized in aliases:
+        return aliases[normalized]
+    raise SystemExit(f"invalid bootstrap selection: {value}")
+
+
+def selected_bootstrap_doc(project_root: Path, choice: str) -> str | None:
+    if choice == "none":
+        return None
+    if choice in ("AGENT.md", "CLAUDE.md"):
+        return choice
+    if (project_root / "AGENT.md").is_file():
+        return "AGENT.md"
+    return None
+
+
+def lifecycle_update_targets(bootstrap_doc: str | None, include_context: bool) -> str:
+    targets: list[str] = []
+    if bootstrap_doc:
+        targets.append(bootstrap_doc)
+    if include_context:
+        targets.append(".context/")
+    if not targets:
+        return "bootstrap/context files"
+    if len(targets) == 1:
+        return targets[0]
+    return " or ".join(targets)
+
+
+def lifecycle_snippet_text(prompt_id: str, bootstrap_doc: str | None, include_context: bool, include_repair: bool) -> dict[str, str]:
+    number = prompt_id_to_number(prompt_id)
+    next_prompt_id = prompt_number_to_id(number + 1)
+    prompt_path = f".prompts/{prompt_id}.txt"
+    update_targets = lifecycle_update_targets(bootstrap_doc, include_context)
+    run_prefix = f"Load {bootstrap_doc}, then run" if bootstrap_doc else "Run"
+    snippets = {
+        "run": f"{run_prefix} {prompt_path}",
+        "audit_next_readiness_context_update": (
+            f"Does everything look appropriately implemented for {prompt_id}? Do not run\n"
+            f"{next_prompt_id}, but look at it to make sure it is setup for success. Also check\n"
+            f"whether {update_targets} should be updated to reflect anything introduced\n"
+            f"(or changed) by this prompt. Do not update them just because they ran."
+        ),
+        "commit_plan": (
+            "Suggest grouped Tim Pope style multi-line commits for the changes (grouping\n"
+            "hunks appropriately with `git add -p` if needed). The commits should be easy\n"
+            "to review, use heredoc EOF so no \\n end up in the commit string, be prefixed\n"
+            f"with [{prompt_id}], and should not have a co-author section"
+        ),
+        "make_commits": "Make the commits",
+        "commit_check": (
+            "Inspect the just-created commits and verify:\n"
+            "- Tim Pope-style subject/body formatting;\n"
+            "- wrapped secondary/body lines;\n"
+            "- no literal `\\n` sequences;\n"
+            "- no co-author trailer;\n"
+            f"- prefix such as `[{prompt_id}]` is present;\n"
+            "- commit grouping matches the implemented changes;\n"
+            "- amend or rebase guidance is suggested only when there is a clear issue."
+        ),
+    }
+    if include_repair:
+        snippets["repair"] = (
+            f"Repair the specific issue found in {prompt_id}. Keep the scope limited to the\n"
+            "reviewed defect, preserve unrelated changes, rerun the relevant validation,\n"
+            "and stop without running a later prompt or committing unless explicitly asked."
+        )
+    return snippets
+
+
+def lifecycle_snippets_data(
+    prompt_value: str,
+    project_value: str | None = None,
+    bootstrap_value: str | None = None,
+    context_value: str = "auto",
+    include_repair: bool = False,
+    environ: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    prompt_id = normalize_prompt_id(prompt_value)
+    locate = project_locate_data(project_value, environ)
+    problems = list(locate["problems"])
+    warnings = list(locate["warnings"])
+    project = dict(locate["project"])
+    project_root = Path(project["root"])
+    bootstrap_choice = normalize_bootstrap_choice(bootstrap_value)
+    bootstrap_doc = selected_bootstrap_doc(project_root, bootstrap_choice)
+    if bootstrap_choice in ("AGENT.md", "CLAUDE.md") and not (project_root / bootstrap_choice).is_file():
+        warnings.append(f"requested bootstrap doc is not present in target project: {bootstrap_choice}")
+
+    if context_value not in ("auto", "include", "omit"):
+        raise SystemExit(f"invalid context selection: {context_value}")
+    context_detected = (project_root / ".context").is_dir()
+    include_context = context_value == "include" or (
+        context_value == "auto" and (context_detected or bootstrap_doc == "AGENT.md")
+    )
+    prompt_path = project_root / ".prompts" / f"{prompt_id}.txt"
+    if project["requested_exists"] and project["requested_is_dir"] and not prompt_path.is_file():
+        warnings.append(f"target prompt file is not present: .prompts/{prompt_id}.txt")
+
+    snippets = lifecycle_snippet_text(prompt_id, bootstrap_doc, include_context, include_repair)
+    return {
+        "ok": not problems,
+        "ahl_home": locate["ahl_home"],
+        "project": {
+            "requested": project["requested"],
+            "root": project["root"],
+            "source": project["source"],
+            "prompt_dir": project["prompt_dir"],
+            "prompt_dir_exists": project["prompt_dir_exists"],
+        },
+        "prompt": {
+            "input": prompt_value,
+            "id": prompt_id,
+            "number": prompt_id_to_number(prompt_id),
+            "path": f".prompts/{prompt_id}.txt",
+            "exists": prompt_path.is_file(),
+        },
+        "configuration": {
+            "bootstrap": bootstrap_choice,
+            "bootstrap_doc": bootstrap_doc,
+            "context": context_value,
+            "context_detected": context_detected,
+            "context_mentioned": include_context,
+            "repair_included": include_repair,
+        },
+        "snippets": snippets,
+        "warnings": warnings,
+        "problems": problems,
+    }
+
+
+def command_lifecycle(args: argparse.Namespace) -> int:
+    context_value = "include" if args.context else "auto"
+    if args.no_context:
+        context_value = "omit"
+    data = lifecycle_snippets_data(
+        args.prompt,
+        project_value=args.project,
+        bootstrap_value=args.bootstrap,
+        context_value=context_value,
+        include_repair=args.include_repair,
+    )
+    human = [
+        f"lifecycle snippets: {data['prompt']['id']}",
+        f"- project root: {data['project']['root']}",
+        f"- bootstrap: {data['configuration']['bootstrap_doc'] or 'none'}",
+        f"- context mentioned: {data['configuration']['context_mentioned']}",
+        "",
+    ]
+    labels = {
+        "run": "Run",
+        "audit_next_readiness_context_update": "Audit / Next Readiness / Context Update",
+        "commit_plan": "Commit Plan",
+        "make_commits": "Make Commits",
+        "commit_check": "Commit Check",
+        "repair": "Repair",
+    }
+    for key, text in data["snippets"].items():
+        human.extend([f"## {labels.get(key, key)}", "", text, ""])
+    human.extend(f"- warning: {warning}" for warning in data["warnings"])
+    human.extend(f"- problem: {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
 def command_project(args: argparse.Namespace) -> int:
@@ -4704,6 +4889,22 @@ def build_parser() -> argparse.ArgumentParser:
     project_status.add_argument("--project", help="Target project path; defaults to the current working directory.")
     project_status.add_argument("--json", action="store_true")
     project_status.set_defaults(func=command_project)
+
+    lifecycle = subparsers.add_parser("lifecycle", help="Print portable lifecycle operator snippets.")
+    lifecycle_subparsers = lifecycle.add_subparsers(dest="action", required=True)
+    lifecycle_snippets = lifecycle_subparsers.add_parser("snippets", help="Print reusable one-prompt lifecycle snippets.")
+    lifecycle_snippets.add_argument("prompt", help="Prompt number, id, or filename, such as 45, PROMPT_45, or PROMPT_45.txt.")
+    lifecycle_snippets.add_argument("--project", help="Target project path; defaults to the current working directory.")
+    lifecycle_snippets.add_argument(
+        "--bootstrap",
+        default="auto",
+        help="Bootstrap doc selection: auto, AGENT.md, CLAUDE.md, or none.",
+    )
+    lifecycle_snippets.add_argument("--context", action="store_true", help="Mention .context/ even when it is not detected.")
+    lifecycle_snippets.add_argument("--no-context", action="store_true", help="Omit .context/ from the context-update snippet.")
+    lifecycle_snippets.add_argument("--include-repair", action="store_true", help="Include the optional repair snippet.")
+    lifecycle_snippets.add_argument("--json", action="store_true")
+    lifecycle_snippets.set_defaults(func=command_lifecycle)
 
     outer = subparsers.add_parser("outer", help="Plan, dry-run, and gate sequential outer-loop batches.")
     outer_subparsers = outer.add_subparsers(dest="action", required=True)
