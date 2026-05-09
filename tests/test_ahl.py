@@ -2692,6 +2692,152 @@ class AhlTest(unittest.TestCase):
         for key in ("ok", "schema", "plan_id", "created_at", "mode", "source", "prompt_ids", "prompt_context", "grouping_policy", "git", "groups", "unrelated_changes", "warnings", "problems", "artifact"):
             self.assertIn(key, data)
 
+    def init_git_repo(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.root, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.root, check=True)
+
+    def make_git_commit(self, path, content, subject, body=None):
+        self.write(path, content)
+        subprocess.run(["git", "add", path], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command = ["git", "commit", "-m", subject]
+        if body is not None:
+            command.extend(["-m", body])
+        subprocess.run(command, cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_accepts_prompt_prefixed_commit_with_body(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "[PROMPT_84] Add commit check docs", "Record validation evidence.\n\nValidation:\n- python3 -m unittest tests/test_ahl.py")
+
+        code, output = self.run_cli("commit", "check", "--prompt", "PROMPT_84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertTrue(data["read_only"])
+        self.assertEqual(data["selector"]["matched_commit_count"], 1)
+        self.assertEqual(data["commits"][0]["issues"], [])
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_detects_missing_prompt_prefix(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "Add commit check docs")
+
+        code, output = self.run_cli("commit", "check", "--last", "1", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(data["commits"][0]["issues"][0]["code"], "missing_prompt_prefix")
+        self.assertTrue(any("amend" in item for item in data["guidance"]))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_detects_literal_newline_sequence(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "[PROMPT_84] Bad literal \\n sequence")
+
+        code, output = self.run_cli("commit", "check", "--last", "1", "--json")
+        data = json.loads(output)
+        codes = {issue["code"] for issue in data["commits"][0]["issues"]}
+
+        self.assertEqual(code, 1)
+        self.assertIn("literal_newline_sequence", codes)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_detects_co_author_trailer(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "[PROMPT_84] Add docs", "Body.\n\nCo-authored-by: Bot <bot@example.test>")
+
+        code, output = self.run_cli("commit", "check", "--prompt", "84", "--json")
+        data = json.loads(output)
+        codes = {issue["code"] for issue in data["commits"][0]["issues"]}
+
+        self.assertEqual(code, 1)
+        self.assertIn("co_author_trailer", codes)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_detects_overlong_subject_and_unwrapped_body(self):
+        self.init_git_repo()
+        long_subject = "[PROMPT_84] " + "Add a subject that is too long for normal review hygiene and needs cleanup"
+        long_body = "This body line is intentionally much too long for the wrapping guidance used by the helper and should be reported."
+        self.make_git_commit("docs/one.md", "# One\n", long_subject, long_body)
+
+        code, output = self.run_cli("commit", "check", "--last", "1", "--json")
+        data = json.loads(output)
+        codes = {issue["code"] for issue in data["commits"][0]["issues"]}
+
+        self.assertEqual(code, 1)
+        self.assertIn("overlong_subject", codes)
+        self.assertIn("unwrapped_body_line", codes)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_supports_range_and_last_selection(self):
+        self.init_git_repo()
+        self.make_git_commit("one.txt", "one\n", "[PROMPT_83] First")
+        self.make_git_commit("two.txt", "two\n", "[PROMPT_84] Second")
+
+        last_code, last_output = self.run_cli("commit", "check", "--last", "1", "--json")
+        last_data = json.loads(last_output)
+        range_code, range_output = self.run_cli("commit", "check", "--range", "HEAD~1..HEAD", "--json")
+        range_data = json.loads(range_output)
+
+        self.assertEqual(last_code, 0)
+        self.assertEqual(last_data["selector"]["searched_commit_count"], 1)
+        self.assertEqual(last_data["commits"][0]["subject"], "[PROMPT_84] Second")
+        self.assertEqual(range_code, 0)
+        self.assertEqual(range_data["selector"]["mode"], "range")
+        self.assertEqual(range_data["selector"]["matched_commit_count"], 1)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_prompt_selection_finds_more_than_three_commits(self):
+        self.init_git_repo()
+        for index in range(4):
+            self.make_git_commit(f"docs/{index}.md", f"# {index}\n", f"[PROMPT_84] Part {index}")
+
+        code, output = self.run_cli("commit", "check", "--prompt", "PROMPT_84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["selector"]["matched_commit_count"], 4)
+        self.assertEqual(data["summary"]["prompt_counts"]["PROMPT_84"], 4)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_does_not_run_commit_rewrite_or_staging_commands(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "Missing prefix")
+        observed = []
+        real_run_git = ahl.run_git
+
+        def recording_run_git(root, args):
+            observed.append(tuple(args))
+            return real_run_git(root, args)
+
+        with mock.patch.object(ahl, "run_git", side_effect=recording_run_git):
+            code, output = self.run_cli("commit", "check", "--last", "1", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        forbidden = {"commit", "rebase", "reset", "add"}
+        self.assertFalse(any(args and args[0] in forbidden for args in observed))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_json_has_stable_fields(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "[PROMPT_84] Add docs")
+
+        code, output = self.run_cli("commit", "check", "--prompt", "PROMPT_84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "read_only", "project", "selector", "summary", "commits", "guidance", "warnings", "problems"):
+            self.assertIn(key, data)
+        for key in ("mode", "description", "prompt", "searched_commit_count", "matched_commit_count", "truncated"):
+            self.assertIn(key, data["selector"])
+        for key in ("hash", "short_hash", "subject", "parents", "changed_files", "issues"):
+            self.assertIn(key, data["commits"][0])
+
     def test_trace_returns_degraded_result_outside_git_repo(self):
         self.write(".prompts/PROMPT_20.txt", "# Prompt\n")
 
