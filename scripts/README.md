@@ -19,10 +19,10 @@ bounded local support, not a daemon or provider platform.
 
 The planned portable-operator extension is documented in
 `../docs/portable-operator/`. That work will add an explicit distinction
-between AHL home and a target project repo. Today, `project locate` and
-`project status` are the read-only discovery commands for that distinction;
-most older commands still resolve paths from the current working directory and
-assume it is the AHL repo.
+between AHL home and a target project repo. Today, `project locate`,
+`project status`, and `lifecycle snippets` are the read-only portable commands
+for that distinction; most older commands still resolve paths from the current
+working directory and assume it is the AHL repo.
 
 ## What It Does
 
@@ -52,6 +52,9 @@ assume it is the AHL repo.
   diagnostics, bootstrap/context file presence, recent prompt-prefixed
   commits, and likely next prompt inference without editing files or invoking
   assistants.
+- `lifecycle snippets` prints reusable run, audit/next-readiness/context,
+  commit-plan, make-commits, commit-check, and optional repair snippets for a
+  single target-project prompt without editing files or invoking assistants.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
@@ -97,9 +100,10 @@ assume it is the AHL repo.
 - `metadata-example` prints a skeleton run record for metadata-aware closeout.
 
 Planned portable commands should continue the documented namespace in
-`../docs/portable-operator/extension-plan.md`, such as `lifecycle snippets`,
-`lifecycle context-check`, `lifecycle run-range`, and `commit check`. They are
-not implemented until a later prompt adds tested behavior.
+`../docs/portable-operator/extension-plan.md`. `lifecycle snippets` is now
+implemented as read-only copy/paste output; later portable commands such as
+`lifecycle context-check`, `lifecycle run-range`, and `commit check` are not
+implemented until a later prompt adds tested behavior.
 
 ## What It Does Not Do
 
@@ -120,6 +124,9 @@ not implemented until a later prompt adds tested behavior.
   target project repos.
 - `project status` does not run prompts, execute validation commands, treat
   `human-notes.md` as machine authority, or make completion decisions.
+- `lifecycle snippets` does not run or repair prompts, execute validation
+  commands, edit `human-notes.md`, modify target-project context files, stage,
+  commit, amend, rebase, or call providers.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
 
@@ -149,6 +156,9 @@ python3 scripts/ahl.py project locate --json
 python3 /path/to/agent-harness-lab/scripts/ahl.py project locate --project /path/to/project --json
 python3 scripts/ahl.py project status --json
 python3 /path/to/agent-harness-lab/scripts/ahl.py project status --project /path/to/project --json
+python3 scripts/ahl.py lifecycle snippets 45
+python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle snippets PROMPT_84 --project /path/to/project --json
+python3 scripts/ahl.py lifecycle snippets PROMPT_84.txt --bootstrap CLAUDE.md --context
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
@@ -249,6 +259,15 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `prompt_prefixed_commit_summary`, `likely_next_prompt`, `confidence`, and
   `reason`; `files` includes `AGENT.md`, `CLAUDE.md`, `.context`, and
   `human-notes.md`
+- `lifecycle snippets`: `ok`, `ahl_home`, `project`, `prompt`,
+  `configuration`, `snippets`, `warnings`, and `problems`; `project` includes
+  `requested`, `root`, `source`, `prompt_dir`, and `prompt_dir_exists`;
+  `prompt` includes `input`, `id`, `number`, `path`, and `exists`;
+  `configuration` includes `bootstrap`, `bootstrap_doc`, `context`,
+  `context_detected`, `context_mentioned`, and `repair_included`; `snippets`
+  includes `run`, `audit_next_readiness_context_update`, `commit_plan`,
+  `make_commits`, and `commit_check`, plus `repair` only when
+  `--include-repair` is used
 - `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
   `driver`, `model`, `reasoning`, `permission_posture`,
   `required_ahl_checks`, `stop_conditions`, `commit_policy`,

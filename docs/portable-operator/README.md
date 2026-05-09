@@ -8,8 +8,9 @@ fresh-session reset.
 
 Most of this section is design guidance for later prompts, not a claim that the
 full portable lifecycle exists. The implemented portable surface starts with
-the read-only `project locate` and `project status` discovery commands.
-Current outer-loop helpers still primarily operate inside the AHL repository.
+the read-only `project locate`, `project status`, and `lifecycle snippets`
+commands. Current outer-loop helpers still primarily operate inside the AHL
+repository.
 
 ## Start Here
 
@@ -20,6 +21,8 @@ Current outer-loop helpers still primarily operate inside the AHL repository.
 - `status.md` - read-only target-project status reporting for git state,
   promptset diagnostics, bootstrap/context files, prompt-prefixed commits, and
   likely next prompt inference.
+- `lifecycle-snippets.md` - reusable prompt-run, audit, context-update,
+  commit-plan, commit-check, and optional repair snippets for one prompt.
 - `non-goals.md` - explicit exclusions for the portable-operator extension.
 
 ## Operating Posture

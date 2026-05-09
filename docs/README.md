@@ -57,6 +57,8 @@ heavier orchestration remains outside the baseline.
 - `portable-operator/status.md` - supported `project status` report for
   target-project git state, promptset diagnostics, bootstrap/context files,
   and likely next prompt inference.
+- `portable-operator/lifecycle-snippets.md` - supported `lifecycle snippets`
+  output for reusable one-prompt assistant instructions.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
@@ -321,6 +323,8 @@ heavier orchestration remains outside the baseline.
   discovery behavior.
 - `portable-operator/status.md` - read-only target-project status reporting
   before a one-prompt run.
+- `portable-operator/lifecycle-snippets.md` - read-only reusable lifecycle
+  snippet generation for a single target-project prompt.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
   portable extension.
 
