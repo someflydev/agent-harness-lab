@@ -524,6 +524,133 @@ class AhlTest(unittest.TestCase):
         for key in ("path", "kind", "confidence", "reason", "questions"):
             self.assertIn(key, data["candidates"][0])
 
+    def test_lifecycle_run_range_resolves_valid_external_project(self):
+        self.write("AGENT.md", "# Agent\n")
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n## Validation\n- python3 -m unittest tests/test_ahl.py\n")
+        self.write(".prompts/PROMPT_19.txt", "# Prompt 19\n")
+
+        code, output = self.run_cli("lifecycle", "run-range", "18", "19", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["mode"], "dry-run")
+        self.assertTrue(data["dry_run"])
+        self.assertEqual(Path(data["project"]["root"]).resolve(), self.root.resolve())
+        self.assertEqual(data["prompt_ids"], ["PROMPT_18", "PROMPT_19"])
+        self.assertEqual([step["prompt_id"] for step in data["steps"]], ["PROMPT_18", "PROMPT_19"])
+        self.assertEqual(data["next_prompt"], "PROMPT_18")
+
+    def test_lifecycle_run_range_reports_missing_prompt(self):
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+        self.write(".prompts/PROMPT_20.txt", "# Prompt 20\n")
+
+        code, output = self.run_cli("lifecycle", "run-range", "18", "20", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertIn("PROMPT_19", data["missing_prompt_ids"])
+        self.assertEqual(data["stop_reason"], "range-validation-failed")
+        self.assertTrue(any("missing prompt file: .prompts/PROMPT_19.txt" == problem for problem in data["problems"]))
+
+    def test_lifecycle_run_range_rejects_reversed_range(self):
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+
+        code, output = self.run_cli("lifecycle", "run-range", "20", "18", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertTrue(any("reversed" in problem for problem in data["problems"]))
+        self.assertEqual(data["steps"], [])
+
+    def test_lifecycle_run_range_rejects_malformed_prompt_filenames(self):
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+        self.write(".prompts/PROMPT_19.txt", "# Prompt 19\n")
+        self.write(".prompts/PROMPT_19_notes.txt", "# Notes\n")
+
+        code, output = self.run_cli("lifecycle", "run-range", "18", "19", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertIn("PROMPT_19_notes.txt", data["malformed_prompt_filenames"])
+
+    def test_lifecycle_run_range_default_does_not_write_target_project(self):
+        self.write("AGENT.md", "# Agent\n")
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+
+        before = sorted(path.relative_to(self.root).as_posix() for path in self.root.rglob("*"))
+        code, output = self.run_cli("lifecycle", "run-range", "18", "18", "--json")
+        after = sorted(path.relative_to(self.root).as_posix() for path in self.root.rglob("*"))
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertIsNone(data["planned_artifact"])
+        self.assertEqual(after, before)
+
+    def test_lifecycle_run_range_writes_explicit_artifact(self):
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+        artifact = self.root / "plans" / "run-range.json"
+
+        code, output = self.run_cli(
+            "lifecycle",
+            "run-range",
+            "18",
+            "18",
+            "--artifact",
+            str(artifact),
+            "--plan-id",
+            "fixture-plan",
+            "--json",
+        )
+        data = json.loads(output)
+        written = json.loads(artifact.read_text(encoding="utf-8"))
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertTrue(artifact.is_file())
+        self.assertEqual(written["plan_id"], "fixture-plan")
+        self.assertEqual(written["prompt_ids"], ["PROMPT_18"])
+
+    def test_lifecycle_run_range_phases_include_commit_check_and_fresh_boundary(self):
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+
+        code, output = self.run_cli("lifecycle", "run-range", "18", "18", "--json")
+        data = json.loads(output)
+        step = data["steps"][0]
+
+        self.assertEqual(code, 0)
+        self.assertIn("commit_check", step["phase_order"])
+        self.assertIn("fresh_session_boundary", step["phase_order"])
+        self.assertTrue(any(phase["name"] == "commit_check" for phase in step["phases"]))
+        self.assertIn("fresh assistant session", step["fresh_session_boundary"])
+
+    def test_lifecycle_run_range_json_has_stable_fields(self):
+        self.write(".prompts/PROMPT_18.txt", "# Prompt 18\n")
+
+        code, output = self.run_cli("lifecycle", "run-range", "PROMPT_18", "PROMPT_18.txt", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in (
+            "ok",
+            "schema",
+            "plan_id",
+            "mode",
+            "dry_run",
+            "project",
+            "requested_range",
+            "prompt_ids",
+            "steps",
+            "next_prompt",
+            "safety_notes",
+            "problems",
+        ):
+            self.assertIn(key, data)
+
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
         self.write(".prompts/PROMPT_03.txt")
@@ -1796,6 +1923,25 @@ class AhlTest(unittest.TestCase):
                             "problems": [],
                         }
                     ],
+                    "problems": [],
+                }
+            ),
+        )
+        self.write(
+            "fixtures/portable-operator/run-range/valid-plan.json",
+            json.dumps(
+                {
+                    "ok": True,
+                    "schema": "schemas/portable-operator-run-plan.schema.json",
+                    "plan_id": "fixture-portable-run-range",
+                    "mode": "dry-run",
+                    "dry_run": True,
+                    "project": {"root": "/tmp/example-project"},
+                    "requested_range": {"start": "18", "end": "18"},
+                    "prompt_ids": ["PROMPT_18"],
+                    "steps": [],
+                    "next_prompt": "PROMPT_18",
+                    "safety_notes": [],
                     "problems": [],
                 }
             ),

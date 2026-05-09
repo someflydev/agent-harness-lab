@@ -194,6 +194,10 @@ FIXTURE_SPECS: dict[str, dict[str, Any]] = {
         "schema": "schemas/outer-loop-dry-run-report.schema.json",
         "required": ("ok", "plan_id", "steps", "problems"),
     },
+    "fixtures/portable-operator/run-range/valid-plan.json": {
+        "schema": "schemas/portable-operator-run-plan.schema.json",
+        "required": ("ok", "schema", "plan_id", "mode", "dry_run", "project", "requested_range", "prompt_ids", "steps", "next_prompt", "safety_notes", "problems"),
+    },
     "fixtures/outer-loop/gates/pass.json": {
         "schema": "schemas/outer-loop-gate-report.schema.json",
         "required": ("ok", "status", "prompt_id", "changed_files", "validation_commands", "validation_outcomes", "ahl_checks", "completion_audit", "next_prompt_readiness", "handoff", "commit_plan", "decision"),
@@ -357,6 +361,7 @@ OUTER_PLAN_SCHEMA = "schemas/outer-loop-plan.schema.json"
 OUTER_DRY_RUN_REPORT_SCHEMA = "schemas/outer-loop-dry-run-report.schema.json"
 OUTER_GATE_REPORT_SCHEMA = "schemas/outer-loop-gate-report.schema.json"
 OUTER_RUN_LEDGER_SCHEMA = "schemas/outer-loop-run-ledger.schema.json"
+PORTABLE_RUN_PLAN_SCHEMA = "schemas/portable-operator-run-plan.schema.json"
 COMMIT_PLAN_SCHEMA = "schemas/commit-plan.schema.json"
 OUTER_DEFAULT_PERMISSION_POSTURE = "workspace-write"
 OUTER_DEFAULT_COMMIT_POLICY = "none"
@@ -380,6 +385,16 @@ OUTER_STOP_CONDITIONS = (
     "unsafe_git_state",
     "unexpected_plan_mutation",
     "operator_approval_required",
+)
+PORTABLE_RUN_RANGE_PHASES = (
+    "run",
+    "audit_next_readiness_context_update",
+    "optional_repair",
+    "commit_plan",
+    "make_commits_explicit_only",
+    "commit_check",
+    "fresh_session_boundary",
+    "stop_boundary",
 )
 OUTER_RUN_STOP_GATE_STATUSES = ("blocked", "failed-validation", "driver-failed", "unsafe-git-state")
 OUTER_GATE_STATUSES = (
@@ -512,6 +527,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "command": "python3 scripts/ahl.py lifecycle context-check PROMPT_45 --json",
         "summary": "Suggest context-update review questions from target-project changed paths.",
         "safety": "read-only",
+    },
+    {
+        "name": "lifecycle-run-range",
+        "command": "python3 scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --dry-run --json",
+        "summary": "Dry-run a one-prompt-at-a-time phase plan for a target project prompt range.",
+        "safety": "read-only; writes only with explicit --artifact",
     },
     {
         "name": "outer-dry-run",
@@ -1191,7 +1212,258 @@ def lifecycle_context_check_data(
     }
 
 
+def portable_run_range_plan_id(start: int, end: int) -> str:
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return f"portable-run-range-{prompt_number_to_id(start)}-{prompt_number_to_id(end)}-{stamp}".lower()
+
+
+def portable_run_range_requested(start_value: str, end_value: str) -> tuple[int | None, int | None, dict[str, Any], list[str]]:
+    problems: list[str] = []
+    requested = {"start": start_value, "end": end_value}
+    start_number: int | None = None
+    end_number: int | None = None
+    try:
+        start_number = prompt_id_to_number(normalize_prompt_id(start_value))
+    except SystemExit as exc:
+        problems.append(str(exc))
+    try:
+        end_number = prompt_id_to_number(normalize_prompt_id(end_value))
+    except SystemExit as exc:
+        problems.append(str(exc))
+    if start_number is not None and end_number is not None and start_number > end_number:
+        problems.append("requested prompt range is reversed; start must be less than or equal to end")
+    if start_number is not None:
+        requested["start_prompt_id"] = prompt_number_to_id(start_number)
+    if end_number is not None:
+        requested["end_prompt_id"] = prompt_number_to_id(end_number)
+    return start_number, end_number, requested, problems
+
+
+def portable_run_range_phase_records(prompt_id: str, snippets: dict[str, str]) -> list[dict[str, Any]]:
+    next_prompt_id = prompt_number_to_id(prompt_id_to_number(prompt_id) + 1)
+    return [
+        {
+            "name": "run",
+            "order": 1,
+            "snippet_key": "run",
+            "snippet": snippets["run"],
+            "boundary": "start this prompt in a fresh assistant session",
+        },
+        {
+            "name": "audit_next_readiness_context_update",
+            "order": 2,
+            "snippet_key": "audit_next_readiness_context_update",
+            "snippet": snippets["audit_next_readiness_context_update"],
+            "boundary": "audit the completed prompt before any commit planning or next prompt",
+        },
+        {
+            "name": "optional_repair",
+            "order": 3,
+            "snippet_key": "repair",
+            "snippet": snippets["repair"],
+            "boundary": "use only for a bounded defect found during audit; otherwise skip",
+            "optional": True,
+        },
+        {
+            "name": "commit_plan",
+            "order": 4,
+            "snippet_key": "commit_plan",
+            "snippet": snippets["commit_plan"],
+            "boundary": "plan commits only after implementation and validation review",
+        },
+        {
+            "name": "make_commits_explicit_only",
+            "order": 5,
+            "snippet_key": "make_commits",
+            "snippet": snippets["make_commits"],
+            "boundary": "make commits only after explicit operator approval",
+            "requires_explicit_operator_approval": True,
+        },
+        {
+            "name": "commit_check",
+            "order": 6,
+            "snippet_key": "commit_check",
+            "snippet": snippets["commit_check"],
+            "boundary": "inspect prompt-prefixed commits after commits exist",
+        },
+        {
+            "name": "fresh_session_boundary",
+            "order": 7,
+            "boundary": f"stop this assistant session before {next_prompt_id}; start the next prompt in a fresh session",
+        },
+        {
+            "name": "stop_boundary",
+            "order": 8,
+            "boundary": "do not automatically continue after validation, audit, repair, commit, or readiness failure",
+        },
+    ]
+
+
+def lifecycle_run_range_data(
+    start_value: str,
+    end_value: str,
+    project_value: str | None = None,
+    bootstrap_value: str | None = None,
+    artifact_value: str | None = None,
+    plan_id_value: str | None = None,
+    environ: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    locate = project_locate_data(project_value, environ)
+    problems = list(locate["problems"])
+    warnings = list(locate["warnings"])
+    project = dict(locate["project"])
+    project_root = Path(project["root"])
+    prompt_dir = project_root / ".prompts"
+    start_number, end_number, requested, range_problems = portable_run_range_requested(start_value, end_value)
+    problems.extend(range_problems)
+
+    numbering = promptset_numbering_data(project_root, prompt_dir)
+    for name in numbering["malformed"]:
+        problems.append(f"malformed prompt filename in target project: {name}")
+    for number in numbering["duplicates"]:
+        problems.append(f"duplicate prompt number in target project: {number:02d}")
+
+    selected_numbers: list[int] = []
+    if start_number is not None and end_number is not None and start_number <= end_number:
+        selected_numbers = list(range(start_number, end_number + 1))
+    prompt_ids = [prompt_number_to_id(number) for number in selected_numbers]
+
+    missing_prompt_ids: list[str] = []
+    steps: list[dict[str, Any]] = []
+    bootstrap_choice = normalize_bootstrap_choice(bootstrap_value)
+    bootstrap_doc = selected_bootstrap_doc(project_root, bootstrap_choice)
+    if bootstrap_choice in ("AGENT.md", "CLAUDE.md") and not (project_root / bootstrap_choice).is_file():
+        warnings.append(f"requested bootstrap doc is not present in target project: {bootstrap_choice}")
+    context_detected = (project_root / ".context").is_dir()
+    include_context = context_detected or bootstrap_doc == "AGENT.md"
+
+    for index, number in enumerate(selected_numbers, start=1):
+        prompt_id = prompt_number_to_id(number)
+        prompt_path = prompt_dir / f"{prompt_id}.txt"
+        if not prompt_path.is_file():
+            missing_prompt_ids.append(prompt_id)
+            problems.append(f"missing prompt file: .prompts/{prompt_id}.txt")
+        snippets = lifecycle_snippet_text(prompt_id, bootstrap_doc, include_context, include_repair=True)
+        phases = portable_run_range_phase_records(prompt_id, snippets)
+        steps.append(
+            {
+                "prompt_id": prompt_id,
+                "number": number,
+                "path": f".prompts/{prompt_id}.txt",
+                "exists": prompt_path.is_file(),
+                "sequence_index": index,
+                "phase_order": list(PORTABLE_RUN_RANGE_PHASES),
+                "phases": phases,
+                "validation_commands": validation_commands_for_prompt(prompt_path),
+                "fresh_session_boundary": f"After {prompt_id}, stop and start a fresh assistant session before any later prompt.",
+                "next_prompt": prompt_number_to_id(number + 1) if number < (end_number or number) else None,
+            }
+        )
+
+    if selected_numbers:
+        expected = list(range(selected_numbers[0], selected_numbers[-1] + 1))
+        if selected_numbers != expected:
+            problems.append("resolved prompts are not strictly sequential")
+
+    git = git_status_summary(project_root, bool(project["git"]["inside_work_tree"]))
+    safety_notes = [
+        "dry-run/read-only plan; no assistant CLI invocation is performed",
+        "target project files are not edited unless the operator separately runs a prompt",
+        "commits require an explicit later operator approval boundary",
+        "human-notes.md is operator-owned and is not parsed or edited",
+    ]
+    if git["status_lines"]:
+        safety_notes.append("target worktree has uncommitted or untracked changes; review before running a prompt")
+    if missing_prompt_ids:
+        safety_notes.append("requested range has missing prompts; stop before running the range")
+
+    plan_id = plan_id_value or (portable_run_range_plan_id(start_number, end_number) if start_number and end_number else "portable-run-range-invalid")
+    artifact = None
+    if artifact_value:
+        artifact_path = Path(artifact_value).expanduser()
+        if not artifact_path.is_absolute():
+            artifact_path = Path(locate["ahl_home"]["path"]) / artifact_path
+        artifact = str(artifact_path)
+
+    next_prompt = prompt_ids[0] if prompt_ids and not missing_prompt_ids and not problems else None
+    stop_reason = None if not problems else "range-validation-failed"
+    return {
+        "ok": not problems,
+        "schema": PORTABLE_RUN_PLAN_SCHEMA,
+        "plan_id": plan_id,
+        "created_at": utc_timestamp(),
+        "mode": "dry-run",
+        "dry_run": True,
+        "read_only": True,
+        "project": {
+            "requested": project["requested"],
+            "root": project["root"],
+            "source": project["source"],
+            "prompt_dir": project["prompt_dir"],
+            "prompt_dir_exists": project["prompt_dir_exists"],
+            "git": git,
+        },
+        "configuration": {
+            "bootstrap": bootstrap_choice,
+            "bootstrap_doc": bootstrap_doc,
+            "context_detected": context_detected,
+            "context_mentioned": include_context,
+            "assistant_invocation": "disabled",
+            "artifact_requested": bool(artifact_value),
+        },
+        "requested_range": requested,
+        "prompt_ids": prompt_ids,
+        "missing_prompt_ids": missing_prompt_ids,
+        "malformed_prompt_filenames": numbering["malformed"],
+        "steps": steps,
+        "planned_artifact": artifact,
+        "next_prompt": next_prompt,
+        "stop_reason": stop_reason,
+        "restart_state": {
+            "project_root": project["root"],
+            "prompt_ids": prompt_ids,
+            "next_prompt": next_prompt,
+            "planned_artifact": artifact,
+            "stop_reason": stop_reason,
+        },
+        "safety_notes": safety_notes,
+        "warnings": warnings + git["problems"],
+        "problems": problems,
+    }
+
+
 def command_lifecycle(args: argparse.Namespace) -> int:
+    if args.action == "run-range":
+        data = lifecycle_run_range_data(
+            args.start_prompt,
+            args.end_prompt,
+            project_value=args.project,
+            bootstrap_value=args.bootstrap,
+            artifact_value=args.artifact,
+            plan_id_value=args.plan_id,
+        )
+        if args.artifact and data["ok"]:
+            artifact_path = Path(data["planned_artifact"])
+            if artifact_path.exists() and not args.force:
+                data["ok"] = False
+                data["problems"].append(f"refusing to overwrite existing run-range artifact: {artifact_path}")
+            else:
+                artifact_path.parent.mkdir(parents=True, exist_ok=True)
+                artifact_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                data["artifact"] = str(artifact_path)
+        human = [
+            "lifecycle run-range: ok" if data["ok"] else "lifecycle run-range: problems found",
+            f"- project root: {data['project']['root']}",
+            f"- prompts: {', '.join(data['prompt_ids']) if data['prompt_ids'] else 'none'}",
+            f"- mode: {data['mode']}",
+            f"- next prompt: {data['next_prompt'] or 'none'}",
+        ]
+        if data.get("artifact"):
+            human.append(f"- artifact: {data['artifact']}")
+        human.extend(f"- warning: {warning}" for warning in data["warnings"])
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
     if args.action == "context-check":
         data = lifecycle_context_check_data(args.prompt, project_value=args.project)
         human = [
@@ -5383,6 +5655,24 @@ def build_parser() -> argparse.ArgumentParser:
     lifecycle_context_check.add_argument("--project", help="Target project path; defaults to the current working directory.")
     lifecycle_context_check.add_argument("--json", action="store_true")
     lifecycle_context_check.set_defaults(func=command_lifecycle)
+    lifecycle_run_range = lifecycle_subparsers.add_parser(
+        "run-range",
+        help="Dry-run a one-prompt-at-a-time lifecycle plan for a prompt range.",
+    )
+    lifecycle_run_range.add_argument("start_prompt", help="First prompt number, id, or filename.")
+    lifecycle_run_range.add_argument("end_prompt", help="Last prompt number, id, or filename.")
+    lifecycle_run_range.add_argument("--project", help="Target project path; defaults to the current working directory.")
+    lifecycle_run_range.add_argument(
+        "--bootstrap",
+        default="auto",
+        help="Bootstrap doc selection for generated run snippets: auto, AGENT.md, CLAUDE.md, or none.",
+    )
+    lifecycle_run_range.add_argument("--dry-run", action="store_true", default=True, help="Default read-only mode; included for explicit operator clarity.")
+    lifecycle_run_range.add_argument("--artifact", help="Explicit JSON artifact path to write; relative paths are under AHL home.")
+    lifecycle_run_range.add_argument("--plan-id", help="Deterministic plan id for tests or operator-selected artifacts.")
+    lifecycle_run_range.add_argument("--force", action="store_true", help="Overwrite an existing explicit artifact.")
+    lifecycle_run_range.add_argument("--json", action="store_true")
+    lifecycle_run_range.set_defaults(func=command_lifecycle)
 
     outer = subparsers.add_parser("outer", help="Plan, dry-run, and gate sequential outer-loop batches.")
     outer_subparsers = outer.add_subparsers(dest="action", required=True)

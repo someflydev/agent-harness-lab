@@ -1,0 +1,90 @@
+{
+  "ok": true,
+  "schema": "schemas/portable-operator-run-plan.schema.json",
+  "plan_id": "fixture-portable-run-range",
+  "created_at": "2026-05-09T00:00:00Z",
+  "mode": "dry-run",
+  "dry_run": true,
+  "read_only": true,
+  "project": {
+    "requested": "/tmp/example-project",
+    "root": "/tmp/example-project",
+    "source": "path",
+    "prompt_dir": "/tmp/example-project/.prompts",
+    "prompt_dir_exists": true,
+    "git": {
+      "available": false,
+      "inside_work_tree": false,
+      "found": false,
+      "dot_git_exists": false,
+      "root": null,
+      "branch": null,
+      "dirty_count": 0,
+      "untracked_count": 0,
+      "status_lines": [],
+      "problems": []
+    }
+  },
+  "configuration": {
+    "bootstrap": "auto",
+    "bootstrap_doc": "AGENT.md",
+    "context_detected": false,
+    "context_mentioned": true,
+    "assistant_invocation": "disabled",
+    "artifact_requested": false
+  },
+  "requested_range": {
+    "start": "18",
+    "end": "19",
+    "start_prompt_id": "PROMPT_18",
+    "end_prompt_id": "PROMPT_19"
+  },
+  "prompt_ids": ["PROMPT_18", "PROMPT_19"],
+  "missing_prompt_ids": [],
+  "malformed_prompt_filenames": [],
+  "steps": [
+    {
+      "prompt_id": "PROMPT_18",
+      "number": 18,
+      "path": ".prompts/PROMPT_18.txt",
+      "exists": true,
+      "sequence_index": 1,
+      "phase_order": [
+        "run",
+        "audit_next_readiness_context_update",
+        "optional_repair",
+        "commit_plan",
+        "make_commits_explicit_only",
+        "commit_check",
+        "fresh_session_boundary",
+        "stop_boundary"
+      ],
+      "phases": [
+        { "name": "run", "order": 1 },
+        { "name": "commit_check", "order": 6 },
+        { "name": "fresh_session_boundary", "order": 7 }
+      ],
+      "validation_commands": ["python3 -m unittest tests/test_ahl.py"],
+      "fresh_session_boundary": "After PROMPT_18, stop and start a fresh assistant session before any later prompt.",
+      "next_prompt": "PROMPT_19"
+    }
+  ],
+  "planned_artifact": null,
+  "next_prompt": "PROMPT_18",
+  "stop_reason": null,
+  "restart_state": {
+    "project_root": "/tmp/example-project",
+    "prompt_ids": ["PROMPT_18", "PROMPT_19"],
+    "next_prompt": "PROMPT_18",
+    "planned_artifact": null,
+    "stop_reason": null
+  },
+  "safety_notes": [
+    "dry-run/read-only plan; no assistant CLI invocation is performed",
+    "target project files are not edited unless the operator separately runs a prompt",
+    "commits require an explicit later operator approval boundary",
+    "human-notes.md is operator-owned and is not parsed or edited"
+  ],
+  "warnings": [],
+  "problems": []
+}
