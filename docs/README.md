@@ -59,10 +59,15 @@ heavier orchestration remains outside the baseline.
   and likely next prompt inference.
 - `portable-operator/lifecycle-snippets.md` - supported `lifecycle snippets`
   output for reusable one-prompt assistant instructions.
+- `portable-operator/one-prompt-loop.md` - portable one-prompt workflow from
+  planning and promptset creation through audit, commit packaging, commit
+  check, and reset.
 - `portable-operator/context-update-policy.md` - context-update doctrine and
   read-only candidate-check support for portable prompt closeout.
 - `portable-operator/commit-check.md` - supported read-only recent-commit
   inspection for prompt-prefix, message-format, and grouping hygiene.
+- `portable-operator/human-notes-boundary.md` - operator-owned boundary for
+  `human-notes.md` scratch/control-zone content.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
@@ -217,6 +222,8 @@ heavier orchestration remains outside the baseline.
 - `../runbooks/README.md` - operator-facing runbook index.
 - `../runbooks/fresh-session-prompt-run.md` - normal fresh-session prompt
   execution flow.
+- `../runbooks/one-prompt-autopilot.md` - operator-governed portable
+  one-prompt loop from planning through post-commit inspection and reset.
 - `../runbooks/completion-audit.md` - prompt requirement and evidence audit.
 - `../runbooks/next-prompt-preflight.md` - immediate next-prompt readiness
   check.
@@ -329,10 +336,14 @@ heavier orchestration remains outside the baseline.
   before a one-prompt run.
 - `portable-operator/lifecycle-snippets.md` - read-only reusable lifecycle
   snippet generation for a single target-project prompt.
+- `portable-operator/one-prompt-loop.md` - portable one-prompt execution loop
+  and lifecycle snippet flow.
 - `portable-operator/context-update-policy.md` - when to update context files,
   when to record no update needed, and how to review candidates.
 - `portable-operator/commit-check.md` - read-only post-commit inspection for
   prompt prefix, message shape, generated boilerplate, and grouping evidence.
+- `portable-operator/human-notes-boundary.md` - explicit rules for
+  operator-owned `human-notes.md` content.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
   portable extension.
 

@@ -10,6 +10,9 @@ docs, and the contract templates listed in `docs/contracts/README.md`.
 ## Runbook Index
 
 - `fresh-session-prompt-run.md` - normal one-prompt fresh-session workflow.
+- `one-prompt-autopilot.md` - operator-governed portable loop from initial
+  planning and promptset generation through one-prompt runs, commit
+  inspection, and fresh-session reset.
 - `completion-audit.md` - compare prompt requirements against delivered
   artifacts and evidence.
 - `next-prompt-preflight.md` - inspect the immediate next prompt for readiness

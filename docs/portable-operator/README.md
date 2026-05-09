@@ -23,10 +23,15 @@ helpers still primarily operate inside the AHL repository.
   likely next prompt inference.
 - `lifecycle-snippets.md` - reusable prompt-run, audit, context-update,
   commit-plan, commit-check, and optional repair snippets for one prompt.
+- `one-prompt-loop.md` - end-to-end portable one-prompt loop from planning
+  blob and promptset creation through audit, commit packaging, commit check,
+  and fresh-session reset.
 - `context-update-policy.md` - doctrine for deciding when prompt closeout
   should update bootstrap or context files and when no edit is appropriate.
 - `commit-check.md` - read-only recent-commit inspection for prompt-prefix,
   message-format, generated-boilerplate, and grouping hygiene.
+- `human-notes-boundary.md` - explicit operator-owned boundary for
+  `human-notes.md` scratch/control-zone content.
 - `non-goals.md` - explicit exclusions for the portable-operator extension.
 
 ## Operating Posture
@@ -39,5 +44,7 @@ helpers still primarily operate inside the AHL repository.
 - Portable commands should distinguish those roots in reports and file writes.
 - The human operator remains scheduler, reviewer, validation authority, and
   commit authority.
+- `human-notes.md` is operator-owned scratch content. AHL may report that it
+  exists, but it must not edit it or treat it as authoritative state.
 - The extension must stay local, inspectable, standard-library-first, and free
   of provider credentials, network calls, daemons, and hidden state.
