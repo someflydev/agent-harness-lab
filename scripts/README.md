@@ -20,10 +20,10 @@ bounded local support, not a daemon or provider platform.
 The planned portable-operator extension is documented in
 `../docs/portable-operator/`. That work will add an explicit distinction
 between AHL home and a target project repo. Today, `project locate`,
-`project status`, `lifecycle snippets`, `lifecycle context-check`, and
-`commit check` are the read-only portable commands for that distinction; most
-older commands still resolve paths from the current working directory and
-assume it is the AHL repo.
+`project status`, `lifecycle snippets`, `lifecycle context-check`,
+`lifecycle run-range`, and `commit check` are the read-only portable commands
+for that distinction; most older commands still resolve paths from the current
+working directory and assume it is the AHL repo.
 
 ## What It Does
 
@@ -59,6 +59,9 @@ assume it is the AHL repo.
 - `lifecycle context-check` inspects target-project changed paths and suggests
   conservative context-update review questions without editing bootstrap,
   `.context/`, `context/`, or target-project files.
+- `lifecycle run-range` dry-runs a prompt range in a target project, validates
+  strict prompt files, and prints or explicitly writes a one-prompt-at-a-time
+  phase plan without invoking assistants or editing target files.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
@@ -111,10 +114,9 @@ assume it is the AHL repo.
 Planned portable commands should continue the documented namespace in
 `../docs/portable-operator/extension-plan.md`. `lifecycle snippets` is now
 implemented as read-only copy/paste output, `lifecycle context-check` is
-implemented as read-only advisory output, and `commit check` is implemented as
-read-only post-commit inspection. Later portable commands such as
-`lifecycle run-range` are not implemented until a later prompt adds tested
-behavior.
+implemented as read-only advisory output, `lifecycle run-range` is implemented
+as dry-run prompt-range planning, and `commit check` is implemented as
+read-only post-commit inspection.
 
 ## What It Does Not Do
 
@@ -142,6 +144,10 @@ behavior.
   `.context/`, `context/`, `human-notes.md`, or any target-project file. It
   does not decide that context must be updated; it only suggests review
   questions from changed paths.
+- `lifecycle run-range` does not run prompts, invoke assistant CLIs, execute
+  validation commands, edit target-project files, edit `human-notes.md`,
+  stage, commit, amend, rebase, push, tag, or continue automatically. It
+  writes JSON only when `--artifact` is explicit.
 - `commit check` does not stage, commit, amend, rebase, reset, push, tag, or
   edit target-project files. It reads git history and changed-file lists only.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
@@ -177,6 +183,8 @@ python3 scripts/ahl.py lifecycle snippets 45
 python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle snippets PROMPT_84 --project /path/to/project --json
 python3 scripts/ahl.py lifecycle snippets PROMPT_84.txt --bootstrap CLAUDE.md --context
 python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project /path/to/project --json
+python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --dry-run --json
+python3 scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --artifact runs/portable-operator/run-range.json --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
@@ -296,6 +304,14 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `prompt` includes `input`, `id`, `number`, `path`, and `exists`; `git` has
   the same stable fields as `project status`; each candidate includes `path`,
   `kind`, `confidence`, `reason`, and `questions`
+- `lifecycle run-range`: `ok`, `schema`, `plan_id`, `created_at`, `mode`,
+  `dry_run`, `read_only`, `project`, `configuration`, `requested_range`,
+  `prompt_ids`, `missing_prompt_ids`, `malformed_prompt_filenames`, `steps`,
+  `planned_artifact`, `next_prompt`, `stop_reason`, `restart_state`,
+  `safety_notes`, `warnings`, and `problems`; each step includes `prompt_id`,
+  `number`, `path`, `exists`, `sequence_index`, `phase_order`, `phases`,
+  `validation_commands`, `fresh_session_boundary`, and `next_prompt`;
+  `artifact` is present only when an explicit artifact write succeeds
 - `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
   `driver`, `model`, `reasoning`, `permission_posture`,
   `required_ahl_checks`, `stop_conditions`, `commit_policy`,

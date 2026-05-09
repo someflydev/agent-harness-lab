@@ -9,8 +9,8 @@ fresh-session reset.
 Most of this section is design guidance for later prompts, not a claim that the
 full portable lifecycle exists. The implemented portable surface starts with
 the read-only `project locate`, `project status`, `lifecycle snippets`,
-`lifecycle context-check`, and `commit check` commands. Current outer-loop
-helpers still primarily operate inside the AHL repository.
+`lifecycle context-check`, `lifecycle run-range`, and `commit check` commands.
+Current outer-loop helpers still primarily operate inside the AHL repository.
 
 ## Start Here
 
@@ -23,6 +23,8 @@ helpers still primarily operate inside the AHL repository.
   likely next prompt inference.
 - `lifecycle-snippets.md` - reusable prompt-run, audit, context-update,
   commit-plan, commit-check, and optional repair snippets for one prompt.
+- `run-range.md` - dry-run prompt-range planning that preserves
+  one-prompt-at-a-time execution and fresh-session boundaries.
 - `one-prompt-loop.md` - end-to-end portable one-prompt loop from planning
   blob and promptset creation through audit, commit packaging, commit check,
   and fresh-session reset.
@@ -43,7 +45,7 @@ helpers still primarily operate inside the AHL repository.
   `human-notes.md`.
 - Portable commands should distinguish those roots in reports and file writes.
 - The human operator remains scheduler, reviewer, validation authority, and
-  commit authority.
+  commit authority; range plans are inspectable dry-runs, not schedulers.
 - `human-notes.md` is operator-owned scratch content. AHL may report that it
   exists, but it must not edit it or treat it as authoritative state.
 - The extension must stay local, inspectable, standard-library-first, and free

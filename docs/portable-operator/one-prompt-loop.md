@@ -55,6 +55,18 @@ exist.
 The snippets are copy/paste guidance. They do not run assistants, edit files,
 stage changes, commit, or call providers.
 
+For a reviewed range request such as "run prompts 18 through 27", use
+`lifecycle run-range` to generate a dry-run phase plan first:
+
+```sh
+python3 scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --dry-run --json
+```
+
+The range plan preserves the same one-prompt loop. It creates per-prompt run,
+audit, optional repair, commit-plan, explicit commit, commit-check, and
+fresh-session boundaries, but it does not invoke assistants or continue
+automatically.
+
 ## Repair And Handoff
 
 Inline repair is appropriate when the issue is small, fresh, and clearly tied

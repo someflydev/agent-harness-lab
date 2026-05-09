@@ -59,6 +59,8 @@ heavier orchestration remains outside the baseline.
   and likely next prompt inference.
 - `portable-operator/lifecycle-snippets.md` - supported `lifecycle snippets`
   output for reusable one-prompt assistant instructions.
+- `portable-operator/run-range.md` - supported `lifecycle run-range` dry-run
+  planning for prompt ranges in arbitrary target projects.
 - `portable-operator/one-prompt-loop.md` - portable one-prompt workflow from
   planning and promptset creation through audit, commit packaging, commit
   check, and reset.
