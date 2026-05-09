@@ -37,6 +37,19 @@ The default cluster includes:
 `--include-repair` adds a separate repair snippet. It is intentionally outside
 the default cluster so routine prompt runs do not imply repair work.
 
+The audit snippet includes the context-update sentence because prompt closeout
+is the right moment to ask whether durable bootstrap or context knowledge
+changed. The answer is often no. Assistants should report `no context update
+needed` in the audit when no durable workflow, architecture, command,
+convention, or repo-navigation knowledge changed, not edit files just to prove
+the check happened.
+
+When candidates exist, produce a short context-update candidate report before
+editing. Name the changed paths, the possible durable knowledge, affected
+targets such as `AGENT.md`, `CLAUDE.md`, `.context/`, or `context/`, and any
+uncertainty. Prefer checked-in docs and templates for broad guidance; keep
+bootstrap/context edits concise and only for future fresh-session needs.
+
 ## Configuration
 
 By default, the run snippet uses `AGENT.md` when it is present in the target
@@ -59,3 +72,14 @@ The command does not run assistants, execute validation commands, edit
 network resources, or require provider credentials. Missing prompt or
 bootstrap files are reported as warnings so the operator can decide whether to
 proceed.
+
+`lifecycle context-check` is a read-only companion command for the same audit
+step:
+
+```sh
+python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project /path/to/project --json
+```
+
+It inspects changed paths and suggests conservative review questions. It does
+not create `.context/`, edit bootstrap files, edit `context/`, or change any
+target-project file.

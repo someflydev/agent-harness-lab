@@ -23,6 +23,11 @@ Purpose: reusable copy/paste snippets for one prompt in a target project.
 <AUDIT_NEXT_READINESS_CONTEXT_UPDATE_SNIPPET>
 ```
 
+The context-update sentence is a review checkpoint, not an instruction to edit
+context files by default. If no durable workflow, architecture, command,
+convention, or repo-navigation knowledge changed, the audit can say `no
+context update needed`.
+
 ### Commit Plan
 
 ```text

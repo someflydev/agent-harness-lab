@@ -59,6 +59,8 @@ heavier orchestration remains outside the baseline.
   and likely next prompt inference.
 - `portable-operator/lifecycle-snippets.md` - supported `lifecycle snippets`
   output for reusable one-prompt assistant instructions.
+- `portable-operator/context-update-policy.md` - context-update doctrine and
+  read-only candidate-check support for portable prompt closeout.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
@@ -325,6 +327,8 @@ heavier orchestration remains outside the baseline.
   before a one-prompt run.
 - `portable-operator/lifecycle-snippets.md` - read-only reusable lifecycle
   snippet generation for a single target-project prompt.
+- `portable-operator/context-update-policy.md` - when to update context files,
+  when to record no update needed, and how to review candidates.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
   portable extension.
 
