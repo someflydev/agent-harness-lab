@@ -19,9 +19,10 @@ bounded local support, not a daemon or provider platform.
 
 The planned portable-operator extension is documented in
 `../docs/portable-operator/`. That work will add an explicit distinction
-between AHL home and a target project repo. Today, `project locate` is the
-read-only discovery command for that distinction; most older commands still
-resolve paths from the current working directory and assume it is the AHL repo.
+between AHL home and a target project repo. Today, `project locate` and
+`project status` are the read-only discovery commands for that distinction;
+most older commands still resolve paths from the current working directory and
+assume it is the AHL repo.
 
 ## What It Does
 
@@ -46,6 +47,10 @@ resolve paths from the current working directory and assume it is the AHL repo.
   until the local command shape and output contract are verified.
 - `project locate` reports AHL home and target project root discovery from the
   current directory or `--project` without editing files or invoking
+  assistants.
+- `project status` reports the target project's git state, `.prompts/`
+  diagnostics, bootstrap/context file presence, recent prompt-prefixed
+  commits, and likely next prompt inference without editing files or invoking
   assistants.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
@@ -92,10 +97,9 @@ resolve paths from the current working directory and assume it is the AHL repo.
 - `metadata-example` prints a skeleton run record for metadata-aware closeout.
 
 Planned portable commands should continue the documented namespace in
-`../docs/portable-operator/extension-plan.md`, such as `project status`,
-`lifecycle snippets`, `lifecycle context-check`, `lifecycle run-range`, and
-`commit check`. They are not implemented until a later prompt adds tested
-behavior.
+`../docs/portable-operator/extension-plan.md`, such as `lifecycle snippets`,
+`lifecycle context-check`, `lifecycle run-range`, and `commit check`. They are
+not implemented until a later prompt adds tested behavior.
 
 ## What It Does Not Do
 
@@ -114,6 +118,8 @@ behavior.
   infrastructure.
 - `project locate` does not make older AHL-root commands operate on arbitrary
   target project repos.
+- `project status` does not run prompts, execute validation commands, treat
+  `human-notes.md` as machine authority, or make completion decisions.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
 
@@ -141,6 +147,8 @@ python3 scripts/ahl.py driver probe codex --help-only --json
 python3 scripts/ahl.py driver probe pi --help-only --json
 python3 scripts/ahl.py project locate --json
 python3 /path/to/agent-harness-lab/scripts/ahl.py project locate --project /path/to/project --json
+python3 scripts/ahl.py project status --json
+python3 /path/to/agent-harness-lab/scripts/ahl.py project status --project /path/to/project --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
@@ -227,6 +235,20 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   includes `requested`, `requested_exists`, `requested_is_dir`, `root`,
   `source`, `git`, `prompt_dir`, `prompt_dir_exists`, `prompt_count`, and
   `prompt_files`
+- `project status`: `ok`, `ahl_home`, `project`, `warnings`, `problems`;
+  `ahl_home` has the same stable fields as `project locate`; `project`
+  includes `requested`, `requested_exists`, `requested_is_dir`, `root`,
+  `source`, `git`, `promptset`, `next_prompt`, and `files`; `git` includes
+  `available`, `inside_work_tree`, `found`, `dot_git_exists`, `root`,
+  `branch`, `dirty_count`, `untracked_count`, `status_lines`, and `problems`;
+  `promptset` includes
+  `prompt_dir`, `prompt_dir_exists`, `prompt_count`, `state`,
+  `lowest_prompt_number`, `highest_prompt_number`, `gaps`, `duplicates`,
+  `malformed`, `strict_two_digit`, `filenames`, and `numbers`; `next_prompt`
+  includes `next_after_highest_prompt_file`,
+  `prompt_prefixed_commit_summary`, `likely_next_prompt`, `confidence`, and
+  `reason`; `files` includes `AGENT.md`, `CLAUDE.md`, `.context`, and
+  `human-notes.md`
 - `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
   `driver`, `model`, `reasoning`, `permission_posture`,
   `required_ahl_checks`, `stop_conditions`, `commit_policy`,

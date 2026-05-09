@@ -54,6 +54,9 @@ heavier orchestration remains outside the baseline.
   assumptions and prompt arc for later portable CLI and docs work.
 - `portable-operator/invocation.md` - supported `project locate` invocation
   from AHL or another repo, including `AHL_HOME` and `--project` behavior.
+- `portable-operator/status.md` - supported `project status` report for
+  target-project git state, promptset diagnostics, bootstrap/context files,
+  and likely next prompt inference.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
@@ -316,6 +319,8 @@ heavier orchestration remains outside the baseline.
   explicit AHL-home versus target-project behavior.
 - `portable-operator/invocation.md` - current portable invocation and
   discovery behavior.
+- `portable-operator/status.md` - read-only target-project status reporting
+  before a one-prompt run.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
   portable extension.
 
