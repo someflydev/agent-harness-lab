@@ -436,6 +436,94 @@ class AhlTest(unittest.TestCase):
         ):
             self.assertIn(key, data["snippets"])
 
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_lifecycle_context_check_no_changed_files_has_no_candidates(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(
+            ["git", "-c", "user.name=AHL Test", "-c", "user.email=ahl@example.test", "commit", "-m", "Initial"],
+            cwd=self.root,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        code, output = self.run_cli("lifecycle", "context-check", "PROMPT_84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["changed_paths"], [])
+        self.assertEqual(data["candidates"], [])
+        self.assertIn("no context update candidates", data["conclusion"])
+        self.assertTrue(data["read_only"])
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_lifecycle_context_check_docs_and_commands_produce_questions(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+        self.write("docs/workflow.md", "# Workflow\n")
+        self.write("scripts/ahl.py", "# helper\n")
+
+        code, output = self.run_cli("lifecycle", "context-check", "84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        paths = {candidate["path"] for candidate in data["candidates"]}
+        self.assertIn("docs/workflow.md", paths)
+        self.assertIn("scripts/ahl.py", paths)
+        self.assertTrue(any("AGENT.md" in question for question in data["questions"]))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_lifecycle_context_check_test_only_changes_do_not_force_candidates(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(
+            ["git", "-c", "user.name=AHL Test", "-c", "user.email=ahl@example.test", "commit", "-m", "Initial"],
+            cwd=self.root,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.write("tests/test_feature.py", "def test_feature():\n    pass\n")
+
+        code, output = self.run_cli("lifecycle", "context-check", "PROMPT_84", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["candidates"], [])
+        self.assertEqual(data["ignored_changes"], [{"path": "tests/test_feature.py", "kind": "test"}])
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_lifecycle_context_check_json_has_stable_fields(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_84.txt", "# Prompt\n")
+        self.write("README.md", "# Project\n")
+
+        code, output = self.run_cli("lifecycle", "context-check", "PROMPT_84.txt", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in (
+            "ok",
+            "ahl_home",
+            "project",
+            "prompt",
+            "git",
+            "changed_paths",
+            "candidates",
+            "ignored_changes",
+            "questions",
+            "conclusion",
+            "read_only",
+            "warnings",
+            "problems",
+        ):
+            self.assertIn(key, data)
+        for key in ("path", "kind", "confidence", "reason", "questions"):
+            self.assertIn(key, data["candidates"][0])
+
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
         self.write(".prompts/PROMPT_03.txt")

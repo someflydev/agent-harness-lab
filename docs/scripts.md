@@ -13,6 +13,7 @@ python3 scripts/ahl.py promptset
 python3 scripts/ahl.py validate
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
+python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project /path/to/project --json
 python3 scripts/ahl.py outer gate PROMPT_36 --json
 python3 scripts/ahl.py resume
 python3 scripts/ahl.py trace PROMPT_20 --json
@@ -40,6 +41,9 @@ Each command supports `--json` where machine-readable output is practical.
 - `outer gate` collects post-prompt validation, audit, readiness, handoff, git,
   and commit-plan evidence without invoking assistants or executing arbitrary
   prompt validation commands.
+- `lifecycle context-check` reads target-project git status and suggests
+  conservative context-update review questions without editing bootstrap,
+  `.context/`, `context/`, or target-project files.
 - `resume` prints a read-only Session Context Briefing from git state,
   runtime-note files, and local `tmp/*.md` counts.
 - `trace` summarizes prompt-related working tree changes, git branch and HEAD
@@ -69,6 +73,9 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
   `validation_commands`, `validation_outcomes`, `ahl_checks`,
   `completion_audit`, `next_prompt_readiness`, `handoff`, `commit_plan`,
   `decision`, `warnings`, `problems`
+- `lifecycle context-check`: `ok`, `ahl_home`, `project`, `prompt`, `git`,
+  `changed_paths`, `candidates`, `ignored_changes`, `questions`,
+  `conclusion`, `read_only`, `warnings`, and `problems`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,

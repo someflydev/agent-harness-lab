@@ -20,9 +20,9 @@ bounded local support, not a daemon or provider platform.
 The planned portable-operator extension is documented in
 `../docs/portable-operator/`. That work will add an explicit distinction
 between AHL home and a target project repo. Today, `project locate`,
-`project status`, and `lifecycle snippets` are the read-only portable commands
-for that distinction; most older commands still resolve paths from the current
-working directory and assume it is the AHL repo.
+`project status`, `lifecycle snippets`, and `lifecycle context-check` are the
+read-only portable commands for that distinction; most older commands still
+resolve paths from the current working directory and assume it is the AHL repo.
 
 ## What It Does
 
@@ -55,6 +55,9 @@ working directory and assume it is the AHL repo.
 - `lifecycle snippets` prints reusable run, audit/next-readiness/context,
   commit-plan, make-commits, commit-check, and optional repair snippets for a
   single target-project prompt without editing files or invoking assistants.
+- `lifecycle context-check` inspects target-project changed paths and suggests
+  conservative context-update review questions without editing bootstrap,
+  `.context/`, `context/`, or target-project files.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
@@ -101,9 +104,10 @@ working directory and assume it is the AHL repo.
 
 Planned portable commands should continue the documented namespace in
 `../docs/portable-operator/extension-plan.md`. `lifecycle snippets` is now
-implemented as read-only copy/paste output; later portable commands such as
-`lifecycle context-check`, `lifecycle run-range`, and `commit check` are not
-implemented until a later prompt adds tested behavior.
+implemented as read-only copy/paste output, and `lifecycle context-check` is
+implemented as read-only advisory output. Later portable commands such as
+`lifecycle run-range` and `commit check` are not implemented until a later
+prompt adds tested behavior.
 
 ## What It Does Not Do
 
@@ -127,6 +131,10 @@ implemented until a later prompt adds tested behavior.
 - `lifecycle snippets` does not run or repair prompts, execute validation
   commands, edit `human-notes.md`, modify target-project context files, stage,
   commit, amend, rebase, or call providers.
+- `lifecycle context-check` does not edit `AGENT.md`, `CLAUDE.md`,
+  `.context/`, `context/`, `human-notes.md`, or any target-project file. It
+  does not decide that context must be updated; it only suggests review
+  questions from changed paths.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
 
@@ -159,6 +167,7 @@ python3 /path/to/agent-harness-lab/scripts/ahl.py project status --project /path
 python3 scripts/ahl.py lifecycle snippets 45
 python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle snippets PROMPT_84 --project /path/to/project --json
 python3 scripts/ahl.py lifecycle snippets PROMPT_84.txt --bootstrap CLAUDE.md --context
+python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project /path/to/project --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
@@ -268,6 +277,13 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   includes `run`, `audit_next_readiness_context_update`, `commit_plan`,
   `make_commits`, and `commit_check`, plus `repair` only when
   `--include-repair` is used
+- `lifecycle context-check`: `ok`, `ahl_home`, `project`, `prompt`, `git`,
+  `changed_paths`, `candidates`, `ignored_changes`, `questions`,
+  `conclusion`, `read_only`, `warnings`, and `problems`; `project` includes
+  `requested`, `root`, `source`, `prompt_dir`, and `prompt_dir_exists`;
+  `prompt` includes `input`, `id`, `number`, `path`, and `exists`; `git` has
+  the same stable fields as `project status`; each candidate includes `path`,
+  `kind`, `confidence`, `reason`, and `questions`
 - `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
   `driver`, `model`, `reasoning`, `permission_posture`,
   `required_ahl_checks`, `stop_conditions`, `commit_policy`,

@@ -24,6 +24,8 @@ PROMPT_COMMIT_RE = re.compile(r"\[PROMPT_(\d{2,})\]")
 NEXT_MARKER_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Next|Next step|## Next)\b", re.I)
 PROMPT_HEADING_RE = re.compile(r"^\s*#\s+PROMPT_\d{2}\b", re.M)
 CONTEXT_FILES = ("TASK.md", "SESSION.md", "MEMORY.md")
+CONTEXT_ROOTS = ("context", ".context")
+BOOTSTRAP_CONTEXT_FILES = ("AGENT.md", "CLAUDE.md")
 REFERENCE_DIRS = ("agent-context-base", "pi-mono", "claw-code")
 TRANSCRIPT_DUMP_PATHS = (
     "transcripts",
@@ -499,6 +501,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "name": "lifecycle-snippets",
         "command": "python3 scripts/ahl.py lifecycle snippets PROMPT_45 --json",
         "summary": "Print reusable one-prompt lifecycle snippets for a target project.",
+        "safety": "read-only",
+    },
+    {
+        "name": "lifecycle-context-check",
+        "command": "python3 scripts/ahl.py lifecycle context-check PROMPT_45 --json",
+        "summary": "Suggest context-update review questions from target-project changed paths.",
         "safety": "read-only",
     },
     {
@@ -1043,7 +1051,157 @@ def lifecycle_snippets_data(
     }
 
 
+def context_change_kind(path: str) -> str:
+    if path in BOOTSTRAP_CONTEXT_FILES:
+        return "bootstrap"
+    if path == "human-notes.md":
+        return "operator-notes"
+    if path == "README.md" or path == "Makefile":
+        return "repo-navigation"
+    if path == "scripts/ahl.py" or path.startswith("scripts/"):
+        return "command-surface"
+    if path.startswith("docs/"):
+        return "durable-docs"
+    if path.startswith("runbooks/"):
+        return "workflow"
+    if path.startswith("prompt-templates/") or path.startswith("templates/"):
+        return "template"
+    if path.startswith(".prompts/"):
+        return "prompt"
+    first = path.split("/", 1)[0]
+    if first in CONTEXT_ROOTS:
+        return "context-file"
+    if path.startswith("tests/"):
+        return "test"
+    if path.startswith("fixtures/") or path.startswith("dry-runs/expected/"):
+        return "fixture"
+    if path.startswith("runs/") or path.startswith("tmp/") or path.startswith(".runtime/") or path.startswith(".session/"):
+        return "transient"
+    return "ordinary"
+
+
+def context_candidate_for_path(path: str) -> dict[str, Any] | None:
+    kind = context_change_kind(path)
+    if kind in ("operator-notes", "test", "fixture", "transient", "ordinary"):
+        return None
+    if kind == "context-file":
+        return {
+            "path": path,
+            "kind": kind,
+            "confidence": "review",
+            "reason": "context or bootstrap-adjacent file changed; verify the edit was intentional and concise",
+            "questions": [
+                "Does this context edit reflect durable workflow, architecture, command, convention, or navigation knowledge?",
+                "Can the same broad guidance live better in checked-in docs or templates?",
+            ],
+        }
+    if kind == "prompt":
+        return {
+            "path": path,
+            "kind": kind,
+            "confidence": "low",
+            "reason": "prompt text changed; only context-relevant doctrine or workflow changes may justify context updates",
+            "questions": [
+                "Did the prompt introduce a reusable rule future fresh sessions need before reading the prompt itself?",
+            ],
+        }
+    return {
+        "path": path,
+        "kind": kind,
+        "confidence": "medium",
+        "reason": "changed path often carries durable workflow, command, convention, or navigation knowledge",
+        "questions": [
+            "Should AGENT.md, CLAUDE.md, .context/, or context/ mention this durable change for future fresh sessions?",
+            "Would updating a checked-in doc or template be clearer than editing a context file?",
+        ],
+    }
+
+
+def lifecycle_context_check_data(
+    prompt_value: str,
+    project_value: str | None = None,
+    environ: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    prompt_id = normalize_prompt_id(prompt_value)
+    locate = project_locate_data(project_value, environ)
+    problems = list(locate["problems"])
+    warnings = list(locate["warnings"])
+    project = dict(locate["project"])
+    project_root = Path(project["root"])
+    prompt_path = project_root / ".prompts" / f"{prompt_id}.txt"
+    if project["requested_exists"] and project["requested_is_dir"] and not prompt_path.is_file():
+        warnings.append(f"target prompt file is not present: .prompts/{prompt_id}.txt")
+
+    git = git_status_summary(project_root, bool(project["git"]["inside_work_tree"]))
+    if not git["inside_work_tree"]:
+        warnings.append("target project is not inside a git work tree; changed paths cannot be inferred")
+    changed_paths = changed_paths_from_status(git["status_lines"])
+    candidates: list[dict[str, Any]] = []
+    ignored_changes: list[dict[str, str]] = []
+    for path in changed_paths:
+        candidate = context_candidate_for_path(path)
+        if candidate:
+            candidates.append(candidate)
+        else:
+            ignored_changes.append({"path": path, "kind": context_change_kind(path)})
+
+    questions: list[str] = []
+    for candidate in candidates:
+        for question in candidate["questions"]:
+            if question not in questions:
+                questions.append(question)
+
+    conclusion = (
+        "review context update candidates"
+        if candidates
+        else "no context update candidates detected; record no context update needed in the audit if that matches review"
+    )
+
+    return {
+        "ok": not problems and not git["problems"],
+        "ahl_home": locate["ahl_home"],
+        "project": {
+            "requested": project["requested"],
+            "root": project["root"],
+            "source": project["source"],
+            "prompt_dir": project["prompt_dir"],
+            "prompt_dir_exists": project["prompt_dir_exists"],
+        },
+        "prompt": {
+            "input": prompt_value,
+            "id": prompt_id,
+            "number": prompt_id_to_number(prompt_id),
+            "path": f".prompts/{prompt_id}.txt",
+            "exists": prompt_path.is_file(),
+        },
+        "git": git,
+        "changed_paths": changed_paths,
+        "candidates": candidates,
+        "ignored_changes": ignored_changes,
+        "questions": questions,
+        "conclusion": conclusion,
+        "read_only": True,
+        "warnings": warnings,
+        "problems": problems + git["problems"],
+    }
+
+
 def command_lifecycle(args: argparse.Namespace) -> int:
+    if args.action == "context-check":
+        data = lifecycle_context_check_data(args.prompt, project_value=args.project)
+        human = [
+            f"lifecycle context-check: {data['prompt']['id']}",
+            f"- project root: {data['project']['root']}",
+            f"- changed paths: {len(data['changed_paths'])}",
+            f"- candidates: {len(data['candidates'])}",
+            f"- conclusion: {data['conclusion']}",
+        ]
+        for candidate in data["candidates"]:
+            human.append(f"- candidate: {candidate['path']} ({candidate['kind']}, {candidate['confidence']})")
+        human.extend(f"- warning: {warning}" for warning in data["warnings"])
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
     context_value = "include" if args.context else "auto"
     if args.no_context:
         context_value = "omit"
@@ -4905,6 +5063,17 @@ def build_parser() -> argparse.ArgumentParser:
     lifecycle_snippets.add_argument("--include-repair", action="store_true", help="Include the optional repair snippet.")
     lifecycle_snippets.add_argument("--json", action="store_true")
     lifecycle_snippets.set_defaults(func=command_lifecycle)
+    lifecycle_context_check = lifecycle_subparsers.add_parser(
+        "context-check",
+        help="Read git status and suggest context-update review questions.",
+    )
+    lifecycle_context_check.add_argument(
+        "prompt",
+        help="Prompt number, id, or filename, such as 45, PROMPT_45, or PROMPT_45.txt.",
+    )
+    lifecycle_context_check.add_argument("--project", help="Target project path; defaults to the current working directory.")
+    lifecycle_context_check.add_argument("--json", action="store_true")
+    lifecycle_context_check.set_defaults(func=command_lifecycle)
 
     outer = subparsers.add_parser("outer", help="Plan, dry-run, and gate sequential outer-loop batches.")
     outer_subparsers = outer.add_subparsers(dest="action", required=True)
