@@ -2,7 +2,9 @@
 
 This guide is for assistants that do not have direct repository access, shell
 access, or file editing. The operator can still use the same prompt-bounded
-workflow by copying the required files manually.
+workflow by copying the required files manually. This is the same file-backed
+one-prompt loop used by Codex, Claude Code, Gemini, and other coding assistant
+surfaces; only the transport changes.
 
 ## Start A Fresh Session
 
@@ -37,6 +39,16 @@ the changes locally, then run validation commands yourself.
 Do not ask the assistant to infer hidden repo state. If it needs a file, paste
 that file or a focused excerpt.
 
+For portable target projects, use the same lifecycle snippets as terminal
+assistant sessions:
+
+```sh
+python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle snippets PROMPT_84 --project /path/to/project
+```
+
+Paste the generated run, audit, commit-plan, make-commits, or commit-check
+snippet into the chat when that step is actually in scope.
+
 ## Templates And Skills
 
 Prompt templates and project skills are still useful in generic chat, but they
@@ -66,6 +78,9 @@ Close with the same loop:
 3. Preflight - inspect the next prompt.
 4. Bridge - create `tmp/HANDOFF.md` only for material blockers.
 5. Reset - start a new chat for the next prompt.
+
+Keep private planning blobs and `human-notes.md` under operator control. Paste
+only the safe excerpts needed for the current bounded task.
 
 ## Limitations
 

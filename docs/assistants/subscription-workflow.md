@@ -19,6 +19,11 @@ small and inspectable:
 This keeps the harness usable in Codex, Claude Code, Gemini, Pi, and generic
 chat sessions without making any one tool mandatory.
 
+Codex, Claude Code, Gemini, and generic chat surfaces should all use the same
+file-backed loop: repo files and prompt files define the work, local
+validation proves it, git history records reviewed commits, and the operator
+controls scheduling and commit approval.
+
 ## Manual Prompt Copying
 
 When the assistant cannot read files directly:
@@ -81,6 +86,11 @@ moving text, patches, and validation output between the repo and chat.
 
 All three modes should preserve the same core loop: Execute -> Audit ->
 Preflight -> Bridge -> Reset.
+
+For portable target projects, `lifecycle snippets` can produce the reusable
+run, audit, commit-plan, make-commits, and commit-check text for any of these
+surfaces. The snippets are instructions for the operator to paste or hand to a
+session; they are not provider automation.
 
 ## Future Wrappers
 
