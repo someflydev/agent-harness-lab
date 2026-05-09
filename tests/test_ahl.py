@@ -192,6 +192,145 @@ class AhlTest(unittest.TestCase):
         ):
             self.assertIn(key, data["project"])
 
+    def test_project_status_reports_valid_promptset_and_context_files(self):
+        self.write(".prompts/PROMPT_01.txt", "# Prompt\n")
+        self.write(".prompts/PROMPT_02.txt", "# Prompt\n")
+        self.write("AGENT.md", "# Agent\n")
+        self.write("human-notes.md", "# Notes\n")
+        (self.root / ".context").mkdir()
+
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["project"]["promptset"]["state"], "valid-sequential")
+        self.assertEqual(data["project"]["promptset"]["lowest_prompt_number"], 1)
+        self.assertEqual(data["project"]["promptset"]["highest_prompt_number"], 2)
+        self.assertEqual(data["project"]["next_prompt"]["next_after_highest_prompt_file"], "PROMPT_03")
+        self.assertEqual(data["project"]["next_prompt"]["likely_next_prompt"], "PROMPT_03")
+        self.assertTrue(data["project"]["files"]["AGENT.md"])
+        self.assertTrue(data["project"]["files"][".context"])
+        self.assertTrue(data["project"]["files"]["human-notes.md"])
+
+    def test_project_status_reports_claude_without_agent(self):
+        self.write("CLAUDE.md", "# Claude\n")
+
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertFalse(data["project"]["files"]["AGENT.md"])
+        self.assertTrue(data["project"]["files"]["CLAUDE.md"])
+
+    def test_project_status_reports_missing_prompts(self):
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["project"]["promptset"]["state"], "missing")
+        self.assertFalse(data["project"]["promptset"]["prompt_dir_exists"])
+        self.assertTrue(any(".prompts" in warning for warning in data["warnings"]))
+
+    def test_project_status_reports_gaps_and_malformed_prompt_names(self):
+        self.write(".prompts/PROMPT_01.txt")
+        self.write(".prompts/PROMPT_03.txt")
+        self.write(".prompts/PROMPT_3.txt")
+
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(data["project"]["promptset"]["state"], "duplicates")
+        self.assertIn(2, data["project"]["promptset"]["gaps"])
+        self.assertIn(3, data["project"]["promptset"]["duplicates"])
+        self.assertIn("PROMPT_3.txt", data["project"]["promptset"]["malformed"])
+        self.assertFalse(data["project"]["promptset"]["strict_two_digit"])
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_project_status_reports_dirty_and_untracked_git_summary(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_01.txt", "# Prompt\n")
+        self.write("tracked.txt", "one\n")
+        subprocess.run(["git", "add", "tracked.txt"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(
+            ["git", "-c", "user.name=AHL Test", "-c", "user.email=ahl@example.test", "commit", "-m", "Initial"],
+            cwd=self.root,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.write("tracked.txt", "two\n")
+        self.write("untracked.txt", "new\n")
+
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["project"]["git"]["found"])
+        self.assertTrue(data["project"]["git"]["dot_git_exists"])
+        self.assertEqual(data["project"]["git"]["dirty_count"], 1)
+        self.assertEqual(data["project"]["git"]["untracked_count"], 2)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_project_status_detects_prompt_prefixed_commits(self):
+        subprocess.run(["git", "init"], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.write(".prompts/PROMPT_01.txt", "# Prompt\n")
+        self.write(".prompts/PROMPT_02.txt", "# Prompt\n")
+        self.write("done.txt", "done\n")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(
+            ["git", "-c", "user.name=AHL Test", "-c", "user.email=ahl@example.test", "commit", "-m", "[PROMPT_01] Finish fixture"],
+            cwd=self.root,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+        summary = data["project"]["next_prompt"]["prompt_prefixed_commit_summary"]
+
+        self.assertEqual(code, 0)
+        self.assertEqual(summary["max_prompt_number"], 1)
+        self.assertEqual(summary["next_after_highest_prompt_commit"], "PROMPT_02")
+        self.assertEqual(data["project"]["next_prompt"]["likely_next_prompt"], "PROMPT_02")
+        self.assertEqual(data["project"]["next_prompt"]["confidence"], "medium")
+        self.assertEqual(summary["prompt_prefixed_commits"][0]["prompt_numbers"], [1])
+
+    def test_project_status_json_has_stable_fields(self):
+        self.write(".prompts/PROMPT_01.txt")
+
+        code, output = self.run_cli("project", "status", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in ("ok", "ahl_home", "project", "warnings", "problems"):
+            self.assertIn(key, data)
+        for key in ("root", "git", "promptset", "next_prompt", "files"):
+            self.assertIn(key, data["project"])
+        self.assertIn("dot_git_exists", data["project"]["git"])
+        for key in (
+            "prompt_dir_exists",
+            "prompt_count",
+            "state",
+            "lowest_prompt_number",
+            "highest_prompt_number",
+            "gaps",
+            "duplicates",
+            "malformed",
+            "strict_two_digit",
+        ):
+            self.assertIn(key, data["project"]["promptset"])
+        for key in (
+            "next_after_highest_prompt_file",
+            "prompt_prefixed_commit_summary",
+            "likely_next_prompt",
+            "confidence",
+            "reason",
+        ):
+            self.assertIn(key, data["project"]["next_prompt"])
+
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
         self.write(".prompts/PROMPT_03.txt")

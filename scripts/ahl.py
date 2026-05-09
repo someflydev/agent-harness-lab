@@ -20,6 +20,7 @@ from urllib.parse import unquote, urlsplit
 
 PROMPT_RE = re.compile(r"^PROMPT_(\d+)\.txt$")
 STRICT_PROMPT_RE = re.compile(r"^PROMPT_(\d{2})\.txt$")
+PROMPT_COMMIT_RE = re.compile(r"\[PROMPT_(\d{2,})\]")
 NEXT_MARKER_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Next|Next step|## Next)\b", re.I)
 PROMPT_HEADING_RE = re.compile(r"^\s*#\s+PROMPT_\d{2}\b", re.M)
 CONTEXT_FILES = ("TASK.md", "SESSION.md", "MEMORY.md")
@@ -489,6 +490,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "safety": "writes runs/outer-loop/<plan-id>/plan.json",
     },
     {
+        "name": "project-status",
+        "command": "python3 scripts/ahl.py project status --json",
+        "summary": "Report target project promptset, git, bootstrap, and likely next prompt state.",
+        "safety": "read-only",
+    },
+    {
         "name": "outer-dry-run",
         "command": "python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json",
         "summary": "Validate a batch plan without invoking assistant CLIs.",
@@ -656,7 +663,257 @@ def project_locate_data(project_value: str | None = None, environ: dict[str, str
     return data
 
 
+def git_status_summary(root: Path, inside_work_tree: bool) -> dict[str, Any]:
+    summary = {
+        "available": False,
+        "inside_work_tree": inside_work_tree,
+        "found": inside_work_tree,
+        "dot_git_exists": (root / ".git").is_dir(),
+        "root": None,
+        "branch": None,
+        "dirty_count": 0,
+        "untracked_count": 0,
+        "status_lines": [],
+        "problems": [],
+    }
+    if not inside_work_tree:
+        return summary
+
+    summary["available"] = True
+    root_result, root_problem = run_git(root, ["rev-parse", "--show-toplevel"])
+    if root_problem:
+        summary["problems"].append(root_problem)
+        summary["available"] = False
+    elif root_result is not None and root_result.returncode == 0:
+        summary["root"] = root_result.stdout.strip() or None
+
+    branch_result, branch_problem = run_git(root, ["branch", "--show-current"])
+    if branch_problem:
+        summary["problems"].append(branch_problem)
+        summary["available"] = False
+    elif branch_result is not None and branch_result.returncode == 0:
+        summary["branch"] = branch_result.stdout.strip() or None
+
+    status_result, status_problem = run_git(root, ["status", "--short", "--untracked-files=all"])
+    if status_problem:
+        summary["problems"].append(status_problem)
+        summary["available"] = False
+    elif status_result is not None and status_result.returncode == 0:
+        lines = [line for line in status_result.stdout.splitlines() if line.strip()]
+        summary["status_lines"] = lines
+        summary["untracked_count"] = sum(1 for line in lines if line.startswith("??"))
+        summary["dirty_count"] = len(lines) - summary["untracked_count"]
+    elif status_result is not None:
+        summary["problems"].append(status_result.stderr.strip() or "could not read git status")
+
+    return summary
+
+
+def prompt_commit_history(root: Path, inside_work_tree: bool, limit: int = 25) -> dict[str, Any]:
+    history = {
+        "available": False,
+        "max_prompt_number": None,
+        "next_after_highest_prompt_commit": None,
+        "prompt_prefixed_commits": [],
+        "problems": [],
+    }
+    if not inside_work_tree:
+        return history
+
+    result, problem = run_git(root, ["log", f"-n{limit}", "--pretty=format:%h%x09%s"])
+    if problem:
+        history["problems"].append(problem)
+        return history
+    if result is None:
+        history["problems"].append("git log did not return a result")
+        return history
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        if "does not have any commits yet" in stderr:
+            history["available"] = True
+            return history
+        history["problems"].append(stderr or "could not read git commit history")
+        return history
+
+    history["available"] = True
+    prompt_numbers: list[int] = []
+    commits: list[dict[str, Any]] = []
+    for line in result.stdout.splitlines():
+        if "\t" in line:
+            commit_hash, subject = line.split("\t", 1)
+        else:
+            commit_hash, subject = "", line
+        matches = [int(match) for match in PROMPT_COMMIT_RE.findall(subject)]
+        if not matches:
+            continue
+        prompt_numbers.extend(matches)
+        commits.append(
+            {
+                "hash": commit_hash,
+                "subject": subject,
+                "prompt_numbers": matches,
+            }
+        )
+
+    highest_commit = max(prompt_numbers) if prompt_numbers else None
+    history["max_prompt_number"] = highest_commit
+    history["next_after_highest_prompt_commit"] = f"PROMPT_{highest_commit + 1:02d}" if highest_commit is not None else None
+    history["prompt_prefixed_commits"] = commits[:5]
+    return history
+
+
+def promptset_state(prompt_dir_exists: bool, numbering: dict[str, Any]) -> str:
+    if not prompt_dir_exists:
+        return "missing"
+    if not numbering["prompts"]:
+        return "empty"
+    if numbering["ok"]:
+        return "valid-sequential"
+    if numbering["duplicates"]:
+        return "duplicates"
+    if numbering["gaps"]:
+        return "gaps"
+    if numbering["malformed"]:
+        return "malformed"
+    return "invalid"
+
+
+def infer_next_prompt(promptset: dict[str, Any], commit_history: dict[str, Any]) -> dict[str, Any]:
+    file_next = promptset["next_after_highest_prompt_file"]
+    commit_next = commit_history["next_after_highest_prompt_commit"]
+    if file_next and commit_next and file_next == commit_next:
+        return {
+            "next_after_highest_prompt_file": file_next,
+            "prompt_prefixed_commit_summary": commit_history,
+            "likely_next_prompt": file_next,
+            "confidence": "high",
+            "reason": "highest prompt file and prompt-prefixed commit history agree",
+        }
+    if commit_next and file_next:
+        return {
+            "next_after_highest_prompt_file": file_next,
+            "prompt_prefixed_commit_summary": commit_history,
+            "likely_next_prompt": commit_next,
+            "confidence": "medium",
+            "reason": "prompt files and prompt-prefixed commit history disagree; using commit progress as completed-work evidence",
+        }
+    if file_next:
+        return {
+            "next_after_highest_prompt_file": file_next,
+            "prompt_prefixed_commit_summary": commit_history,
+            "likely_next_prompt": file_next,
+            "confidence": "medium",
+            "reason": "prompt files exist but no prompt-prefixed commit evidence was found",
+        }
+    if commit_next:
+        return {
+            "next_after_highest_prompt_file": file_next,
+            "prompt_prefixed_commit_summary": commit_history,
+            "likely_next_prompt": commit_next,
+            "confidence": "low",
+            "reason": "prompt-prefixed commits exist but no prompt files were found",
+        }
+    return {
+        "next_after_highest_prompt_file": file_next,
+        "prompt_prefixed_commit_summary": commit_history,
+        "likely_next_prompt": None,
+        "confidence": "low",
+        "reason": "no prompt files or prompt-prefixed commit history found",
+    }
+
+
+def project_status_data(project_value: str | None = None, environ: dict[str, str] | None = None) -> dict[str, Any]:
+    locate = project_locate_data(project_value, environ)
+    problems = list(locate["problems"])
+    warnings = list(locate["warnings"])
+    project = dict(locate["project"])
+    project_root = Path(project["root"])
+    prompt_dir = project_root / ".prompts"
+    prompt_dir_exists = prompt_dir.is_dir()
+    numbering = promptset_numbering_data(project_root, prompt_dir)
+    numbers = numbering["numbers"]
+    lowest = min(numbers) if numbers else None
+    highest = max(numbers) if numbers else None
+    next_after_file = f"PROMPT_{highest + 1:02d}" if highest is not None else None
+    state = promptset_state(prompt_dir_exists, numbering)
+
+    if prompt_dir_exists and not numbering["prompts"]:
+        warnings.append("project .prompts/ directory is empty")
+    for number in numbering["gaps"]:
+        warnings.append(f"promptset gap: missing PROMPT_{number:02d}.txt")
+    for number in numbering["duplicates"]:
+        warnings.append(f"duplicate prompt number: {number:02d}")
+    for name in numbering["malformed"]:
+        warnings.append(f"malformed prompt filename: {name}")
+
+    git = git_status_summary(project_root, bool(project["git"]["inside_work_tree"]))
+    commit_history = prompt_commit_history(project_root, bool(project["git"]["inside_work_tree"]))
+    next_prompt = infer_next_prompt(
+        {
+            "next_after_highest_prompt_file": next_after_file,
+        },
+        commit_history,
+    )
+
+    project.update(
+        {
+            "git": git,
+            "promptset": {
+                "prompt_dir": str(prompt_dir),
+                "prompt_dir_exists": prompt_dir_exists,
+                "prompt_count": len(numbering["prompts"]),
+                "state": state,
+                "lowest_prompt_number": lowest,
+                "highest_prompt_number": highest,
+                "gaps": numbering["gaps"],
+                "duplicates": numbering["duplicates"],
+                "malformed": numbering["malformed"],
+                "strict_two_digit": numbering["strict_two_digit"],
+                "filenames": numbering["filenames"],
+                "numbers": numbers,
+            },
+            "next_prompt": next_prompt,
+            "files": {
+                "AGENT.md": (project_root / "AGENT.md").is_file(),
+                "CLAUDE.md": (project_root / "CLAUDE.md").is_file(),
+                ".context": (project_root / ".context").is_dir(),
+                "human-notes.md": (project_root / "human-notes.md").is_file(),
+            },
+        }
+    )
+
+    return {
+        "ok": not problems,
+        "ahl_home": locate["ahl_home"],
+        "project": project,
+        "warnings": warnings,
+        "problems": problems,
+    }
+
+
 def command_project(args: argparse.Namespace) -> int:
+    if args.action == "status":
+        data = project_status_data(args.project)
+        promptset = data["project"]["promptset"]
+        git = data["project"]["git"]
+        inference = data["project"]["next_prompt"]
+        human = ["project status: ok" if data["ok"] else "project status: problems found"]
+        human.extend(
+            [
+                f"- AHL home: {data['ahl_home']['path']} ({data['ahl_home']['source']})",
+                f"- project root: {data['project']['root']}",
+                f"- git: {'present' if git['found'] else 'not found'}"
+                + (f", branch {git['branch']}" if git.get("branch") else ""),
+                f"- .prompts: {promptset['state']} ({promptset['prompt_count']} prompts)",
+                f"- prompt range: {promptset['lowest_prompt_number']}..{promptset['highest_prompt_number']}",
+                f"- likely next prompt: {inference['likely_next_prompt'] or 'unknown'}"
+                f" ({inference['confidence']}; {inference['reason']})",
+            ]
+        )
+        human.extend(f"- warning: {warning}" for warning in data["warnings"])
+        human.extend(f"- problem: {problem}" for problem in data["problems"])
+        return emit(data, args.json, human, 0 if data["ok"] else 1)
+
     data = project_locate_data(args.project)
     human = ["project locate: ok" if data["ok"] else "project locate: problems found"]
     human.extend(
@@ -4443,6 +4700,10 @@ def build_parser() -> argparse.ArgumentParser:
     project_locate.add_argument("--project", help="Target project path; defaults to the current working directory.")
     project_locate.add_argument("--json", action="store_true")
     project_locate.set_defaults(func=command_project)
+    project_status = project_subparsers.add_parser("status", help="Report target project promptset and git status.")
+    project_status.add_argument("--project", help="Target project path; defaults to the current working directory.")
+    project_status.add_argument("--json", action="store_true")
+    project_status.set_defaults(func=command_project)
 
     outer = subparsers.add_parser("outer", help="Plan, dry-run, and gate sequential outer-loop batches.")
     outer_subparsers = outer.add_subparsers(dest="action", required=True)
