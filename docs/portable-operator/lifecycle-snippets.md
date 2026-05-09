@@ -34,6 +34,15 @@ The default cluster includes:
 - inspect the just-created commits for formatting, prefix, grouping, literal
   `\n`, and co-author issues.
 
+The commit-check snippet maps to the local helper:
+
+```sh
+python3 scripts/ahl.py commit check --project /path/to/project --prompt PROMPT_84 --json
+```
+
+Use `--last N` or `--range <git-rev-range>` when the operator knows the exact
+recent commit window to inspect.
+
 `--include-repair` adds a separate repair snippet. It is intentionally outside
 the default cluster so routine prompt runs do not imply repair work.
 

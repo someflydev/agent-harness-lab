@@ -42,3 +42,13 @@ ledger validation evidence and writes `commit-plan.json` beside the ledger.
 The planner excludes likely unrelated changes when prompt deliverables list
 specific repo paths. The result remains derived metadata: git status, prompt
 files, validation output, and operator review remain authoritative.
+
+After the operator makes commits, use the portable read-only check to inspect
+message hygiene and grouping evidence:
+
+```sh
+python3 scripts/ahl.py commit check --project /path/to/project --prompt PROMPT_38 --json
+```
+
+The check may suggest amend or interactive rebase commands when it detects a
+clear message issue, but it does not rewrite history.

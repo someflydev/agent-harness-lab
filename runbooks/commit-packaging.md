@@ -40,7 +40,11 @@ that request.
 6. Include validation evidence in the commit body when it helps review.
 7. Stage only task-related files. Do not sweep unrelated user changes.
 8. Commit using a multi-line message when body context is useful.
-9. Report commit hash, summary, and validation cited.
+9. Run `python3 scripts/ahl.py commit check --project <path> --prompt
+   PROMPT_XX --json` from the AHL checkout, or inspect the same criteria
+   manually when the helper is unavailable.
+10. Report commit hash, summary, validation cited, and any commit-check
+    guidance.
 
 ## Expected Artifacts
 
@@ -53,6 +57,9 @@ that request.
 - Status and diff were inspected before staging.
 - Staged files match the intended commit group.
 - Commit body cites meaningful validation when appropriate.
+- Post-commit inspection checked prompt prefix, subject/body formatting,
+  wrapping, literal `\n` sequences, co-author trailers, generated boilerplate,
+  and grouping evidence.
 - Final status is reported after commit.
 
 ## Stop Conditions

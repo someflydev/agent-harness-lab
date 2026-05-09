@@ -61,6 +61,8 @@ heavier orchestration remains outside the baseline.
   output for reusable one-prompt assistant instructions.
 - `portable-operator/context-update-policy.md` - context-update doctrine and
   read-only candidate-check support for portable prompt closeout.
+- `portable-operator/commit-check.md` - supported read-only recent-commit
+  inspection for prompt-prefix, message-format, and grouping hygiene.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
@@ -329,6 +331,8 @@ heavier orchestration remains outside the baseline.
   snippet generation for a single target-project prompt.
 - `portable-operator/context-update-policy.md` - when to update context files,
   when to record no update needed, and how to review candidates.
+- `portable-operator/commit-check.md` - read-only post-commit inspection for
+  prompt prefix, message shape, generated boilerplate, and grouping evidence.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
   portable extension.
 

@@ -6,9 +6,9 @@ filenames, scaffolds run and handoff artifacts from templates, validates
 deterministic dry-run scenario manifests, and reports a compact session context
 briefing. It also scaffolds and checks reviewed memory promotion artifacts and
 can run a dry-run-default sequential outer-loop plan through an explicitly
-selected assistant driver. It can also create prompt-scoped commit plans and
-execute reviewed plans only when the operator supplies an explicit approval
-flag.
+selected assistant driver. It can also create prompt-scoped commit plans,
+inspect recent commit-message hygiene, and execute reviewed plans only when
+the operator supplies an explicit approval flag.
 The repo Makefile provides a small operator console for the most common
 commands; this script remains the underlying command source.
 
@@ -20,9 +20,10 @@ bounded local support, not a daemon or provider platform.
 The planned portable-operator extension is documented in
 `../docs/portable-operator/`. That work will add an explicit distinction
 between AHL home and a target project repo. Today, `project locate`,
-`project status`, `lifecycle snippets`, and `lifecycle context-check` are the
-read-only portable commands for that distinction; most older commands still
-resolve paths from the current working directory and assume it is the AHL repo.
+`project status`, `lifecycle snippets`, `lifecycle context-check`, and
+`commit check` are the read-only portable commands for that distinction; most
+older commands still resolve paths from the current working directory and
+assume it is the AHL repo.
 
 ## What It Does
 
@@ -79,6 +80,11 @@ resolve paths from the current working directory and assume it is the AHL repo.
 - `commit plan` creates a plan-only artifact with prompt-prefixed subjects,
   explicit file lists, validation evidence when available, and unrelated
   working-tree changes separated.
+- `commit check` inspects recent commits in a target project for prompt
+  prefixes, Tim Pope-style subject/body shape, line wrapping, literal `\n`
+  sequences, co-author trailers, generated boilerplate, and grouping evidence.
+  It reports amend or interactive rebase guidance only when it finds a clear
+  issue.
 - `commit execute` stages only files listed in a commit plan and commits only
   when `--operator-approved` is supplied. It refuses unrelated staged files,
   missing listed files, and failed or blocked validation status unless
@@ -104,10 +110,11 @@ resolve paths from the current working directory and assume it is the AHL repo.
 
 Planned portable commands should continue the documented namespace in
 `../docs/portable-operator/extension-plan.md`. `lifecycle snippets` is now
-implemented as read-only copy/paste output, and `lifecycle context-check` is
-implemented as read-only advisory output. Later portable commands such as
-`lifecycle run-range` and `commit check` are not implemented until a later
-prompt adds tested behavior.
+implemented as read-only copy/paste output, `lifecycle context-check` is
+implemented as read-only advisory output, and `commit check` is implemented as
+read-only post-commit inspection. Later portable commands such as
+`lifecycle run-range` are not implemented until a later prompt adds tested
+behavior.
 
 ## What It Does Not Do
 
@@ -135,6 +142,8 @@ prompt adds tested behavior.
   `.context/`, `context/`, `human-notes.md`, or any target-project file. It
   does not decide that context must be updated; it only suggests review
   questions from changed paths.
+- `commit check` does not stage, commit, amend, rebase, reset, push, tag, or
+  edit target-project files. It reads git history and changed-file lists only.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
 
@@ -184,6 +193,9 @@ python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json 
 python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --execute --max-prompts 1 --json
 python3 scripts/ahl.py commit plan PROMPT_38 --json
 python3 scripts/ahl.py commit plan --run runs/outer-loop/<run-id>/run-ledger.json --json
+python3 scripts/ahl.py commit check --project /path/to/project --prompt PROMPT_84 --json
+python3 scripts/ahl.py commit check --project /path/to/project --prompt PROMPT_84 --range HEAD~10..HEAD --json
+python3 scripts/ahl.py commit check --project /path/to/project --last 7 --json
 python3 scripts/ahl.py commit execute --plan runs/outer-loop/<run-id>/commit-plan.json --operator-approved
 python3 scripts/ahl.py dry-run list
 python3 scripts/ahl.py dry-run check sequential-prompt-run
@@ -310,6 +322,11 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `commit plan`: `ok`, `schema`, `plan_id`, `created_at`, `mode`, `source`,
   `prompt_ids`, `prompt_context`, `grouping_policy`, `git`, `groups`,
   `unrelated_changes`, `warnings`, `problems`, and `artifact`
+- `commit check`: `ok`, `read_only`, `project`, `selector`, `summary`,
+  `commits`, `guidance`, `warnings`, and `problems`; `selector` includes
+  `mode`, `description`, `prompt`, `searched_commit_count`,
+  `matched_commit_count`, and `truncated`; each commit includes `hash`,
+  `short_hash`, `subject`, `parents`, `changed_files`, and `issues`
 - `commit execute`: `ok`, `status`, `plan`, `dry_run`, `commits`, and
   `problems`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`
