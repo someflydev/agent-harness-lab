@@ -17,13 +17,13 @@ Future architecture docs may describe richer orchestration candidates, but
 this script remains a small helper layer. The phase-two outer-loop baseline is
 bounded local support, not a daemon or provider platform.
 
-The planned portable-operator extension is documented in
-`../docs/portable-operator/`. That work will add an explicit distinction
-between AHL home and a target project repo. Today, `project locate`,
-`project status`, `lifecycle snippets`, `lifecycle context-check`,
-`lifecycle run-range`, and `commit check` are the read-only portable commands
-for that distinction; most older commands still resolve paths from the current
-working directory and assume it is the AHL repo.
+The portable-operator extension is documented in
+`../docs/portable-operator/`. It adds an explicit distinction between AHL home
+and a target project repo. `project locate`, `project status`, `lifecycle
+snippets`, `lifecycle context-check`, `lifecycle run-range`, and `commit
+check` are the read-only portable commands for that distinction; most older
+commands still resolve paths from the current working directory and assume it
+is the AHL repo.
 Portable helpers produce snippets, prompt payloads, plans, reports, and
 validation helpers; the operator or chosen assistant CLI executes prompt work.
 They do not require provider credentials, network access, paid APIs, or
@@ -120,8 +120,8 @@ isolated temporary git repository to provide offline capstone evidence.
   `templates/handoffs/handoff.md`.
 - `metadata-example` prints a skeleton run record for metadata-aware closeout.
 
-Planned portable commands should continue the documented namespace in
-`../docs/portable-operator/extension-plan.md`. `lifecycle snippets` is now
+Future portable commands should continue the documented namespace in
+`../docs/portable-operator/extension-plan.md`. `lifecycle snippets` is
 implemented as read-only copy/paste output, `lifecycle context-check` is
 implemented as read-only advisory output, `lifecycle run-range` is implemented
 as dry-run prompt-range planning, and `commit check` is implemented as

@@ -34,6 +34,11 @@ claim.
   `docs/outer-loop/smoke-test-plan.md`,
   `docs/outer-loop/known-limitations.md`, and
   `docs/outer-loop/future-work.md`.
+- Portable-operator capstone docs are current when claiming portable
+  target-project support: `docs/portable-operator/capstone-audit.md`,
+  `docs/portable-operator/operating-baseline.md`,
+  `docs/portable-operator/known-limitations.md`, and
+  `docs/portable-operator/future-work.md`.
 
 ## Console Sweep
 
@@ -53,6 +58,7 @@ make lane-check
 make registry
 make memory-check
 make experiment-check
+make portable-rehearsal
 ```
 
 `make checkpoint` is intentionally omitted from this sweep because it can
@@ -74,3 +80,6 @@ Before closing a release-readiness pass, verify:
   validated.
 - Outer-loop release claims stay limited to bounded local support when checks
   pass and the operator explicitly enables live execution.
+- Portable-operator release claims stay limited to local read-only helpers,
+  copy/paste snippets, dry-run range plans, explicit artifact writes, manual
+  assistant sessions, and read-only commit inspection.

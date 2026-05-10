@@ -23,6 +23,11 @@
   commit planning, and explicit approval-gated commit execution.
 - Added phase-two outer-loop capstone docs covering the audit, operating
   baseline, smoke tests, known limitations, and future-work backlog.
+- Added the portable-operator baseline for arbitrary target projects with
+  `.prompts/`, including project discovery/status, lifecycle snippets,
+  context-update checks, run-range dry-runs, commit inspection, fixtures,
+  rehearsal evidence, capstone audit, operating baseline, limitations, and
+  future-work docs.
 - Documented current limitations: no provider credential manager, no live
   multi-agent daemon, no autonomous production orchestration runtime, no raw
   transcript store, and no graph or vector retrieval implementation.

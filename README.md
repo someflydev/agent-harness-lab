@@ -114,10 +114,12 @@ ledgers, rehearse manual-driver runs, plan resumes, generate commit plans, and
 perform explicit one-step live CLI invocation only through `outer run --execute`
 for supported local driver contracts.
 
-Prompts 42 through 53 are a planned portable-operator extension. They are
-intended to make the one-prompt-at-a-time workflow callable from arbitrary
-project repos while keeping the human operator as scheduler, reviewer, and
-final authority.
+Prompts 42 through 53 add a portable-operator baseline for calling AHL from
+arbitrary project repos with their own `.prompts/` directory. The supported
+portable namespace is `project locate/status`, `lifecycle
+snippets/context-check/run-range`, `commit check`, and `portable rehearsal`.
+It keeps the human operator as scheduler, reviewer, validation authority, and
+commit authority.
 
 Release-readiness guidance lives in `docs/release-readiness.md`, with current
 limitations in `docs/known-limitations.md`, maintenance guidance in
@@ -162,6 +164,7 @@ python3 scripts/ahl.py doctor
 python3 scripts/ahl.py docs check
 python3 scripts/ahl.py domain-pack check
 python3 scripts/ahl.py validate
+python3 scripts/ahl.py portable rehearsal --json
 python3 -m unittest tests/test_ahl.py
 ```
 
@@ -183,6 +186,7 @@ contracts, templates, runbooks, examples, quality guidance, metadata rules,
 final capstone baseline docs, future-facing architecture guidance, and
 lightweight helper scripts. It also has phase-two outer-loop planning,
 dry-run, gate, dry-run-default live-runner, resume, recovery, Pi adapter, and
-commit-planning helpers. It does not have provider credentials, graph or
-vector database dependencies, an autonomous daemon, or a production
-orchestration runtime.
+commit-planning helpers, plus portable operator helpers for status, snippets,
+context checks, run-range dry-runs, commit inspection, fixtures, and
+rehearsal. It does not have provider credentials, graph or vector database
+dependencies, an autonomous daemon, or a production orchestration runtime.

@@ -98,8 +98,8 @@ Use this closeout loop for prompt-execution sessions:
 
 For the completed initial baseline, no prompt after Prompt 32 is required.
 Prompt 33 through Prompt 41 are the phase-two outer-loop promptset. Prompt 42
-through Prompt 53 are the planned portable operator extension for
-human-governed one-prompt workflows in arbitrary project repos.
+through Prompt 53 add the portable operator baseline for human-governed
+one-prompt workflows in arbitrary project repos.
 
 Create `tmp/HANDOFF.md` only when it materially helps the next session. Do not
 create or update it for routine completion notes that fit in the final answer.

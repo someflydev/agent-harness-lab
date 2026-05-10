@@ -59,7 +59,7 @@ primarily operate on the AHL checkout.
 - `non-goals.md` - explicit exclusions for the outer-loop design.
 - `roadmap.md` - phase-two implementation sequence after this requirements
   layer.
-- `../portable-operator/README.md` - planned extension for applying the
+- `../portable-operator/README.md` - portable baseline for applying the
   one-prompt workflow from arbitrary project repositories.
 
 ## Current Status

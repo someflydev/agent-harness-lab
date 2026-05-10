@@ -9,7 +9,7 @@ experiments, reports, findings, lab method, capstone audits, lane simulations,
 release-readiness, operating baseline, phase-two outer-loop requirements,
 capstone audit, smoke tests, gate reports, run-ledger recovery, maintenance,
 contributing guidance, known limitations, commit planning, explicit commit
-execution, Pi adapter comparison, the planned portable-operator extension, and
+execution, Pi adapter comparison, the portable-operator baseline, and
 future-facing architecture. Role packs and lane playbooks now provide
 pasteable manual hierarchy routines. The committed memory workspace supports
 reviewed promotion candidates and decision records. Helper scripts exist, but
@@ -48,10 +48,19 @@ heavier orchestration remains outside the baseline.
   commit-plan workflow.
 - `outer-loop/capstone-audit.md` - phase-two outer-loop implementation audit,
   validation evidence, gaps, and baseline decision.
-- `portable-operator/README.md` - planned portable workflow extension for
-  using AHL from arbitrary project repos with their own `.prompts/` directory.
+- `portable-operator/README.md` - portable workflow extension for using AHL
+  from arbitrary project repos with their own `.prompts/` directory.
 - `portable-operator/extension-plan.md` - inventory of current AHL-root
   assumptions and prompt arc for later portable CLI and docs work.
+- `portable-operator/capstone-audit.md` - portable-operator capstone audit,
+  validation evidence, gaps, and baseline decision.
+- `portable-operator/operating-baseline.md` - supported portable invocation,
+  status, snippets, manual run, audit, context-check, commit-check, and
+  run-range workflow.
+- `portable-operator/known-limitations.md` - portable execution, validation,
+  data, git, run-range, and architecture limits.
+- `portable-operator/future-work.md` - portable backlog beyond the current
+  baseline.
 - `portable-operator/invocation.md` - supported `project locate` invocation
   from AHL or another repo, including `AHL_HOME` and `--project` behavior.
 - `portable-operator/status.md` - supported `project status` report for
@@ -339,16 +348,24 @@ heavier orchestration remains outside the baseline.
 
 ## Portable Operator
 
-- `portable-operator/README.md` - index for the planned portable-operator
-  extension.
+- `portable-operator/README.md` - index for the portable-operator baseline.
 - `portable-operator/extension-plan.md` - inventory and prompt arc for adding
   explicit AHL-home versus target-project behavior.
+- `portable-operator/capstone-audit.md` - capstone audit and baseline
+  decision for the portable extension.
+- `portable-operator/operating-baseline.md` - supported portable operator
+  procedure and command examples.
+- `portable-operator/known-limitations.md` - portable helper limitations and
+  safety boundaries.
+- `portable-operator/future-work.md` - deferred portable-operator backlog.
 - `portable-operator/invocation.md` - current portable invocation and
   discovery behavior.
 - `portable-operator/status.md` - read-only target-project status reporting
   before a one-prompt run.
 - `portable-operator/lifecycle-snippets.md` - read-only reusable lifecycle
   snippet generation for a single target-project prompt.
+- `portable-operator/run-range.md` - dry-run prompt-range planning that keeps
+  execution one prompt at a time.
 - `portable-operator/assistant-surfaces.md` - provider-agnostic assistant
   surface boundary for portable target-project workflows.
 - `portable-operator/one-prompt-loop.md` - portable one-prompt execution loop
@@ -357,6 +374,8 @@ heavier orchestration remains outside the baseline.
   when to record no update needed, and how to review candidates.
 - `portable-operator/commit-check.md` - read-only post-commit inspection for
   prompt prefix, message shape, generated boilerplate, and grouping evidence.
+- `portable-operator/rehearsal.md` - deterministic fixture rehearsal for
+  portable helper composition.
 - `portable-operator/human-notes-boundary.md` - explicit rules for
   operator-owned `human-notes.md` content.
 - `portable-operator/non-goals.md` - non-goals and safety boundaries for the
