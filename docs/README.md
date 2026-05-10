@@ -36,6 +36,8 @@ heavier orchestration remains outside the baseline.
   routines, runbooks, inputs, outputs, status, and safety notes.
 - `navigation-map.md` - start points, durable artifact areas, registry
   relationships, and source-of-truth boundaries.
+- `architecture/mental-model.md` - fast visual workflow and artifact map for
+  new readers.
 - `navigation-validation.md` - local markdown link checking, docs index
   coverage, checker limits, and registry relationship.
 - `release-readiness.md` - checks required before calling the repo usable.
@@ -284,6 +286,7 @@ heavier orchestration remains outside the baseline.
 ## Architecture
 
 - `architecture/README.md` - architecture index and current posture.
+- `architecture/mental-model.md` - one-screen workflow and artifact map.
 - `architecture/future-runtime-path.md` - gradual migration path from
   documented routines to possible richer orchestration.
 - `architecture/automation-readiness-ladder.md` - criteria for graduating

@@ -1,12 +1,13 @@
 # Architecture
 
-Architecture notes describe possible future structure for
-`agent-harness-lab` without making those ideas current requirements. They are
-decision guides for later prompts, not implementation plans for the foundation
-phase.
+Architecture notes describe the current mental model and possible future
+structure for `agent-harness-lab` without making future ideas current
+requirements. Future-facing pages are decision guides for later prompts, not
+implementation plans for the foundation phase.
 
 ## Start Here
 
+- `mental-model.md` - one-screen workflow and artifact map for new readers.
 - `future-runtime-path.md` - gradual path from documented routines to richer
   orchestration after the human-assisted model is proven.
 - `automation-readiness-ladder.md` - criteria for graduating a routine from

@@ -3,6 +3,9 @@
 This map explains where humans and fresh assistant sessions should start, what
 durable areas exist, and how the registry files relate to the source files.
 
+For the fastest visual orientation, start with
+`docs/architecture/mental-model.md`.
+
 ## Starting Points
 
 An operator starts with `README.md`, then uses `AGENT.md` and
@@ -14,6 +17,18 @@ A fresh assistant starts with `AGENT.md`, then `README.md`,
 `docs/guardrails.md`, the active `.prompts/PROMPT_XX.txt`, and any docs the
 prompt explicitly references. During prompt execution, the assistant should run
 `git status --short` before editing and preserve unrelated work.
+
+## At A Glance
+
+| Question | Best first path |
+| --- | --- |
+| What is this repo trying to do? | `README.md` |
+| What is the shortest workflow map? | `docs/architecture/mental-model.md` |
+| How does an operator start? | `docs/operator-start.md` |
+| How does an assistant start? | `AGENT.md` |
+| Where are all docs indexed? | `docs/README.md` |
+| What helper commands exist? | `scripts/README.md` and `docs/scripts.md` |
+| What is not implemented? | `docs/known-limitations.md` |
 
 ## Durable Areas
 

@@ -12,6 +12,45 @@ plain markdown, templates, runbooks, small scripts, inspectable reports, and
 validation gates. Heavier runtime automation can only earn its place after the
 human workflow is explicit and stable.
 
+## Quick Orientation
+
+If you are new to the repo, read in this order:
+
+1. `README.md` for identity, boundaries, and current status.
+2. `docs/architecture/mental-model.md` for the one-screen workflow map.
+3. `docs/operator-start.md` if you are the human operator.
+4. `AGENT.md` if you are starting an assistant session.
+5. `docs/README.md` only when you need the full documentation index.
+
+The shortest mental model is: AHL keeps prompt-bounded work explicit. A human
+operator chooses one prompt, an assistant executes it in a fresh session, local
+helpers inspect files and produce artifacts, and the operator decides whether
+the result is complete, needs repair, or should be committed.
+
+```mermaid
+flowchart LR
+    operator[Human operator] --> prompt[One active prompt]
+    prompt --> assistant[Fresh assistant session]
+    assistant --> files[Repo files and artifacts]
+    files --> checks[Local checks and audits]
+    checks --> decision{Operator decision}
+    decision -->|complete| next[Next prompt preflight]
+    decision -->|needs repair| repair[Bounded repair or handoff]
+    decision -->|approved| commit[Commit packaging]
+    next --> operator
+    repair --> operator
+    commit --> operator
+```
+
+| Need | Start here |
+| --- | --- |
+| Understand what AHL is | `README.md` and `docs/architecture/mental-model.md` |
+| Run one prompt manually | `docs/operator-start.md` and `runbooks/fresh-session-prompt-run.md` |
+| Start an assistant session | `AGENT.md` |
+| Check local health | `make help`, then `make doctor`, `make check-docs`, and `make test` |
+| Use AHL from another repo | `docs/portable-operator/README.md` |
+| Review limits before relying on it | `docs/known-limitations.md` |
+
 ## What This Is
 
 - A lab for fresh-session prompt execution and session choreography.
