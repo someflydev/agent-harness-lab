@@ -28,6 +28,8 @@ Portable helpers produce snippets, prompt payloads, plans, reports, and
 validation helpers; the operator or chosen assistant CLI executes prompt work.
 They do not require provider credentials, network access, paid APIs, or
 machine-readable subscription quota checks.
+`portable rehearsal` composes those helpers against artificial fixtures and an
+isolated temporary git repository to provide offline capstone evidence.
 
 ## What It Does
 
@@ -66,6 +68,9 @@ machine-readable subscription quota checks.
 - `lifecycle run-range` dry-runs a prompt range in a target project, validates
   strict prompt files, and prints or explicitly writes a one-prompt-at-a-time
   phase plan without invoking assistants or editing target files.
+- `portable rehearsal` runs the deterministic portable-operator fixture
+  rehearsal, including project discovery, status, snippets, context-check,
+  run-range, gapped diagnostics, and temporary git commit-check evidence.
 - `outer plan` creates an inspectable sequential batch plan under
   `runs/outer-loop/` without invoking assistants, staging, or committing.
 - `outer dry-run` validates a batch plan's prompt files, driver record,
@@ -152,6 +157,10 @@ read-only post-commit inspection.
   validation commands, edit target-project files, edit `human-notes.md`,
   stage, commit, amend, rebase, push, tag, or continue automatically. It
   writes JSON only when `--artifact` is explicit.
+- `portable rehearsal` does not run prompts, call assistant CLIs, edit
+  `human-notes.md`, edit target-project fixtures, stage or commit in the AHL
+  repository, fetch network resources, or require credentials. Its only
+  commits are isolated temporary git fixture data for `commit check`.
 - `commit check` does not stage, commit, amend, rebase, reset, push, tag, or
   edit target-project files. It reads git history and changed-file lists only.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
@@ -197,6 +206,7 @@ python3 scripts/ahl.py lifecycle snippets PROMPT_01 --project fixtures/portable-
 python3 scripts/ahl.py lifecycle context-check PROMPT_01 --project fixtures/portable-operator/projects/basic --json
 python3 scripts/ahl.py lifecycle run-range 1 2 --project fixtures/portable-operator/projects/basic --dry-run --json
 python3 scripts/ahl.py lifecycle snippets PROMPT_01 --project fixtures/portable-operator/projects/claude-bootstrap --bootstrap CLAUDE.md --json
+python3 scripts/ahl.py portable rehearsal --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
@@ -252,6 +262,7 @@ The stable Makefile targets are:
 - `domain-pack`
 - `trace`
 - `dry-run`
+- `portable-rehearsal`
 - `registry`
 - `memory-check`
 - `experiment-check`
@@ -324,6 +335,11 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
   `number`, `path`, `exists`, `sequence_index`, `phase_order`, `phases`,
   `validation_commands`, `fresh_session_boundary`, and `next_prompt`;
   `artifact` is present only when an explicit artifact write succeeds
+- `portable rehearsal`: `ok`, `schema`, `generated_at`, `mode`, `read_only`,
+  `assistant_invocation`, `ahl_home`, `fixture_projects`, `commands`,
+  `summary`, `known_limitations`, `residual_manual_steps`, `capstone_ready`,
+  and `problems`; each command record includes `label`, `command`, `status`,
+  `ok`, and `details`
 - `outer plan`: `ok`, `plan_id`, `created_at`, `requested_range`, `prompts`,
   `driver`, `model`, `reasoning`, `permission_posture`,
   `required_ahl_checks`, `stop_conditions`, `commit_policy`,

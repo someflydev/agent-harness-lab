@@ -70,6 +70,8 @@ heavier orchestration remains outside the baseline.
   read-only candidate-check support for portable prompt closeout.
 - `portable-operator/commit-check.md` - supported read-only recent-commit
   inspection for prompt-prefix, message-format, and grouping hygiene.
+- `portable-operator/rehearsal.md` - deterministic end-to-end fixture
+  rehearsal for portable helper composition and capstone evidence.
 - `portable-operator/human-notes-boundary.md` - operator-owned boundary for
   `human-notes.md` scratch/control-zone content.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable

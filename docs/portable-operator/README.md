@@ -34,6 +34,8 @@ Current outer-loop helpers still primarily operate inside the AHL repository.
   should update bootstrap or context files and when no edit is appropriate.
 - `commit-check.md` - read-only recent-commit inspection for prompt-prefix,
   message-format, generated-boilerplate, and grouping hygiene.
+- `rehearsal.md` - deterministic fixture-based rehearsal that composes
+  portable helpers from project discovery through commit-check evidence.
 - `human-notes-boundary.md` - explicit operator-owned boundary for
   `human-notes.md` scratch/control-zone content.
 - `non-goals.md` - explicit exclusions for the portable-operator extension.
@@ -71,3 +73,5 @@ diagnostics.
 
 The examples in `../../examples/portable-operator/` show the expected command
 sequence without using private notes, provider credentials, or assistant quota.
+Run `python3 scripts/ahl.py portable rehearsal --json` from the AHL checkout
+for the end-to-end offline fixture rehearsal used by capstone review.
