@@ -18,6 +18,8 @@ runtime abstraction.
   status.
 - Prompt payload: the active prompt plus bounded startup context needed for one
   fresh assistant session.
+- Assistant surface: the local CLI, terminal assistant, or manual chat session
+  where the human operator runs a prompt payload.
 - Run ledger entry: an inspectable record of one prompt attempt, including
   prompt id, driver, inputs, validation, audit, readiness, stop reason, and
   commit-plan references.
@@ -29,7 +31,12 @@ runtime abstraction.
 ## Supported Direction
 
 Codex and Gemini may be driven through their supported CLIs when the operator
-has authenticated those tools outside AHL.
+has authenticated those tools outside AHL and the local command behavior has
+been verified enough for the selected operation.
+
+Claude Code is an acceptable manual or terminal assistant surface. AHL does
+not provide Claude subscription automation through external APIs, browser
+sessions, cookies, or hidden provider integrations.
 
 Pi may be adapted as an external harness if its local CLI mode can be driven
 safely and inspected.
@@ -41,6 +48,8 @@ phase if the operator asks for it.
 ## Boundary Rules
 
 - Driver capability probes must be explicit per tool.
+- Help-only probes may inspect local executables and help output; they must
+  not authenticate, send prompt text, consume quota, or prove account limits.
 - Driver configuration must avoid secrets and machine-specific paths.
 - The runner must surface the exact driver selected for each prompt.
 - A driver failure must stop the batch.
@@ -48,4 +57,5 @@ phase if the operator asks for it.
   transcripts by default.
 - AHL must not claim provider support that has not been implemented and
   validated in this repo.
-
+- Manual assistant surfaces are first-class when no verified local CLI driver
+  is available.

@@ -24,6 +24,10 @@ between AHL home and a target project repo. Today, `project locate`,
 `lifecycle run-range`, and `commit check` are the read-only portable commands
 for that distinction; most older commands still resolve paths from the current
 working directory and assume it is the AHL repo.
+Portable helpers produce snippets, prompt payloads, plans, reports, and
+validation helpers; the operator or chosen assistant CLI executes prompt work.
+They do not require provider credentials, network access, paid APIs, or
+machine-readable subscription quota checks.
 
 ## What It Does
 
@@ -152,6 +156,9 @@ read-only post-commit inspection.
   edit target-project files. It reads git history and changed-file lists only.
 - Driver probes do not authenticate, send prompts, create sessions, or prove
   quota. They inspect the registry, `PATH`, and optional help output only.
+- AHL does not automate Claude subscription usage through external APIs,
+  browser sessions, cookies, or hidden provider integrations; Claude Code and
+  generic chat remain manual or terminal assistant surfaces.
 
 ## Examples
 
