@@ -1,21 +1,30 @@
 # Portable Operator
 
-The portable-operator extension is a planned local workflow layer for using
-AHL from arbitrary project repositories that contain their own `.prompts/`
-directory. It keeps the same human-governed loop as the AHL promptset:
-one prompt, explicit context, validation, audit, next-prompt preflight, and a
+The portable-operator extension is the local workflow layer for using AHL from
+arbitrary project repositories that contain their own `.prompts/` directory.
+It keeps the same human-governed loop as the AHL promptset: one prompt,
+explicit context, validation, audit, next-prompt preflight, and a
 fresh-session reset.
 
-Most of this section is design guidance for later prompts, not a claim that the
-full portable lifecycle exists. The implemented portable surface starts with
-the read-only `project locate`, `project status`, `lifecycle snippets`,
-`lifecycle context-check`, `lifecycle run-range`, and `commit check` commands.
-Current outer-loop helpers still primarily operate inside the AHL repository.
+The supported portable surface is intentionally small and inspectable:
+read-only `project locate`, `project status`, `lifecycle snippets`,
+`lifecycle context-check`, `lifecycle run-range`, `commit check`, and
+`portable rehearsal`. It does not run assistants, schedule prompt ranges, edit
+target projects, or commit automatically. Outer-loop helpers remain separate
+and primarily operate inside the AHL repository.
 
 ## Start Here
 
 - `extension-plan.md` - inventory of existing AHL helper behavior, missing
   portable-project behavior, and the remaining prompt arc.
+- `capstone-audit.md` - Prompt 53 implementation audit, validation evidence,
+  gaps, and baseline decision.
+- `operating-baseline.md` - supported operator workflow for invoking AHL from
+  another project, running one prompt manually, auditing, checking context,
+  inspecting commits, and dry-running ranges.
+- `known-limitations.md` - portable execution, validation, data, git,
+  run-range, and architecture limits.
+- `future-work.md` - backlog candidates beyond the current portable baseline.
 - `invocation.md` - current supported `project locate` invocation forms,
   `AHL_HOME` behavior, target-project detection, and failure reporting.
 - `status.md` - read-only target-project status reporting for git state,
