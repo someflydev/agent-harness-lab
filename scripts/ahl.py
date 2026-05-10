@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
@@ -363,6 +364,7 @@ OUTER_GATE_REPORT_SCHEMA = "schemas/outer-loop-gate-report.schema.json"
 OUTER_RUN_LEDGER_SCHEMA = "schemas/outer-loop-run-ledger.schema.json"
 PORTABLE_RUN_PLAN_SCHEMA = "schemas/portable-operator-run-plan.schema.json"
 COMMIT_PLAN_SCHEMA = "schemas/commit-plan.schema.json"
+PORTABLE_REHEARSAL_REPORT_SCHEMA = "schemas/portable-operator-rehearsal.schema.json"
 OUTER_DEFAULT_PERMISSION_POSTURE = "workspace-write"
 OUTER_DEFAULT_COMMIT_POLICY = "none"
 OUTER_DEFAULT_TRANSCRIPT_POLICY = {
@@ -539,6 +541,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "command": "python3 scripts/ahl.py project status --project fixtures/portable-operator/projects/basic --json",
         "summary": "Exercise portable helpers against artificial external-project fixtures.",
         "safety": "read-only",
+    },
+    {
+        "name": "portable-rehearsal",
+        "command": "python3 scripts/ahl.py portable rehearsal --json",
+        "summary": "Run the deterministic portable-operator end-to-end fixture rehearsal.",
+        "safety": "read-only except isolated temporary git fixture commits",
     },
     {
         "name": "outer-dry-run",
@@ -4374,6 +4382,132 @@ def command_commit(args: argparse.Namespace) -> int:
     return emit(data, args.json, human, 0 if data["ok"] else 1)
 
 
+def portable_rehearsal_command(label: str, command: str, ok: bool, details: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {"label": label, "command": command, "status": "pass" if ok else "fail", "ok": ok, "details": details or {}}
+
+
+def portable_rehearsal_missing_fixture(path: Path, label: str) -> dict[str, Any] | None:
+    if path.exists():
+        return None
+    return portable_rehearsal_command(label, f"check fixture path {path}", False, {"problem": f"missing fixture path: {path}"})
+
+
+def create_portable_rehearsal_git_repo() -> tuple[str | None, dict[str, Any]]:
+    if not shutil.which("git"):
+        return None, {"status": "skip", "reason": "git is not available"}
+
+    tempdir = tempfile.TemporaryDirectory(prefix="ahl-portable-rehearsal-")
+    repo = Path(tempdir.name)
+    commands: list[dict[str, Any]] = []
+
+    def run(args: list[str]) -> subprocess.CompletedProcess[str]:
+        result = subprocess.run(args, cwd=repo, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        commands.append({"command": " ".join(args), "returncode": result.returncode})
+        return result
+
+    run(["git", "init"])
+    run(["git", "config", "user.email", "ahl-rehearsal@example.test"])
+    run(["git", "config", "user.name", "AHL Rehearsal"])
+    (repo / "good.txt").write_text("good\n", encoding="utf-8")
+    run(["git", "add", "good.txt"])
+    good_commit = run(["git", "commit", "-m", "[PROMPT_01] Add portable rehearsal fixture", "-m", "Record deterministic rehearsal data."])
+    (repo / "bad.txt").write_text("bad\n", encoding="utf-8")
+    run(["git", "add", "bad.txt"])
+    bad_commit = run(["git", "commit", "-m", "Add unprefixed rehearsal fixture"])
+    ok = all(item["returncode"] == 0 for item in commands) and good_commit.returncode == 0 and bad_commit.returncode == 0
+    if not ok:
+        tempdir.cleanup()
+        return None, {"status": "fail", "commands": commands, "reason": "temporary git repo setup failed"}
+    return str(repo), {"status": "pass", "commands": commands, "cleanup": tempdir}
+
+
+def portable_rehearsal_data(args: argparse.Namespace) -> dict[str, Any]:
+    ahl_home = script_ahl_home()
+    basic = Path(args.basic_project or ahl_home / "fixtures" / "portable-operator" / "projects" / "basic")
+    gapped = Path(args.gapped_project or ahl_home / "fixtures" / "portable-operator" / "projects" / "gapped")
+    if not basic.is_absolute():
+        basic = ahl_home / basic
+    if not gapped.is_absolute():
+        gapped = ahl_home / gapped
+
+    commands: list[dict[str, Any]] = []
+    for fixture_path, label in ((basic, "basic fixture exists"), (gapped, "gapped fixture exists")):
+        missing = portable_rehearsal_missing_fixture(fixture_path, label)
+        if missing:
+            commands.append(missing)
+
+    if not commands:
+        locate = project_locate_data(str(basic))
+        commands.append(portable_rehearsal_command("AHL home and project root discovery", f"python3 scripts/ahl.py project locate --project {basic} --json", locate["ok"] and Path(locate["ahl_home"]["path"]).resolve() == ahl_home.resolve() and Path(locate["project"]["root"]).resolve() == basic.resolve(), {"ahl_home": locate["ahl_home"]["path"], "project_root": locate["project"]["root"], "warnings": locate["warnings"], "problems": locate["problems"]}))
+
+        basic_status = project_status_data(str(basic))
+        commands.append(portable_rehearsal_command("project status basic fixture", f"python3 scripts/ahl.py project status --project {basic} --json", basic_status["ok"] and basic_status["project"]["promptset"]["state"] == "valid-sequential", {"promptset_state": basic_status["project"]["promptset"]["state"], "prompt_files": basic_status["project"]["promptset"]["filenames"], "likely_next_prompt": basic_status["project"]["next_prompt"]["likely_next_prompt"], "problems": basic_status["problems"]}))
+
+        gapped_status = project_status_data(str(gapped))
+        commands.append(portable_rehearsal_command("project status gapped fixture", f"python3 scripts/ahl.py project status --project {gapped} --json", gapped_status["ok"] and gapped_status["project"]["promptset"]["state"] == "gaps" and 2 in gapped_status["project"]["promptset"]["gaps"], {"promptset_state": gapped_status["project"]["promptset"]["state"], "gaps": gapped_status["project"]["promptset"]["gaps"], "problems": gapped_status["problems"]}))
+
+        snippets = lifecycle_snippets_data("PROMPT_01", project_value=str(basic))
+        commands.append(portable_rehearsal_command("lifecycle snippets fixture prompt", f"python3 scripts/ahl.py lifecycle snippets PROMPT_01 --project {basic} --json", snippets["ok"] and snippets["snippets"]["run"] == "Load AGENT.md, then run .prompts/PROMPT_01.txt", {"bootstrap_doc": snippets["configuration"]["bootstrap_doc"], "context_mentioned": snippets["configuration"]["context_mentioned"], "snippet_keys": sorted(snippets["snippets"]), "problems": snippets["problems"]}))
+
+        context = lifecycle_context_check_data("PROMPT_01", project_value=str(basic))
+        commands.append(portable_rehearsal_command("context-update check fixture prompt", f"python3 scripts/ahl.py lifecycle context-check PROMPT_01 --project {basic} --json", context["ok"] and context["read_only"] and not context["changed_paths"], {"read_only": context["read_only"], "changed_paths": context["changed_paths"], "conclusion": context["conclusion"], "warnings": context["warnings"], "problems": context["problems"]}))
+
+        run_range = lifecycle_run_range_data("1", "2", project_value=str(basic), plan_id_value="portable-rehearsal-basic")
+        commands.append(portable_rehearsal_command("run-range dry-run basic fixture", f"python3 scripts/ahl.py lifecycle run-range 1 2 --project {basic} --dry-run --json", run_range["ok"] and run_range["dry_run"] and run_range["prompt_ids"] == ["PROMPT_01", "PROMPT_02"], {"plan_id": run_range["plan_id"], "prompt_ids": run_range["prompt_ids"], "mode": run_range["mode"], "problems": run_range["problems"]}))
+
+        gapped_range = lifecycle_run_range_data("1", "3", project_value=str(gapped), plan_id_value="portable-rehearsal-gapped")
+        commands.append(portable_rehearsal_command("run-range gapped fixture failure is clear", f"python3 scripts/ahl.py lifecycle run-range 1 3 --project {gapped} --dry-run --json", not gapped_range["ok"] and "PROMPT_02" in gapped_range["missing_prompt_ids"], {"missing_prompt_ids": gapped_range["missing_prompt_ids"], "stop_reason": gapped_range["stop_reason"], "problems": gapped_range["problems"]}))
+
+        temp_repo, git_setup = create_portable_rehearsal_git_repo()
+        if temp_repo is None:
+            commands.append({"label": "commit-check temporary git fixture", "command": "python3 scripts/ahl.py commit check --project <tempdir> --last 2 --json", "status": git_setup["status"], "ok": git_setup["status"] == "skip", "details": {k: v for k, v in git_setup.items() if k != "cleanup"}})
+        else:
+            cleanup = git_setup.pop("cleanup")
+            try:
+                commit_check = commit_check_data(argparse.Namespace(project=temp_repo, prompt=None, last=2, range=None))
+                issue_codes = [issue["code"] for commit in commit_check["commits"] for issue in commit["issues"]]
+                commands.append(portable_rehearsal_command("commit-check temporary git fixture", "python3 scripts/ahl.py commit check --project <tempdir> --last 2 --json", not commit_check["ok"] and "missing_prompt_prefix" in issue_codes and commit_check["summary"]["commit_count"] == 2, {"temp_repo_created": True, "temp_repo_cleaned_up": False, "commit_count": commit_check["summary"]["commit_count"], "issue_codes": issue_codes, "setup": git_setup, "problems": commit_check["problems"]}))
+            finally:
+                cleanup.cleanup()
+            commands[-1]["details"]["temp_repo_cleaned_up"] = not Path(temp_repo).exists()
+
+    failed = [item for item in commands if item["status"] == "fail"]
+    skipped = [item for item in commands if item["status"] == "skip"]
+    return {
+        "ok": not failed,
+        "schema": PORTABLE_REHEARSAL_REPORT_SCHEMA,
+        "generated_at": utc_timestamp(),
+        "mode": "offline-rehearsal",
+        "read_only": True,
+        "assistant_invocation": "disabled",
+        "ahl_home": str(ahl_home),
+        "fixture_projects": {"basic": str(basic), "gapped": str(gapped)},
+        "commands": commands,
+        "summary": {"passed": sum(1 for item in commands if item["status"] == "pass"), "failed": len(failed), "skipped": len(skipped), "total": len(commands)},
+        "known_limitations": [
+            "Rehearsal proves helper composition against fixtures; it does not call assistant CLIs or perform real prompt implementation.",
+            "Context-update check is advisory and read-only; human review decides whether durable context edits are justified.",
+            "Commit-check coverage uses isolated temporary git history, not the AHL repository history.",
+        ],
+        "residual_manual_steps": ["A human operator still starts each assistant session, reviews implementation, approves commits, and decides context updates."],
+        "capstone_ready": not failed,
+        "problems": [item["details"].get("problem", item["label"]) for item in failed],
+    }
+
+
+def command_portable(args: argparse.Namespace) -> int:
+    data = portable_rehearsal_data(args)
+    human = [
+        "portable rehearsal: ok" if data["ok"] else "portable rehearsal: problems found",
+        f"- commands: {data['summary']['passed']} passed, {data['summary']['failed']} failed, {data['summary']['skipped']} skipped",
+        f"- capstone ready: {data['capstone_ready']}",
+    ]
+    for item in data["commands"]:
+        human.append(f"- {item['status']}: {item['label']}")
+    human.extend(f"- problem: {problem}" for problem in data["problems"])
+    return emit(data, args.json, human, 0 if data["ok"] else 1)
+
+
 def markdown_files_for_docs_check(root: Path) -> list[Path]:
     files: list[Path] = []
     for rel in DOCS_SCAN_ROOTS:
@@ -5775,6 +5909,14 @@ def build_parser() -> argparse.ArgumentParser:
     commit_execute.add_argument("--dry-run", action="store_true", help="Check the plan and render message files without staging or committing.")
     commit_execute.add_argument("--json", action="store_true")
     commit_execute.set_defaults(func=command_commit)
+
+    portable = subparsers.add_parser("portable", help="Run portable-operator rehearsal helpers.")
+    portable_subparsers = portable.add_subparsers(dest="action", required=True)
+    portable_rehearsal = portable_subparsers.add_parser("rehearsal", help="Run deterministic portable-operator fixture rehearsal.")
+    portable_rehearsal.add_argument("--basic-project", help="Override the basic fixture path for failure testing.")
+    portable_rehearsal.add_argument("--gapped-project", help="Override the gapped fixture path for failure testing.")
+    portable_rehearsal.add_argument("--json", action="store_true")
+    portable_rehearsal.set_defaults(func=command_portable)
 
     docs = subparsers.add_parser("docs", help="Check markdown navigation and local links.")
     docs.add_argument("action", choices=("check",))

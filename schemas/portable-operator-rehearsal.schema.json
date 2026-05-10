@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portable Operator Rehearsal Report",
+  "type": "object",
+  "required": [
+    "ok",
+    "schema",
+    "generated_at",
+    "mode",
+    "read_only",
+    "assistant_invocation",
+    "ahl_home",
+    "fixture_projects",
+    "commands",
+    "summary",
+    "known_limitations",
+    "residual_manual_steps",
+    "capstone_ready",
+    "problems"
+  ],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "schema": { "const": "schemas/portable-operator-rehearsal.schema.json" },
+    "generated_at": { "type": "string" },
+    "mode": { "const": "offline-rehearsal" },
+    "read_only": { "type": "boolean" },
+    "assistant_invocation": { "const": "disabled" },
+    "ahl_home": { "type": "string" },
+    "fixture_projects": {
+      "type": "object",
+      "required": ["basic", "gapped"],
+      "properties": {
+        "basic": { "type": "string" },
+        "gapped": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "command", "status", "ok", "details"],
+        "properties": {
+          "label": { "type": "string" },
+          "command": { "type": "string" },
+          "status": { "enum": ["pass", "fail", "skip"] },
+          "ok": { "type": "boolean" },
+          "details": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["passed", "failed", "skipped", "total"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "known_limitations": { "type": "array", "items": { "type": "string" } },
+    "residual_manual_steps": { "type": "array", "items": { "type": "string" } },
+    "capstone_ready": { "type": "boolean" },
+    "problems": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

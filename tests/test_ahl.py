@@ -772,6 +772,71 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(snippets["configuration"]["bootstrap_doc"], "CLAUDE.md")
         self.assertEqual(snippets["snippets"]["run"], "Load CLAUDE.md, then run .prompts/PROMPT_01.txt")
 
+    def test_portable_rehearsal_succeeds_offline(self):
+        code, output = self.run_cli("portable", "rehearsal", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["mode"], "offline-rehearsal")
+        self.assertEqual(data["assistant_invocation"], "disabled")
+        self.assertTrue(data["capstone_ready"])
+        labels = {item["label"] for item in data["commands"]}
+        self.assertIn("AHL home and project root discovery", labels)
+        self.assertIn("project status basic fixture", labels)
+        self.assertIn("project status gapped fixture", labels)
+        self.assertIn("lifecycle snippets fixture prompt", labels)
+        self.assertIn("context-update check fixture prompt", labels)
+        self.assertIn("run-range dry-run basic fixture", labels)
+        self.assertIn("run-range gapped fixture failure is clear", labels)
+        self.assertIn("commit-check temporary git fixture", labels)
+
+    def test_portable_rehearsal_missing_fixture_failure_is_clear(self):
+        missing = self.root / "missing-basic"
+
+        code, output = self.run_cli("portable", "rehearsal", "--basic-project", str(missing), "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertFalse(data["capstone_ready"])
+        self.assertTrue(any("missing fixture path" in problem for problem in data["problems"]))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_portable_rehearsal_commit_check_uses_temporary_git_data_and_cleans_up(self):
+        code, output = self.run_cli("portable", "rehearsal", "--json")
+        data = json.loads(output)
+        commit_step = next(item for item in data["commands"] if item["label"] == "commit-check temporary git fixture")
+
+        self.assertEqual(code, 0)
+        self.assertEqual(commit_step["status"], "pass")
+        self.assertEqual(commit_step["details"]["commit_count"], 2)
+        self.assertIn("missing_prompt_prefix", commit_step["details"]["issue_codes"])
+        self.assertTrue(commit_step["details"]["temp_repo_cleaned_up"])
+
+    def test_portable_rehearsal_json_has_stable_fields(self):
+        code, output = self.run_cli("portable", "rehearsal", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        for key in (
+            "ok",
+            "schema",
+            "generated_at",
+            "mode",
+            "read_only",
+            "assistant_invocation",
+            "ahl_home",
+            "fixture_projects",
+            "commands",
+            "summary",
+            "known_limitations",
+            "residual_manual_steps",
+            "capstone_ready",
+            "problems",
+        ):
+            self.assertIn(key, data)
+
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")
         self.write(".prompts/PROMPT_03.txt")
