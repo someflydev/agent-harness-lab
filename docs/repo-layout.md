@@ -22,6 +22,9 @@ This page describes the top-level areas for `agent-harness-lab`.
 - `reports/` - retrospective summaries of session, promptset, routine, or phase
   evidence.
 - `schemas/` - JSON Schemas for selected metadata and report shapes.
+- `runs/` - generated run, plan, ledger, and commit-plan artifacts when an
+  operator explicitly creates them; this directory may be absent in a clean
+  checkout until a helper command writes an artifact.
 - `tmp/` - ignored scratch space for transient handoffs and session-local
   material.
 - `README.md` - public identity and high-level project orientation.
@@ -35,8 +38,6 @@ of this repo's committed implementation.
 
 ## Possible Later Areas
 
-- `runs/` - inspectable records of significant promptset or workflow runs when
-  later prompts define the format.
 - Optional local indexes or automation hook areas only after the documented
   workflow and helper-script contracts prove they need them.
 

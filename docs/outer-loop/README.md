@@ -11,8 +11,8 @@ structured output, validation evidence, completion audits, and explicit
 operator approval points.
 
 The portable-operator extension starts from this baseline but adds a separate
-target project root. See `../portable-operator/README.md` for the planned
-AHL-home versus target-project design; current outer-loop commands still
+target project root. See `../portable-operator/README.md` for the implemented
+AHL-home versus target-project helper boundary; current outer-loop commands still
 primarily operate on the AHL checkout.
 
 ## Start Here
@@ -33,11 +33,11 @@ primarily operate on the AHL checkout.
 - `provider-harness-comparison.md` - safety, auth, output, model-selection,
   and testing differences across current and future driver categories.
 - `capability-probes.md` - safe PATH and help-only probe behavior before live
-  assistant invocation exists.
+  assistant invocation.
 - `batch-planning.md` - inspectable prompt batch plan artifacts and range
   resolution rules.
 - `dry-run-runner.md` - structural dry-run checks for batch plans before any
-  future live execution.
+  live execution.
 - `gates.md` - post-prompt gate statuses, evidence fields, report format, and
   CLI boundary.
 - `live-runner.md` - dry-run-default sequential runner behavior and live

@@ -320,7 +320,7 @@ heavier orchestration remains outside the baseline.
 - `outer-loop/batch-planning.md` - deterministic prompt batch plan artifacts,
   explicit range handling, driver settings, and commit policy boundaries.
 - `outer-loop/dry-run-runner.md` - plan dry-run validation, limits, and review
-  guidance before any future live execution path.
+  guidance before any live execution path.
 - `outer-loop/gates.md` - post-prompt gate statuses, expected evidence, report
   format, and command boundary.
 - `outer-loop/live-runner.md` - dry-run-default `outer run` behavior, live
