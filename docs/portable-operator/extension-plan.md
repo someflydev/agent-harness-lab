@@ -200,7 +200,7 @@ The portable extension inherits the outer-loop safety boundary:
 - Likely command shape: no provider-specific command family; assistant names
   may be options for snippet wording and driver records only.
 - Likely files to modify later: `docs/assistants/README.md`,
-  `docs/portable-operator/assistant-boundaries.md`,
+  `docs/portable-operator/assistant-surfaces.md`,
   `docs/outer-loop/assistant-driver-boundary.md`.
 - Safety boundary: no provider lock-in, no hidden APIs, no Claude subscription
   API automation assumptions, and no Pi-specific extension material.

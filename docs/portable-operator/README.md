@@ -25,6 +25,8 @@ Current outer-loop helpers still primarily operate inside the AHL repository.
   commit-plan, commit-check, and optional repair snippets for one prompt.
 - `run-range.md` - dry-run prompt-range planning that preserves
   one-prompt-at-a-time execution and fresh-session boundaries.
+- `assistant-surfaces.md` - provider-agnostic boundary for Codex, Claude Code,
+  Gemini, generic chat, and manual assistant surfaces.
 - `one-prompt-loop.md` - end-to-end portable one-prompt loop from planning
   blob and promptset creation through audit, commit packaging, commit check,
   and fresh-session reset.
@@ -46,6 +48,8 @@ Current outer-loop helpers still primarily operate inside the AHL repository.
 - Portable commands should distinguish those roots in reports and file writes.
 - The human operator remains scheduler, reviewer, validation authority, and
   commit authority; range plans are inspectable dry-runs, not schedulers.
+- AHL produces snippets, payloads, plans, reports, and validation helpers; the
+  human or chosen assistant CLI executes the prompt work.
 - `human-notes.md` is operator-owned scratch content. AHL may report that it
   exists, but it must not edit it or treat it as authoritative state.
 - The extension must stay local, inspectable, standard-library-first, and free

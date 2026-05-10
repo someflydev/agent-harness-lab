@@ -61,6 +61,8 @@ heavier orchestration remains outside the baseline.
   output for reusable one-prompt assistant instructions.
 - `portable-operator/run-range.md` - supported `lifecycle run-range` dry-run
   planning for prompt ranges in arbitrary target projects.
+- `portable-operator/assistant-surfaces.md` - provider-agnostic manual and
+  CLI assistant-surface boundary for portable workflows.
 - `portable-operator/one-prompt-loop.md` - portable one-prompt workflow from
   planning and promptset creation through audit, commit packaging, commit
   check, and reset.
@@ -183,6 +185,9 @@ heavier orchestration remains outside the baseline.
 - `assistants/subscription-workflow.md` - subscription-friendly workflow,
   quota control, rate-limit recovery, and runtime-mode boundaries.
 - `assistants/context-loading.md` - context-loading matrix by session type.
+- `portable-operator/assistant-surfaces.md` - portable assistant-surface
+  boundary covering local/manual Codex, Claude Code, Gemini, generic chat, and
+  no mandatory provider.
 
 ## Safety
 
@@ -338,6 +343,8 @@ heavier orchestration remains outside the baseline.
   before a one-prompt run.
 - `portable-operator/lifecycle-snippets.md` - read-only reusable lifecycle
   snippet generation for a single target-project prompt.
+- `portable-operator/assistant-surfaces.md` - provider-agnostic assistant
+  surface boundary for portable target-project workflows.
 - `portable-operator/one-prompt-loop.md` - portable one-prompt execution loop
   and lifecycle snippet flow.
 - `portable-operator/context-update-policy.md` - when to update context files,
