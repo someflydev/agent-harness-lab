@@ -1,0 +1,28 @@
+# PROMPT_01 - Claude Bootstrap Fixture
+
+This fake prompt verifies that portable lifecycle snippets can name
+`CLAUDE.md` when the operator explicitly selects it.
+
+## Startup Instructions
+
+1. Read `CLAUDE.md`.
+2. Inspect repo state before editing.
+
+## Required Deliverables
+
+- Make no real change; this is a read-only fixture prompt.
+
+## Constraints
+
+- Do not call provider CLIs.
+- Do not use network access.
+- Do not commit unless asked.
+
+## Validation
+
+- Run lifecycle snippet generation from the AHL checkout.
+
+## Endcap
+
+1. Confirm no implementation was needed.
+2. Stop for a fresh assistant session.

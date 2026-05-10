@@ -1,0 +1,26 @@
+# PROMPT_01 - Gapped Fixture Start
+
+This fake prompt is present so diagnostics can compare it with the missing
+`PROMPT_02`.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+
+## Required Deliverables
+
+- No implementation; this fixture exists for promptset diagnostics.
+
+## Constraints
+
+- Do not call provider CLIs.
+- Do not use network access.
+
+## Validation
+
+- Run project status or run-range dry-run from the AHL checkout.
+
+## Endcap
+
+1. Audit diagnostics only.
+2. Stop before any later prompt.

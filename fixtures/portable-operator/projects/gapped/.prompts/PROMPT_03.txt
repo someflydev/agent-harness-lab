@@ -1,0 +1,25 @@
+# PROMPT_03 - Gapped Fixture Later Prompt
+
+This fake prompt intentionally skips `PROMPT_02`.
+
+## Startup Instructions
+
+1. Inspect repo state before editing.
+
+## Required Deliverables
+
+- No implementation; this fixture exists for promptset diagnostics.
+
+## Constraints
+
+- Do not call provider CLIs.
+- Do not use network access.
+
+## Validation
+
+- Run `python3 scripts/ahl.py lifecycle run-range 1 3 --project fixtures/portable-operator/projects/gapped --dry-run --json`.
+
+## Endcap
+
+1. Confirm the missing prompt diagnostic was visible.
+2. Stop before any repair unless explicitly asked.

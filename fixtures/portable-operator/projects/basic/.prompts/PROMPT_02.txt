@@ -1,0 +1,32 @@
+# PROMPT_02 - Basic Fixture Second Change
+
+This fake prompt exists so range dry-runs can plan more than one prompt while
+still stopping at fresh-session boundaries.
+
+## Startup Instructions
+
+1. Read `AGENT.md`.
+2. Read `.context/README.md`.
+3. Inspect repo state before editing.
+
+## Required Deliverables
+
+- Add a tiny fake validation note to `README.md`.
+
+## Constraints
+
+- Keep the change local and artificial.
+- Do not call provider CLIs.
+- Do not use network access.
+- Do not commit unless asked.
+
+## Validation
+
+- Run `python3 scripts/ahl.py project status --project . --json` if AHL is
+  available from a separate checkout.
+
+## Endcap
+
+1. Audit the deliverables.
+2. Inspect only the next prompt if one exists.
+3. Stop for a fresh assistant session.

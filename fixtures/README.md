@@ -19,6 +19,9 @@ actually happened.
   `scripts/ahl.py trace --json` style working tree summary.
 - `outer-loop/gates/pass.json` and `outer-loop/gates/blocked.json` -
   artificial post-prompt gate reports for continuation and stop cases.
+- `portable-operator/` - artificial external target projects for portable
+  status, lifecycle snippet, context-check, bootstrap-selection, and range
+  dry-run tests.
 - `assistant-drivers/codex.json`, `assistant-drivers/gemini.json`, and
   `assistant-drivers/pi.json` - compact examples for conservative driver
   contract records.

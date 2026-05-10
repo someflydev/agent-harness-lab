@@ -1,0 +1,31 @@
+# PROMPT_01 - Basic Fixture First Change
+
+This fake prompt exercises a normal portable one-prompt cycle.
+
+## Startup Instructions
+
+1. Read `AGENT.md`.
+2. Read `.context/README.md`.
+3. Inspect repo state before editing.
+
+## Required Deliverables
+
+- Update `README.md` with one short fake project note.
+- Do not edit `human-notes.md` if one exists.
+
+## Constraints
+
+- Keep the change local and artificial.
+- Do not call provider CLIs.
+- Do not use network access.
+- Do not commit unless asked.
+
+## Validation
+
+- Run `python3 -m unittest tests/test_ahl.py` if this were the AHL repo.
+
+## Endcap
+
+1. Audit the deliverables.
+2. Inspect `PROMPT_02` for readiness only.
+3. Stop for a fresh assistant session.
