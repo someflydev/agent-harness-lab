@@ -4,7 +4,8 @@ This guide is for assistants that do not have direct repository access, shell
 access, or file editing. The operator can still use the same prompt-bounded
 workflow by copying the required files manually. This is the same file-backed
 one-prompt loop used by Codex, Claude Code, Gemini, and other coding assistant
-surfaces; only the transport changes.
+surfaces; only the transport changes. AHL produces the prompt text, snippets,
+and validation guidance; the operator applies changes and runs checks locally.
 
 ## Start A Fresh Session
 
@@ -88,3 +89,5 @@ only the safe excerpts needed for the current bounded task.
 - Patch application and validation are operator responsibilities.
 - Long files can exceed context limits; use narrow excerpts and explicit file
   paths.
+- Generic chat use does not require provider APIs, repo credentials, networked
+  AHL helpers, or machine-readable subscription quota checks.

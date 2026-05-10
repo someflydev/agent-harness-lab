@@ -2,7 +2,10 @@
 
 This guide describes a Codex-style session for running one
 `agent-harness-lab` prompt. Product details can vary by environment, so treat
-repo files and the active prompt as authoritative.
+repo files and the active prompt as authoritative. Codex can be used through a
+local or manual subscription workflow when available; AHL prepares bounded
+instructions and local checks, while the Codex tool executes the prompt work
+under the operator's local permissions.
 
 ## Start A Fresh Session
 
@@ -74,5 +77,6 @@ Close every prompt run with:
 - Tool-specific skill discovery should not be assumed outside the active
   environment.
 - Network access, shell permissions, and edit permissions may differ by setup.
+- AHL does not query Codex subscription status, quota, or account limits.
 - Codex chat context is not durable project memory unless promoted into repo
   artifacts.

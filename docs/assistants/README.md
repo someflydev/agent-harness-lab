@@ -11,7 +11,10 @@ assistant tools while preserving the same operating model:
 
 The guides are intentionally tool-agnostic where product behavior varies. They
 do not make any assistant mandatory, and they do not assume this repo currently
-has provider orchestration, API-backed runners, or cross-tool automation.
+has provider orchestration, API-backed runners, cross-tool automation, network
+requirements, secrets, paid APIs, or machine-readable subscription quotas.
+AHL produces repo-backed instructions and helper output; the human operator or
+chosen assistant CLI executes the prompt work.
 
 ## Guides
 
@@ -24,6 +27,8 @@ has provider orchestration, API-backed runners, or cross-tool automation.
 - `subscription-workflow.md` - subscription-friendly operating model, quota
   control, and workflow boundaries.
 - `context-loading.md` - small matrix for what to load by session type.
+- `../portable-operator/assistant-surfaces.md` - portable boundary across
+  Codex, Claude Code, Gemini, generic chat, and manual surfaces.
 
 ## Common Operating Model
 
@@ -35,6 +40,10 @@ unless a prompt or review process promotes it into a repo artifact.
 When a tool supports commands, skills, file search, or local shell execution,
 use those capabilities to reduce manual copying. When it does not, paste the
 same startup files and prompt text manually. The workflow remains the same.
+
+Claude Code is treated as a manual or terminal assistant surface. AHL must not
+assume that Claude subscription usage can be automated through external APIs,
+browser sessions, cookies, or hidden provider integrations.
 
 ## Minimum Startup Context
 

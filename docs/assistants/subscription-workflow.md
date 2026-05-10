@@ -4,6 +4,8 @@
 manual assistant sessions because the core workflow is prompt-bounded,
 file-based, and operator-directed. A session does not need a provider API,
 daemon, queue, or autonomous runner to be useful.
+AHL produces snippets, prompt payloads, plans, reports, and validation helpers;
+the human operator or selected assistant CLI executes the actual prompt work.
 
 ## Why Subscription-Level Tools Fit
 
@@ -80,6 +82,9 @@ tree under the operator's subscription and permission settings.
 
 API-backed provider runtimes would call provider APIs from repo-owned or
 operator-owned automation. This repo does not currently implement that runtime.
+Claude subscription automation is not available through AHL external APIs; use
+Claude Code or manual copy/paste workflows unless a future prompt adds a
+separate reviewed API-backed design.
 
 Manual copy/paste workflows use a general chat assistant with the operator
 moving text, patches, and validation output between the repo and chat.
@@ -91,6 +96,10 @@ For portable target projects, `lifecycle snippets` can produce the reusable
 run, audit, commit-plan, make-commits, and commit-check text for any of these
 surfaces. The snippets are instructions for the operator to paste or hand to a
 session; they are not provider automation.
+
+AHL portable helpers do not require network access, secrets, paid APIs, or
+provider credentials, and they do not query subscription usage limits
+programmatically.
 
 ## Future Wrappers
 

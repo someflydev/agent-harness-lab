@@ -3,6 +3,8 @@
 This guide describes a Gemini-style coding assistant session for
 `agent-harness-lab`. Use the local repo artifacts as the source of truth and
 avoid assuming product features that are not visible in the current setup.
+Gemini can be used manually or through local CLI behavior only where the
+operator has verified that behavior locally.
 
 ## Start A Fresh Session
 
@@ -67,3 +69,5 @@ End with Execute -> Audit -> Preflight -> Bridge -> Reset:
 - File access, editing behavior, and command execution vary by setup.
 - Automatic project skill discovery should not be assumed.
 - Manual copy/paste may be needed when repository access is limited.
+- AHL does not query Gemini subscription status, quota, or account limits, and
+  it does not assume a local CLI supports headless execution until verified.

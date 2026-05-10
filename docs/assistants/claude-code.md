@@ -2,7 +2,9 @@
 
 This guide describes a Claude Code-style terminal assistant session for
 `agent-harness-lab`. Keep product-specific assumptions light; the repo workflow
-is based on files, prompts, commands, and operator review.
+is based on files, prompts, commands, and operator review. Claude Code is a
+manual or terminal assistant surface for AHL; it is not evidence that Claude
+subscription usage can be automated through external APIs.
 
 ## Start A Fresh Session
 
@@ -70,4 +72,7 @@ Use the same closeout loop as every other assistant:
 
 - Terminal command permissions depend on the operator's local setup.
 - Skills and templates are repo artifacts, not guaranteed tool features.
+- AHL does not automate Claude subscription usage through external APIs,
+  browser sessions, cookies, or hidden provider integrations.
+- AHL does not query Claude subscription status, quota, or account limits.
 - Assistant transcripts should not be stored as durable state by default.
