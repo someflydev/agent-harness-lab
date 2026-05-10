@@ -75,6 +75,10 @@ heavier orchestration remains outside the baseline.
 - `portable-operator/non-goals.md` - explicit exclusions for the portable
   extension, including provider daemons, credentials, Pi-specific material,
   and autonomous execution.
+- `../fixtures/portable-operator/README.md` - artificial external-project
+  fixtures for offline portable helper tests and examples.
+- `../examples/portable-operator/README.md` - dry-run portable workflow
+  examples using the artificial fixtures.
 - `outer-loop/smoke-test-plan.md` - offline-safe and opt-in real-assistant
   smoke tests for outer-loop helpers.
 - `outer-loop/known-limitations.md` - outer-loop execution, validation, data,

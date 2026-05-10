@@ -37,6 +37,11 @@ Current outer-loop helpers still primarily operate inside the AHL repository.
 - `human-notes-boundary.md` - explicit operator-owned boundary for
   `human-notes.md` scratch/control-zone content.
 - `non-goals.md` - explicit exclusions for the portable-operator extension.
+- `../../fixtures/portable-operator/README.md` - artificial target-project
+  fixtures for offline status, lifecycle, context-check, bootstrap-selection,
+  and range dry-run examples.
+- `../../examples/portable-operator/README.md` - copy/paste examples for a
+  one-prompt cycle and prompt-range dry-run using those fixtures.
 
 ## Operating Posture
 
@@ -54,3 +59,15 @@ Current outer-loop helpers still primarily operate inside the AHL repository.
   exists, but it must not edit it or treat it as authoritative state.
 - The extension must stay local, inspectable, standard-library-first, and free
   of provider credentials, network calls, daemons, and hidden state.
+
+## Offline Fixtures
+
+Use `../../fixtures/portable-operator/projects/basic/` when you need a fake
+target project with `AGENT.md`, `.context/`, and two sequential prompts. Use
+`../../fixtures/portable-operator/projects/claude-bootstrap/` to test explicit
+`CLAUDE.md` bootstrap selection. Use
+`../../fixtures/portable-operator/projects/gapped/` to test prompt gap
+diagnostics.
+
+The examples in `../../examples/portable-operator/` show the expected command
+sequence without using private notes, provider credentials, or assistant quota.

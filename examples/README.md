@@ -18,6 +18,8 @@ and the reusable templates in `../templates/`.
   only after evidence and rejection criteria are checked.
 - `repair-bridge/` - a blocked prompt closeout where a transient
   `tmp/HANDOFF.md` bridge is justified.
+- `portable-operator/` - offline portable workflow examples against fake
+  external target-project fixtures.
 
 ## How To Read These
 

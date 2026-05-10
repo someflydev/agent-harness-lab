@@ -192,6 +192,11 @@ python3 scripts/ahl.py lifecycle snippets PROMPT_84.txt --bootstrap CLAUDE.md --
 python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project /path/to/project --json
 python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --dry-run --json
 python3 scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --artifact runs/portable-operator/run-range.json --json
+python3 scripts/ahl.py project status --project fixtures/portable-operator/projects/basic --json
+python3 scripts/ahl.py lifecycle snippets PROMPT_01 --project fixtures/portable-operator/projects/basic --json
+python3 scripts/ahl.py lifecycle context-check PROMPT_01 --project fixtures/portable-operator/projects/basic --json
+python3 scripts/ahl.py lifecycle run-range 1 2 --project fixtures/portable-operator/projects/basic --dry-run --json
+python3 scripts/ahl.py lifecycle snippets PROMPT_01 --project fixtures/portable-operator/projects/claude-bootstrap --bootstrap CLAUDE.md --json
 python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver codex --model gpt-5.5 --reasoning medium --json
 python3 scripts/ahl.py outer plan --from PROMPT_40 --count 1 --driver pi --json
 python3 scripts/ahl.py outer plan --next 10 --driver codex --json
