@@ -2,8 +2,10 @@
 
 `scripts/ahl.py` provides the first lightweight helper layer for
 `agent-harness-lab`. It is a local Python 3 CLI built on the standard library.
-Its job is to make manual prompt execution easier to inspect, not to automate
-agent work.
+Its job is to make manual prompt execution easier to inspect. It defaults to
+read-only checks, scaffolds, dry-runs, and review artifacts; the only live
+assistant invocation path is explicit `outer run --execute` for supported local
+driver contracts.
 
 ## Commands
 
@@ -13,8 +15,19 @@ python3 scripts/ahl.py promptset
 python3 scripts/ahl.py validate
 python3 scripts/ahl.py registry check
 python3 scripts/ahl.py registry list --json
+python3 scripts/ahl.py driver check
+python3 scripts/ahl.py project status --project /path/to/project --json
+python3 scripts/ahl.py lifecycle snippets PROMPT_84 --project /path/to/project --json
 python3 scripts/ahl.py lifecycle context-check PROMPT_84 --project /path/to/project --json
+python3 scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --dry-run --json
+python3 scripts/ahl.py portable rehearsal --json
+python3 scripts/ahl.py outer plan --from PROMPT_33 --count 3 --driver manual --json
+python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json --json
+python3 scripts/ahl.py outer run --plan runs/outer-loop/<plan-id>/plan.json --dry-run --json
 python3 scripts/ahl.py outer gate PROMPT_36 --json
+python3 scripts/ahl.py outer resume --run runs/outer-loop/<run-id>/run-ledger.json --dry-run --json
+python3 scripts/ahl.py commit plan PROMPT_38 --json
+python3 scripts/ahl.py commit check --project /path/to/project --last 10 --json
 python3 scripts/ahl.py resume
 python3 scripts/ahl.py trace PROMPT_20 --json
 python3 scripts/ahl.py checkpoint
@@ -38,12 +51,35 @@ Each command supports `--json` where machine-readable output is practical.
 - `registry check` validates curated registry JSON parsing, required fields,
   referenced paths, and prompt registry ordering.
 - `registry list` reports registry files and item counts.
+- `driver check` validates conservative assistant driver records. `driver
+  probe --help-only` can inspect local executable availability without sending
+  prompts.
+- `project status` reports target-project git, promptset, bootstrap/context,
+  recent prompt-prefixed commit, and likely-next-prompt state without editing
+  files or invoking assistants.
+- `lifecycle snippets` prints reusable one-prompt snippets for a target
+  project without executing them.
+- `lifecycle run-range` dry-runs a one-prompt-at-a-time range plan for a
+  target project. It writes JSON only with explicit `--artifact`.
+- `portable rehearsal` composes portable helpers against artificial fixtures
+  and isolated temporary git data.
+- `outer plan`, `outer dry-run`, `outer run`, `outer status`, `outer resume`,
+  and `outer recovery-handoff` support bounded outer-loop planning, payloads,
+  ledgers, dry-run execution, status, and recovery artifacts. `outer run`
+  defaults to dry-run and needs `--execute` for live local assistant CLI use.
 - `outer gate` collects post-prompt validation, audit, readiness, handoff, git,
   and commit-plan evidence without invoking assistants or executing arbitrary
   prompt validation commands.
 - `lifecycle context-check` reads target-project git status and suggests
   conservative context-update review questions without editing bootstrap,
   `.context/`, `context/`, or target-project files.
+- `commit plan` creates a plan-only artifact for prompt-scoped commit grouping.
+- `commit check` inspects recent commits and reports prompt-prefix or message
+  hygiene issues without rewriting history.
+- `commit execute` commits only from a reviewed plan and only with explicit
+  `--operator-approved`.
+- `dry-run`, `lane`, `domain-pack`, `memory`, `experiment`, and `finding`
+  subcommands validate or scaffold their named local artifact families.
 - `resume` prints a read-only Session Context Briefing from git state,
   runtime-note files, and local `tmp/*.md` counts.
 - `trace` summarizes prompt-related working tree changes, git branch and HEAD
@@ -69,6 +105,10 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `validate`: `ok`, `checks`, `problems`, `promptset`
 - `registry check`: `ok`, `checks`, `problems`, `registries`
 - `registry list`: `ok`, `registries`
+- `driver check`: `ok`, `drivers`, `checks`, `problems`
+- `project status`: `ok`, `ahl_home`, `project`, `warnings`, `problems`
+- `lifecycle snippets`: `ok`, `ahl_home`, `project`, `prompt`,
+  `configuration`, `snippets`, `warnings`, `problems`
 - `outer gate`: `ok`, `status`, `prompt_id`, `changed_files`,
   `validation_commands`, `validation_outcomes`, `ahl_checks`,
   `completion_audit`, `next_prompt_readiness`, `handoff`, `commit_plan`,
@@ -76,6 +116,20 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
 - `lifecycle context-check`: `ok`, `ahl_home`, `project`, `prompt`, `git`,
   `changed_paths`, `candidates`, `ignored_changes`, `questions`,
   `conclusion`, `read_only`, `warnings`, and `problems`
+- `lifecycle run-range`: `ok`, `schema`, `plan_id`, `mode`, `dry_run`,
+  `read_only`, `project`, `requested_range`, `steps`, `warnings`, `problems`
+- `portable rehearsal`: `ok`, `schema`, `commands`, `summary`, `problems`
+- `outer plan`: `ok`, `plan_id`, `requested_range`, `prompts`, `driver`,
+  `required_ahl_checks`, `stop_conditions`, `commit_policy`, `artifact`,
+  `problems`
+- `outer run`: `ok`, `status`, `run_id`, `plan_id`, `mode`, `execute`,
+  `dry_run`, `driver`, `steps`, `artifact`, `problems`
+- `outer resume`: `ok`, `status`, `run_id`, `plan_id`, `dry_run`,
+  `next_prompt`, `completed_prompts`, `pending_prompts`, `git`, `problems`
+- `commit plan`: `ok`, `schema`, `plan_id`, `prompt_ids`, `git`, `groups`,
+  `unrelated_changes`, `warnings`, `problems`
+- `commit check`: `ok`, `read_only`, `project`, `selector`, `summary`,
+  `commits`, `guidance`, `warnings`, `problems`
 - `resume`: `branch`, `head`, `clean`, `runtime_files`, `posture`,
   `recommendation`
 - `trace`: `prompt_id`, `prompt_file`, `prompt_file_exists`, `branch`, `head`,
@@ -92,13 +146,14 @@ The JSON shapes are intentionally compact. Stable top-level fields include:
   `readiness_blockers`, `handoff_created`, `follow_up_fix_required`,
   `reusable_pattern_observations`, `associated_commit_hashes`
 
-These fields are suitable for small local checks and smoke tests. The script is
-not a provider integration surface.
+These fields are suitable for small local checks and smoke tests. See
+`scripts/README.md` for the fuller JSON field inventory.
 
 ## Boundary
 
 The helper CLI supports the human-assisted workflow described in the runbooks.
-It does not choose prompts, run assistants, call paid model APIs, store raw
-assistant transcripts, create long-running processes, or decide when work is
-complete. The operator and active prompt remain the source of scope and
-authority.
+It does not choose prompts, call paid model APIs, store raw assistant
+transcripts, create long-running processes, or decide when work is complete.
+Live local assistant CLI invocation is opt-in through `outer run --execute` and
+depends on local authentication outside AHL. The operator and active prompt
+remain the source of scope and authority.

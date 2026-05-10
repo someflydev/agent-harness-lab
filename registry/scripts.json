@@ -8,13 +8,13 @@
       "name": "ahl.py",
       "type": "script",
       "path": "scripts/ahl.py",
-      "purpose": "Provide dependency-free helper commands for local checks, registry validation, context briefing, and scaffolding.",
+      "purpose": "Provide dependency-free helper commands for local checks, registry validation, context briefing, scaffolding, portable helper flows, outer-loop dry-runs, gates, and reviewed commit support.",
       "owner_role": "operator",
       "status": "active",
       "inputs": ["repo files", "CLI arguments"],
       "outputs": ["human summaries", "JSON summaries", "scaffolded markdown"],
       "related_docs": ["scripts/README.md", "docs/scripts.md"],
-      "safe_use_notes": "Does not run providers, prompts, daemons, or hidden runtime state."
+      "safe_use_notes": "Defaults to local checks and dry-runs; live local assistant CLI invocation exists only through explicit outer run --execute for supported driver contracts. Does not run daemons or hidden runtime state."
     },
     {
       "id": "command-doctor",
@@ -93,6 +93,19 @@
       "outputs": ["session briefing"],
       "related_docs": ["docs/runtime/session-lifecycle.md"],
       "safe_use_notes": "Read-only briefing; recommendations are advisory."
+    },
+    {
+      "id": "command-outer-portable-commit",
+      "name": "outer, project, lifecycle, portable, commit",
+      "type": "helper_script_command_group",
+      "path": "scripts/ahl.py",
+      "purpose": "Support bounded outer-loop plans and dry-runs, portable target-project inspection and snippets, offline portable rehearsal, and reviewed commit planning or inspection.",
+      "owner_role": "operator",
+      "status": "active",
+      "inputs": ["prompt ids", "plan artifacts", "run ledgers", "target project root", "git history"],
+      "outputs": ["plans", "payloads", "ledgers", "gate reports", "portable status reports", "snippets", "commit plans", "commit-check reports"],
+      "related_docs": ["docs/outer-loop/README.md", "docs/portable-operator/README.md", "docs/scripts.md", "scripts/README.md"],
+      "safe_use_notes": "Portable helpers are read-only by default. Outer run live execution and commit execution require explicit operator flags."
     }
   ]
 }
