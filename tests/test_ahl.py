@@ -38,6 +38,9 @@ class AhlTest(unittest.TestCase):
         target.write_text(content, encoding="utf-8")
         return target
 
+    def portable_fixture_project(self, name):
+        return ROOT / "fixtures" / "portable-operator" / "projects" / name
+
     def add_foundations(self):
         self.write("README.md", "# Test\n")
         self.write("AGENT.md", "# Agent\n")
@@ -650,6 +653,124 @@ class AhlTest(unittest.TestCase):
             "problems",
         ):
             self.assertIn(key, data)
+
+    def test_portable_basic_fixture_exercises_project_status(self):
+        project = self.portable_fixture_project("basic")
+
+        code, output = self.run_cli("project", "status", "--project", str(project), "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(Path(data["project"]["root"]).resolve(), project.resolve())
+        self.assertEqual(data["project"]["promptset"]["state"], "valid-sequential")
+        self.assertEqual(data["project"]["promptset"]["filenames"], ["PROMPT_01.txt", "PROMPT_02.txt"])
+        self.assertEqual(data["project"]["next_prompt"]["likely_next_prompt"], "PROMPT_03")
+        self.assertTrue(data["project"]["files"]["AGENT.md"])
+        self.assertTrue(data["project"]["files"][".context"])
+        self.assertFalse(data["project"]["files"]["human-notes.md"])
+
+    def test_portable_basic_fixture_exercises_lifecycle_helpers(self):
+        project = self.portable_fixture_project("basic")
+
+        snippets_code, snippets_output = self.run_cli(
+            "lifecycle",
+            "snippets",
+            "PROMPT_01",
+            "--project",
+            str(project),
+            "--json",
+        )
+        snippets = json.loads(snippets_output)
+        context_code, context_output = self.run_cli(
+            "lifecycle",
+            "context-check",
+            "PROMPT_01",
+            "--project",
+            str(project),
+            "--json",
+        )
+        context = json.loads(context_output)
+
+        self.assertEqual(snippets_code, 0)
+        self.assertEqual(snippets["configuration"]["bootstrap_doc"], "AGENT.md")
+        self.assertTrue(snippets["configuration"]["context_mentioned"])
+        self.assertEqual(snippets["snippets"]["run"], "Load AGENT.md, then run .prompts/PROMPT_01.txt")
+        self.assertEqual(context_code, 0)
+        self.assertTrue(context["read_only"])
+        self.assertEqual(context["changed_paths"], [])
+        self.assertTrue(any("not inside a git work tree" in warning for warning in context["warnings"]))
+
+    def test_portable_basic_fixture_exercises_run_range_dry_run(self):
+        project = self.portable_fixture_project("basic")
+
+        code, output = self.run_cli(
+            "lifecycle",
+            "run-range",
+            "1",
+            "2",
+            "--project",
+            str(project),
+            "--dry-run",
+            "--json",
+        )
+        data = json.loads(output)
+
+        self.assertEqual(code, 0)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["prompt_ids"], ["PROMPT_01", "PROMPT_02"])
+        self.assertEqual(data["next_prompt"], "PROMPT_01")
+        self.assertTrue(all(step["fresh_session_boundary"] for step in data["steps"]))
+        self.assertTrue(any("human-notes.md is operator-owned" in note for note in data["safety_notes"]))
+
+    def test_portable_gapped_fixture_reports_diagnostics(self):
+        project = self.portable_fixture_project("gapped")
+
+        status_code, status_output = self.run_cli("project", "status", "--project", str(project), "--json")
+        status = json.loads(status_output)
+        range_code, range_output = self.run_cli(
+            "lifecycle",
+            "run-range",
+            "1",
+            "3",
+            "--project",
+            str(project),
+            "--dry-run",
+            "--json",
+        )
+        plan = json.loads(range_output)
+
+        self.assertEqual(status_code, 0)
+        self.assertEqual(status["project"]["promptset"]["state"], "gaps")
+        self.assertIn(2, status["project"]["promptset"]["gaps"])
+        self.assertEqual(range_code, 1)
+        self.assertFalse(plan["ok"])
+        self.assertIn("PROMPT_02", plan["missing_prompt_ids"])
+        self.assertEqual(plan["stop_reason"], "range-validation-failed")
+
+    def test_portable_claude_fixture_selects_claude_bootstrap(self):
+        project = self.portable_fixture_project("claude-bootstrap")
+
+        status_code, status_output = self.run_cli("project", "status", "--project", str(project), "--json")
+        status = json.loads(status_output)
+        snippets_code, snippets_output = self.run_cli(
+            "lifecycle",
+            "snippets",
+            "PROMPT_01",
+            "--project",
+            str(project),
+            "--bootstrap",
+            "CLAUDE.md",
+            "--json",
+        )
+        snippets = json.loads(snippets_output)
+
+        self.assertEqual(status_code, 0)
+        self.assertFalse(status["project"]["files"]["AGENT.md"])
+        self.assertTrue(status["project"]["files"]["CLAUDE.md"])
+        self.assertEqual(snippets_code, 0)
+        self.assertEqual(snippets["configuration"]["bootstrap_doc"], "CLAUDE.md")
+        self.assertEqual(snippets["snippets"]["run"], "Load CLAUDE.md, then run .prompts/PROMPT_01.txt")
 
     def test_promptset_detects_gap_or_malformed_filename(self):
         self.write(".prompts/PROMPT_01.txt")

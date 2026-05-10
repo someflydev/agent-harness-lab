@@ -70,9 +70,11 @@ when detected in the target project. Use `--context` to mention it even when
 absent under other bootstrap choices, or `--no-context` to omit it from the
 context update snippet.
 
-Without `--project`, the command inspects the current working directory. If
-that path is inside a git work tree, the target project root is the containing
-git root; otherwise the requested directory is used.
+Without `--project`, the command inspects the current working directory. When
+an explicitly requested directory already contains `.prompts/`, that directory
+is treated as the target project root; otherwise, if that path is inside a git
+work tree, the target project root is the containing git root. If neither rule
+applies, the requested directory is used.
 
 ## Boundaries
 

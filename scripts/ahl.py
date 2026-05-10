@@ -535,6 +535,12 @@ COMMAND_HELP: tuple[dict[str, str], ...] = (
         "safety": "read-only; writes only with explicit --artifact",
     },
     {
+        "name": "portable-fixtures",
+        "command": "python3 scripts/ahl.py project status --project fixtures/portable-operator/projects/basic --json",
+        "summary": "Exercise portable helpers against artificial external-project fixtures.",
+        "safety": "read-only",
+    },
+    {
         "name": "outer-dry-run",
         "command": "python3 scripts/ahl.py outer dry-run --plan runs/outer-loop/<plan-id>/plan.json",
         "summary": "Validate a batch plan without invoking assistant CLIs.",
@@ -664,7 +670,10 @@ def project_locate_data(project_value: str | None = None, environ: dict[str, str
         problems.append(f"project path is not a directory: {project_value}")
     else:
         detected_git_root, git_available, git_problem = nearest_git_root(requested_resolved)
-        if detected_git_root is not None:
+        requested_prompt_dir = requested_resolved / ".prompts"
+        if requested_prompt_dir.is_dir() and detected_git_root is not None and detected_git_root != requested_resolved:
+            project_root = requested_resolved
+        elif detected_git_root is not None:
             git_root = str(detected_git_root)
             project_root = detected_git_root
             inside_git_work_tree = True

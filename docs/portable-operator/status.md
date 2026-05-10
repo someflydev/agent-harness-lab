@@ -19,10 +19,12 @@ From another project, call the AHL script directly:
 python3 /path/to/agent-harness-lab/scripts/ahl.py project status --project /path/to/project --json
 ```
 
-Without `--project`, the command inspects the current working directory. If the
-requested directory is inside a git work tree and git is available, the
-reported target project root is the containing git root. Otherwise the
-requested directory is used as the project root.
+Without `--project`, the command inspects the current working directory. When
+an explicitly requested directory already contains `.prompts/`, that directory
+is treated as the target project root. Otherwise, if the requested directory is
+inside a git work tree and git is available, the reported target project root
+is the containing git root. If neither rule applies, the requested directory is
+used as the project root.
 
 ## Reported State
 

@@ -18,6 +18,11 @@ From another project, call the AHL script directly:
 python3 /path/to/agent-harness-lab/scripts/ahl.py lifecycle run-range 18 27 --project /path/to/project --dry-run --json
 ```
 
+When `--project` points at a directory that already contains `.prompts/`, that
+directory is treated as the target project root even if it is nested inside
+another git checkout. This keeps checked-in fixtures usable as artificial
+target projects.
+
 Prompt inputs may be numbers, ids, or filenames such as `18`, `PROMPT_18`, or
 `PROMPT_18.txt`.
 
