@@ -3065,6 +3065,35 @@ class AhlTest(unittest.TestCase):
         self.assertTrue(any("amend" in item for item in data["guidance"]))
 
     @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_prompt_selection_fails_when_no_prompt_commits_match(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "Add commit check docs")
+
+        code, output = self.run_cli("commit", "check", "--prompt", "PROMPT_01", "--json")
+        data = json.loads(output)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(data["selector"]["matched_commit_count"], 0)
+        self.assertEqual(data["selector"]["unmatched_commit_count"], 1)
+        self.assertTrue(any("PROMPT_01" in problem for problem in data["problems"]))
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
+    def test_commit_check_prompt_range_inspects_unmatched_commits(self):
+        self.init_git_repo()
+        self.make_git_commit("docs/one.md", "# One\n", "Add commit check docs")
+
+        code, output = self.run_cli("commit", "check", "--prompt", "PROMPT_01", "--range", "HEAD", "--json")
+        data = json.loads(output)
+        codes = {issue["code"] for issue in data["commits"][0]["issues"]}
+
+        self.assertEqual(code, 1)
+        self.assertFalse(data["ok"])
+        self.assertEqual(data["selector"]["matched_commit_count"], 1)
+        self.assertEqual(data["selector"]["unmatched_commit_count"], 1)
+        self.assertIn("missing_prompt_prefix", codes)
+
+    @unittest.skipUnless(shutil.which("git"), "git is not available")
     def test_commit_check_detects_literal_newline_sequence(self):
         self.init_git_repo()
         self.make_git_commit("docs/one.md", "# One\n", "[PROMPT_84] Bad literal \\n sequence")
@@ -3165,7 +3194,7 @@ class AhlTest(unittest.TestCase):
         self.assertEqual(code, 0)
         for key in ("ok", "read_only", "project", "selector", "summary", "commits", "guidance", "warnings", "problems"):
             self.assertIn(key, data)
-        for key in ("mode", "description", "prompt", "searched_commit_count", "matched_commit_count", "truncated"):
+        for key in ("mode", "description", "prompt", "searched_commit_count", "matched_commit_count", "unmatched_commit_count", "truncated"):
             self.assertIn(key, data["selector"])
         for key in ("hash", "short_hash", "subject", "parents", "changed_files", "issues"):
             self.assertIn(key, data["commits"][0])

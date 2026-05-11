@@ -4197,10 +4197,12 @@ def commit_check_data(args: argparse.Namespace) -> dict[str, Any]:
 
     selected_hashes: list[str] = []
     selected_commits: list[dict[str, Any]] = []
+    unmatched_commit_count = 0
     if not problems:
         selected_hashes, hash_problems = git_commit_hashes(project_root, selector)
         problems.extend(hash_problems)
     prompt_id = selector["prompt_id"]
+    inspect_selected_against_prompt = prompt_id is not None and (args.last is not None or args.range is not None)
     if not problems:
         for commit_hash in selected_hashes:
             record, record_problem = git_commit_record(project_root, commit_hash)
@@ -4209,11 +4211,16 @@ def commit_check_data(args: argparse.Namespace) -> dict[str, Any]:
                 continue
             assert record is not None
             if prompt_id and not record["subject"].startswith(f"[{prompt_id}]"):
-                continue
+                unmatched_commit_count += 1
+                if not inspect_selected_against_prompt:
+                    continue
             record["issues"] = inspect_commit_message(record, prompt_id)
             selected_commits.append(record)
         if not selected_commits:
-            warnings.append("no commits matched the requested selector")
+            if prompt_id:
+                problems.append(f"no commits matched requested prompt {prompt_id}")
+            else:
+                warnings.append("no commits matched the requested selector")
 
     issue_count = sum(len(commit.get("issues", [])) for commit in selected_commits)
     guidance: list[str] = []
@@ -4251,6 +4258,7 @@ def commit_check_data(args: argparse.Namespace) -> dict[str, Any]:
             "prompt": prompt_id,
             "searched_commit_count": len(selected_hashes),
             "matched_commit_count": len(selected_commits),
+            "unmatched_commit_count": unmatched_commit_count,
             "truncated": selector["truncated"],
         },
         "summary": summary,
