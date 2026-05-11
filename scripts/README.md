@@ -95,8 +95,9 @@ isolated temporary git repository to provide offline capstone evidence.
 - `commit check` inspects recent commits in a target project for prompt
   prefixes, Tim Pope-style subject/body shape, line wrapping, literal `\n`
   sequences, co-author trailers, generated boilerplate, and grouping evidence.
-  It reports amend or interactive rebase guidance only when it finds a clear
-  issue.
+  With `--prompt` and an explicit `--last` or `--range`, it inspects the
+  selected commits against the requested prompt prefix. It reports amend or
+  interactive rebase guidance only when it finds a clear issue.
 - `commit execute` stages only files listed in a commit plan and commits only
   when `--operator-approved` is supplied. It refuses unrelated staged files,
   missing listed files, and failed or blocked validation status unless
@@ -369,8 +370,9 @@ JSON output is meant for lightweight local checks. Stable top-level fields are:
 - `commit check`: `ok`, `read_only`, `project`, `selector`, `summary`,
   `commits`, `guidance`, `warnings`, and `problems`; `selector` includes
   `mode`, `description`, `prompt`, `searched_commit_count`,
-  `matched_commit_count`, and `truncated`; each commit includes `hash`,
-  `short_hash`, `subject`, `parents`, `changed_files`, and `issues`
+  `matched_commit_count`, `unmatched_commit_count`, and `truncated`; each
+  commit includes `hash`, `short_hash`, `subject`, `parents`, `changed_files`,
+  and `issues`
 - `commit execute`: `ok`, `status`, `plan`, `dry_run`, `commits`, and
   `problems`
 - `dry-run list`: `ok`, `scenario_count`, `scenarios`

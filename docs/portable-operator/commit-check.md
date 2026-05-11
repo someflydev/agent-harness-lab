@@ -16,7 +16,13 @@ python3 scripts/ahl.py commit check --project /path/to/project --last 7 --json
 Without `--project`, the command inspects the current working directory. If
 `--prompt` is supplied without `--last` or `--range`, it searches the most
 recent 10 commits for subjects prefixed with that prompt id and warns that the
-search may be truncated.
+search may be truncated. If that prompt-default search finds no matching
+commit, the command fails instead of silently passing.
+
+When `--prompt` is combined with an explicit `--last` or `--range`, the command
+inspects the selected commits against the requested prompt prefix. Commits in
+that explicit selection whose subjects do not start with the requested prompt
+are reported with `missing_prompt_prefix`.
 
 ## Checks
 
@@ -31,7 +37,8 @@ The helper reports:
 - generated assistant boilerplate;
 - merge commits that need manual grouping review;
 - commit count, prompt-prefix counts, changed-file count, and top-level
-  changed directories.
+  changed directories;
+- searched, matched, and unmatched commit counts in the selector summary.
 
 When it finds a clear issue, it may print suggested `git commit --amend` or
 `git rebase -i` commands as guidance. It does not run those commands.
